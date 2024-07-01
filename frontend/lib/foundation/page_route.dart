@@ -124,15 +124,14 @@ mixin _AppRouteTransitionMixin<T> on PageRoute<T> {
             parent: secondaryAnimation,
             curve: Curves.ease,
           )),
-          child: PhysicalModel(
-            color: Colors.transparent,
-            borderRadius: BorderRadius.zero,
-            clipBehavior: Clip.hardEdge,
-            elevation: 6,
-            child: Material(child: child,),
-          ),
-        )
-    );
+          child: enableIOSGesture
+              ? IOSBackGestureDetector(
+              gestureWidth: _kBackGestureWidth,
+              enabledCallback: () => _isPopGestureEnabled<T>(this),
+              onStartPopGesture: () => _startPopGesture(this),
+              child: child)
+              : child),
+        );
   }
 
   IOSBackGestureController _startPopGesture(PageRoute<T> route) {

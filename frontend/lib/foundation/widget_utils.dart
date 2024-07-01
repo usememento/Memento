@@ -1,5 +1,4 @@
 import 'package:flutter/widgets.dart';
-import 'package:frontend/foundation/page_route.dart';
 
 extension WidgetExtension on Widget{
   Widget padding(EdgeInsetsGeometry padding){
@@ -77,6 +76,10 @@ extension ContextExt on BuildContext {
   }
 
   Size get size => MediaQuery.of(this).size;
+
+  double get width => MediaQuery.of(this).size.width;
+
+  double get height => MediaQuery.of(this).size.height;
 
   EdgeInsets get padding => MediaQuery.of(this).padding;
 
