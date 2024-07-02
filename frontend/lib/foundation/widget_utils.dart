@@ -71,8 +71,8 @@ extension ContextExt on BuildContext {
     Navigator.of(this).pop(result);
   }
 
-  Future<T?> to<T>(String path) {
-    return Navigator.of(this).pushNamed(path);
+  Future<T?> to<T>(String path, [Map<String, String> params = const {}]) {
+    return Navigator.of(this).pushNamed(path, arguments: params);
   }
 
   Size get size => MediaQuery.of(this).size;

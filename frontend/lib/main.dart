@@ -20,6 +20,7 @@ class Memento extends StatelessWidget {
     return MaterialApp(
       title: "Memento",
       initialRoute: '/',
+      debugShowCheckedModeBanner: false,
       navigatorObservers: [App.observer],
       onGenerateRoute: (settings) {
         final builder = routes[settings.name]
@@ -31,7 +32,7 @@ class Memento extends StatelessWidget {
           return Text(details.exceptionAsString());
         };
         if(widget == null)  throw "Widget is null!";
-        return Material(child: Frame(widget, App.observer),);
+        return Overlay.wrap(child: Material(child: Frame(widget, App.observer),));
       },
     );
   }

@@ -1,6 +1,7 @@
 import 'dart:collection';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:frontend/foundation/app.dart';
 
 class Frame extends StatefulWidget {
@@ -50,13 +51,13 @@ class _FrameState extends State<Frame> {
     });
   }
 
-  static const _kSideBarWidth = 256.0;
+  static const _kSideBarWidth = 284.0;
 
   static const _kSmallSideBarWidth = 72.0;
 
   static const _kPhoneMaxWidth = 500.0;
 
-  static const _kMinBodyWidth = 300.0;
+  static const _kMinBodyWidth = 400.0;
 
   static const routes = {
     "Home": "/",
@@ -71,21 +72,23 @@ class _FrameState extends State<Frame> {
     "Home": Icons.home_outlined,
     "Explore": Icons.explore_outlined,
     "Archives": Icons.folder_outlined,
-    "Settings": Icons.settings_outlined
+    "Settings": Icons.settings_outlined,
+    "Search": Icons.search_outlined,
   };
 
   static const iconsActive = {
     "Home": Icons.home,
     "Explore": Icons.explore,
     "Archives": Icons.folder,
-    "Settings": Icons.settings
+    "Settings": Icons.settings,
+    "Search": Icons.search,
   };
 
   @override
   Widget build(BuildContext context) {
-    return Center(
+    var body = Center(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 1200),
+        constraints: const BoxConstraints(maxWidth: 1400),
         child: LayoutBuilder(
           builder: (context, constrains) {
             var width = constrains.maxWidth;
@@ -148,9 +151,27 @@ class _FrameState extends State<Frame> {
         ),
       ),
     );
+
+    return _NaviPopScope(
+      popGesture: true,
+      action: () {
+        if (naviObserver.routes.length > 1) {
+          App.navigatorState?.pop();
+        } else {
+          SystemNavigator.pop();
+        }
+      },
+      child: body,
+    );
   }
 
-  void to(String path) {
+  void to(String path, [Object? arguments]) {
+    var current = naviObserver.routes.lastOrNull?.settings.name ?? "unknown";
+    if (current == path) return;
+    App.navigatorState?.pushNamed(path, arguments: arguments);
+  }
+
+  void toAndRemoveAll(String path) {
     var current = naviObserver.routes.lastOrNull?.settings.name ?? "unknown";
     if (current == path) return;
     App.navigatorState?.pushNamedAndRemoveUntil(path, (route) => false);
@@ -164,7 +185,7 @@ class _FrameState extends State<Frame> {
           setState(() {
             path = routes[name]!;
           });
-          to(routes[name]!);
+          toAndRemoveAll(routes[name]!);
         },
         child: HoverBox(
           borderRadius: BorderRadius.circular(16),
@@ -198,10 +219,10 @@ class _FrameState extends State<Frame> {
         border: Border(
             right: BorderSide(
                 color: Theme.of(context).colorScheme.outlineVariant,
-                width: 0.6)),
+                width: 0.4)),
       ),
       child: SizedBox(
-        width: _kSideBarWidth,
+        width: _kSideBarWidth - 32,
         height: double.infinity,
         child: SingleChildScrollView(
           padding: const EdgeInsets.only(top: 16),
@@ -209,37 +230,63 @@ class _FrameState extends State<Frame> {
             children: routes.keys.map((e) => buildItem(e)).toList(),
           ),
         ),
-      ).paddingHorizontal(8),
+      ).paddingHorizontal(16),
     );
   }
 
   Widget buildRightFull() {
-    // TODO: show statistics
     return Container(
       key: const ValueKey("right"),
       decoration: BoxDecoration(
         border: Border(
             left: BorderSide(
                 color: Theme.of(context).colorScheme.outlineVariant,
-                width: 0.6)),
+                width: 0.4)),
       ),
-      child: const SizedBox(
-        width: _kSideBarWidth,
+      child: SizedBox(
+        width: _kSideBarWidth - 32,
         height: double.infinity,
-        child: Text("Right"),
-      ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.only(top: 16),
+          child: Column(
+            children: [
+              Container(
+                height: 42,
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainer,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: TextField(
+                  decoration: const InputDecoration(
+                    hintText: "Search",
+                    prefixIcon: Icon(Icons.search),
+                    border: InputBorder.none,
+                  ),
+                  onSubmitted: (s) {
+                    to("/search", {
+                      "keyword": s,
+                    });
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ).paddingHorizontal(16),
     );
   }
 
   Widget buildLeftSmall() {
-    Widget buildItem(String name) {
-      bool isActive = path == routes[name];
+    Widget buildItem(String name, [String? routePath]) {
+      bool isActive = path == (routePath ?? routes[name]);
       return GestureDetector(
         onTap: () {
           setState(() {
-            path = routes[name]!;
+            path = routePath ?? routes[name]!;
           });
-          to(routes[name]!);
+          toAndRemoveAll(routePath ?? routes[name]!);
         },
         child: HoverBox(
           borderRadius: BorderRadius.circular(16),
@@ -265,7 +312,7 @@ class _FrameState extends State<Frame> {
         border: Border(
             right: BorderSide(
                 color: Theme.of(context).colorScheme.outlineVariant,
-                width: 0.6)),
+                width: 0.4)),
       ),
       child: SizedBox(
         width: _kSmallSideBarWidth,
@@ -273,7 +320,10 @@ class _FrameState extends State<Frame> {
         child: SingleChildScrollView(
           padding: const EdgeInsets.only(top: 16),
           child: Column(
-            children: routes.keys.map((e) => buildItem(e)).toList(),
+            children: [
+              ...routes.keys.map((e) => buildItem(e)),
+              buildItem("Search", "/search"),
+            ],
           ),
         ),
       ).paddingHorizontal(4),
@@ -286,7 +336,7 @@ class _FrameState extends State<Frame> {
         border: Border(
             bottom: BorderSide(
                 color: Theme.of(context).colorScheme.outlineVariant,
-                width: 0.6)),
+                width: 0.4)),
       ),
       width: double.infinity,
       height: 58 + context.padding.bottom,
@@ -305,7 +355,9 @@ class _FrameState extends State<Frame> {
             const Spacer(),
             IconButton(
               icon: const Icon(Icons.search),
-              onPressed: () {},
+              onPressed: () {
+                to("/search");
+              },
             ),
           ],
         ).paddingHorizontal(16),
@@ -323,7 +375,7 @@ class _FrameState extends State<Frame> {
             setState(() {
               path = routes[name]!;
             });
-            to(routes[name]!);
+            toAndRemoveAll(routes[name]!);
           },
           child: HoverBox(
             borderRadius: BorderRadius.circular(16),
@@ -347,7 +399,7 @@ class _FrameState extends State<Frame> {
         border: Border(
             top: BorderSide(
                 color: Theme.of(context).colorScheme.outlineVariant,
-                width: 0.6)),
+                width: 0.4)),
       ),
       child: Row(
         children: routes.keys.map((e) => buildItem(e)).toList(),
@@ -438,5 +490,47 @@ class _HoverBoxState extends State<HoverBox> {
         child: widget.child,
       ),
     );
+  }
+}
+
+class _NaviPopScope extends StatelessWidget {
+  const _NaviPopScope(
+      {required this.child,
+        this.popGesture = false,
+        required this.action});
+
+  final Widget child;
+  final bool popGesture;
+  final VoidCallback action;
+
+  static bool panStartAtEdge = false;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget res = App.isIOS ? child : PopScope(
+        canPop: App.isAndroid ? false : true,
+        onPopInvoked: (value) {
+          action();
+        },
+        child: child);
+    if(popGesture){
+      res = GestureDetector(
+          onPanStart: (details){
+            if(details.globalPosition.dx < 64){
+              panStartAtEdge = true;
+            }
+          },
+          onPanEnd: (details) {
+            if (details.velocity.pixelsPerSecond.dx < 0 ||
+                details.velocity.pixelsPerSecond.dx > 0) {
+              if (panStartAtEdge) {
+                action();
+              }
+            }
+            panStartAtEdge = false;
+          },
+          child: res);
+    }
+    return res;
   }
 }
