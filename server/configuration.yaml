@@ -1,0 +1,14 @@
+server:
+  name: Memento
+  version: 0.1.0
+  port: 1323
+
+database:
+  user: root
+  password: 123456
+  host: 127.0.0.1
+  port: 1234
+  driver: sqlite
+  database: test.db
+
+service:

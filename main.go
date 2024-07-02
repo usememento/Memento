@@ -1,25 +1,16 @@
 package main
 
 import (
-	"Memento/server/model"
+	"Memento/server"
 	"Memento/server/service"
 	"github.com/labstack/echo/v4"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
 	"net/http"
 )
 
 func main() {
 
-	db, err := gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
-	if err != nil {
-		panic("failed to connect database")
-	}
-
-	// Migrate the schema
-	db.AutoMigrate(&model.Post{})
-	db.AutoMigrate(&model.User{})
 	e := echo.New()
+	server.Memento.Init()
 
 	// post api
 	e.GET("/api/post/get/:id", service.HandlePostGet)
@@ -28,7 +19,7 @@ func main() {
 	e.DELETE("/api/post/delete", service.HandlePostDelete)
 
 	// user api
-	e.GET("/api/user/get", service.HandleUserGet)
+	e.GET("/api/user/get/:id", service.HandleUserGet)
 	e.GET("/api/user/login", service.HandleUserLogin)
 	e.GET("/api/user/changePwd", service.HandleUserChangePwd)
 	e.POST("/api/user/create", service.HandleUserCreate)
