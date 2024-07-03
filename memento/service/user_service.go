@@ -5,7 +5,6 @@ import (
 	"Memento/memento/model"
 	"Memento/memento/utils"
 	"errors"
-	"fmt"
 	echoserver "github.com/dasjott/oauth2-echo-server"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
@@ -37,12 +36,12 @@ func HandleUserCreate(c echo.Context) error {
 		// Check if the error is due to a unique constraint violation
 		if errors.Is(err, gorm.ErrDuplicatedKey) {
 			// Username already exists
-			return utils.RespondError(c, fmt.Sprintf("username %s already exists", username))
+			return utils.RespondError(c, "username already exists")
 		}
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown insertion error")
 	}
-	return utils.RespondOk(c, fmt.Sprintf("user %s created", username))
+	return utils.RespondOk(c, username)
 }
 
 func HandleUserDelete(c echo.Context) error {
@@ -52,17 +51,16 @@ func HandleUserDelete(c echo.Context) error {
 	err := memento.GetDbConnection().First(&user, "username=?", username).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			// Username already exists
-			return utils.RespondError(c, fmt.Sprintf("username %s not exists", username))
+			return utils.RespondError(c, "username not exists")
 		}
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown query error")
 	}
 	if utils.Md5string(password) != user.PasswordHash {
-		return utils.RespondError(c, "incorrect Username or Password")
+		return utils.RespondError(c, "incorrect username or password")
 	}
 	memento.GetDbConnection().Delete(&user)
-	return utils.RespondOk(c, "delete succeeded")
+	return c.NoContent(http.StatusOK)
 }
 
 func HandleUserEdit(c echo.Context) error {
@@ -70,18 +68,16 @@ func HandleUserEdit(c echo.Context) error {
 	username := c.FormValue("username")
 	nickname := form["nickname"]
 	bio := form["bio"]
-
-	hasAvatar := false
+	hasAvatar := true
 	avatar, err := c.FormFile("avatar")
-	if err == nil {
-		hasAvatar = true
+	if err != nil {
+		hasAvatar = false
 	}
 	var user model.User
 	err = memento.GetDbConnection().First(&user, "username=?", username).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			// Username already exists
-			return utils.RespondError(c, fmt.Sprintf("username %s not exists", username))
+			return utils.RespondError(c, "username not exists")
 		}
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown query error")
@@ -121,16 +117,16 @@ func HandleUserEdit(c echo.Context) error {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown save error")
 	}
-	return utils.RespondOk(c, "edit succeeded")
+	return c.NoContent(http.StatusOK)
 }
 
-func HandleUserGetInfo(c echo.Context) error {
+func HandleUserGet(c echo.Context) error {
 	username := c.QueryParam("username")
 	var user model.User
 	err := memento.GetDbConnection().First(&user, "username=?", username).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return utils.RespondError(c, fmt.Sprintf("username %s not exists", username))
+			return utils.RespondError(c, "username not exists")
 		}
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown query error")
@@ -143,6 +139,7 @@ func HandleUserGetInfo(c echo.Context) error {
 		TotalComment int64
 		TotalPosts   int64
 		RegisteredAt time.Time
+		AvatarUrl    string
 	}{
 		Username:     user.Username,
 		Nickname:     user.Nickname,
@@ -150,22 +147,9 @@ func HandleUserGetInfo(c echo.Context) error {
 		RegisteredAt: user.RegisteredAt,
 		TotalLiked:   user.TotalLiked,
 		TotalComment: user.TotalComment,
-		TotalPosts:   user.TotalPosts})
-}
-
-func HandleUserGetAvatar(c echo.Context) error {
-	username := c.QueryParam("username")
-	var user model.User
-	err := memento.GetDbConnection().First(&user, "username=?", username).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			// Username already exists
-			return utils.RespondError(c, fmt.Sprintf("username %s not exists", username))
-		}
-		log.Errorf(err.Error())
-		return utils.RespondError(c, "unknown query error")
-	}
-	return c.File(user.AvatarUrl)
+		TotalPosts:   user.TotalPosts,
+		AvatarUrl:    user.AvatarUrl,
+	})
 }
 
 func HandleLogin(c echo.Context) error {
@@ -175,13 +159,13 @@ func HandleLogin(c echo.Context) error {
 	err := memento.GetDbConnection().First(&user, "username=?", username).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return utils.RespondError(c, fmt.Sprintf("username %s not exists", username))
+			return utils.RespondError(c, "username not exists")
 		}
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown query error")
 	}
 	if utils.Md5string(password) != user.PasswordHash {
-		return utils.RespondError(c, "incorrect Username or Password")
+		return utils.RespondError(c, "incorrect username or password")
 	}
 	return echoserver.HandleTokenRequest(c)
 }
@@ -194,7 +178,7 @@ func HandleUserChangePwd(c echo.Context) error {
 	err := memento.GetDbConnection().First(&user, "username=?", username).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return utils.RespondError(c, fmt.Sprintf("username %s not exists", username))
+			return utils.RespondError(c, "username not exists")
 		}
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown query error")
@@ -206,5 +190,32 @@ func HandleUserChangePwd(c echo.Context) error {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown update error")
 	}
-	return utils.RespondOk(c, "password changed")
+	return c.NoContent(http.StatusOK)
+}
+
+func HandleUserHeatMap(c echo.Context) error {
+	username := c.FormValue("username")
+	var user model.User
+	err := memento.GetDbConnection().First(&user, "username=?", username).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return utils.RespondError(c, "username not exists")
+		}
+		log.Errorf(err.Error())
+		return utils.RespondError(c, "unknown query error")
+	}
+	var posts []model.Post
+	sixMonthsAgo := time.Now().AddDate(0, -6, 0)
+	heatmap := make(map[string]int)
+	err = memento.GetDbConnection().Where("user_id = ? and edited_at >= ?", user.ID, sixMonthsAgo).
+		Order("created_at DESC").
+		Find(&posts).Error
+	if err != nil {
+		log.Errorf(err.Error())
+		return utils.RespondError(c, "unknown query error")
+	}
+	for _, p := range posts {
+		heatmap[p.EditedAt.Format("2006/01/02")] += 1
+	}
+	return c.JSON(http.StatusOK, heatmap)
 }

@@ -49,11 +49,11 @@ func main() {
 		}
 		userApi := api.Group("/user")
 		{
-			userApi.GET("/getInfo", service.HandleUserGetInfo)
-			userApi.GET("/getAvatar", service.HandleUserGetAvatar)
+			userApi.GET("/get", service.HandleUserGet)
 			userApi.POST("/changePwd", service.HandleUserChangePwd)
 			userApi.POST("/edit", service.HandleUserEdit)
 			userApi.DELETE("/delete", service.HandleUserDelete)
+			userApi.GET("/heatmap", service.HandleUserHeatMap)
 		}
 		fileApi := api.Group("/file")
 		{

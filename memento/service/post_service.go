@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"strconv"
 	"time"
 )
 
@@ -23,8 +24,7 @@ func HandlePostCreate(c echo.Context) error {
 	err := memento.GetDbConnection().First(&user, "username=?", username).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			// Username already exists
-			return utils.RespondError(c, fmt.Sprintf("username %s not exists", username))
+			return utils.RespondError(c, "username not exists")
 		}
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown query error")
@@ -65,33 +65,32 @@ func HandlePostCreate(c echo.Context) error {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown insertion error")
 	}
-	return utils.RespondOk(c, "post created")
+	return utils.RespondOk(c, strconv.FormatInt(int64(post.ID), 10))
 }
 func HandlePostDelete(c echo.Context) error {
 	id := c.FormValue("id")
-	var user model.User
-	err := memento.GetDbConnection().First(&user, "id=?", id).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			// Username already exists
-			return utils.RespondError(c, fmt.Sprintf("post id %s not exists", id))
-		}
-		log.Errorf(err.Error())
-		return utils.RespondError(c, "unknown query error")
-	}
-	if err := memento.GetDbConnection().Delete(&user).Error; err != nil {
-		log.Errorf(err.Error())
-		return utils.RespondError(c, "unknown deletion error")
-	}
-	return utils.RespondOk(c, "delete succeeded")
-}
-func HandlePostEdit(c echo.Context) error {
-	id := c.QueryParam("id")
 	var post model.Post
 	err := memento.GetDbConnection().First(&post, "id=?", id).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return utils.RespondError(c, fmt.Sprintf("post id %s not exists", id))
+			return utils.RespondError(c, "post not exists")
+		}
+		log.Errorf(err.Error())
+		return utils.RespondError(c, "unknown query error")
+	}
+	if err := memento.GetDbConnection().Delete(&post).Error; err != nil {
+		log.Errorf(err.Error())
+		return utils.RespondError(c, "unknown deletion error")
+	}
+	return c.NoContent(http.StatusOK)
+}
+func HandlePostEdit(c echo.Context) error {
+	id := c.FormValue("id")
+	var post model.Post
+	err := memento.GetDbConnection().First(&post, "id=?", id).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return utils.RespondError(c, "post not exists")
 		}
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown query error")
@@ -124,7 +123,7 @@ func HandlePostEdit(c echo.Context) error {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown update error")
 	}
-	return utils.RespondOk(c, "post edited")
+	return c.NoContent(http.StatusOK)
 }
 func HandlePostGet(c echo.Context) error {
 	id := c.QueryParam("id")
@@ -132,7 +131,7 @@ func HandlePostGet(c echo.Context) error {
 	err := memento.GetDbConnection().First(&post, "id=?", id).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return utils.RespondError(c, fmt.Sprintf("post id %s not exists", id))
+			return utils.RespondError(c, "post not exists")
 		}
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown query error")
