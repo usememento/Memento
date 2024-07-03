@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:frontend/components/frame.dart';
 
 export "widget_utils.dart";
@@ -30,6 +31,8 @@ class _App {
   NavigatorState? get navigatorState => observer.navigator;
 
   var observer = NaviObserver();
+
+  final mainColor = Colors.blue;
 }
 
 // ignore: non_constant_identifier_names

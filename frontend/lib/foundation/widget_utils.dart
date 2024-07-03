@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
 extension WidgetExtension on Widget{
@@ -88,4 +89,6 @@ extension ContextExt on BuildContext {
   EdgeInsets get padding => MediaQuery.of(this).padding;
 
   EdgeInsets get viewInsets => MediaQuery.of(this).viewInsets;
+
+  ColorScheme get colorScheme => Theme.of(this).colorScheme;
 }

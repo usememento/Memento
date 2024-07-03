@@ -3,8 +3,11 @@ import 'package:frontend/components/frame.dart';
 import 'package:frontend/foundation/app.dart';
 import 'package:frontend/pages/home_page.dart';
 import 'package:frontend/pages/page_404.dart';
+import 'package:frontend/utils/translation.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Translation.init();
   runApp(const Memento());
 }
 
@@ -22,7 +25,13 @@ class Memento extends StatelessWidget {
       initialRoute: '/',
       debugShowCheckedModeBanner: false,
       navigatorObservers: [App.observer],
-      theme: ThemeData.from(colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue)),
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: App.mainColor),
+        fontFamily: App.isWindows ? "Microsoft YaHei" : null,
+      ),
+      darkTheme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: App.mainColor),
+      ),
       onGenerateRoute: (settings) {
         final builder = routes[settings.name]
             ?? (context) => const UnknownRoutePage();

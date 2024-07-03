@@ -2,6 +2,7 @@ import 'dart:collection';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:frontend/components/heat_map.dart';
 import 'package:frontend/components/user.dart';
 import 'package:frontend/foundation/app.dart';
 
@@ -288,6 +289,8 @@ class _FrameState extends State<Frame> {
                   },
                 ),
               ),
+              const SizedBox(height: 16,),
+              HeatMap(data: getTestData())
             ],
           ),
         ),
