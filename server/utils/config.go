@@ -16,7 +16,6 @@ type ServerConfig struct {
 	Name     string
 	Version  string
 	Port     uint16
-	PostPath string
 	FilePath string
 }
 

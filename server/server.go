@@ -8,11 +8,13 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"os"
+	"sync"
 )
 
 type MementoServer struct {
 	DbConn *gorm.DB
 	Config utils.MementoConfig
+	lock   sync.Locker
 }
 
 var Memento MementoServer
@@ -29,11 +31,16 @@ func (server *MementoServer) Init() {
 		return
 	}
 
-	server.DbConn, err = gorm.Open(sqlite.Open("test.db"), &gorm.Config{TranslateError: true})
+	server.DbConn, err = gorm.Open(sqlite.Open("test.db"), &gorm.Config{
+		TranslateError:                           true,
+		DisableForeignKeyConstraintWhenMigrating: true,
+	})
 	if err != nil {
 		fmt.Println("Error opening database connection:", err)
 		return
 	}
 	server.DbConn.AutoMigrate(&model.User{})
 	server.DbConn.AutoMigrate(&model.Post{})
+	server.DbConn.AutoMigrate(&model.UserLike{})
+	server.DbConn.AutoMigrate(&model.UserPost{})
 }
