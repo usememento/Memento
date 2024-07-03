@@ -1,12 +1,14 @@
 package service
 
 import (
-	"Memento/server"
-	"Memento/server/model"
-	"Memento/server/utils"
+	"Memento/memento"
+	"Memento/memento/model"
+	"Memento/memento/utils"
 	"errors"
 	"fmt"
+	echoserver "github.com/dasjott/oauth2-echo-server"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/gommon/log"
 	"gorm.io/gorm"
 	"io"
 	"net/http"
@@ -20,7 +22,7 @@ func HandleUserCreate(c echo.Context) error {
 	username := c.FormValue("username")
 	password := c.FormValue("password")
 	hashedPassword := utils.Md5string(password)
-	err := server.Memento.DbConn.Create(&model.User{
+	err := memento.GetDbConnection().Create(&model.User{
 		Username:     username,
 		PasswordHash: hashedPassword,
 		AvatarUrl:    "",
@@ -35,35 +37,36 @@ func HandleUserCreate(c echo.Context) error {
 		// Check if the error is due to a unique constraint violation
 		if errors.Is(err, gorm.ErrDuplicatedKey) {
 			// Username already exists
-			return c.String(http.StatusBadRequest, fmt.Sprintf("username %s already exists", username))
+			return utils.RespondError(c, fmt.Sprintf("username %s already exists", username))
 		}
-		return c.String(http.StatusBadRequest, "unknown insertion error")
+		log.Errorf(err.Error())
+		return utils.RespondError(c, "unknown insertion error")
 	}
-	return c.String(http.StatusOK, fmt.Sprintf("user %s created", username))
+	return utils.RespondOk(c, fmt.Sprintf("user %s created", username))
 }
 
 func HandleUserDelete(c echo.Context) error {
 	username := c.FormValue("username")
 	password := c.FormValue("password")
 	var user model.User
-	err := server.Memento.DbConn.First(&user, "username=?", username).Error
+	err := memento.GetDbConnection().First(&user, "username=?", username).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			// Username already exists
-			return c.String(http.StatusBadRequest, fmt.Sprintf("username %s not exists", username))
+			return utils.RespondError(c, fmt.Sprintf("username %s not exists", username))
 		}
-		return c.String(http.StatusBadRequest, "unknown query error")
+		log.Errorf(err.Error())
+		return utils.RespondError(c, "unknown query error")
 	}
 	if utils.Md5string(password) != user.PasswordHash {
-		return c.String(http.StatusBadRequest, "incorrect Username or Password")
+		return utils.RespondError(c, "incorrect Username or Password")
 	}
-	server.Memento.DbConn.Delete(&user)
-	return c.String(http.StatusOK, "delete succeeded")
+	memento.GetDbConnection().Delete(&user)
+	return utils.RespondOk(c, "delete succeeded")
 }
 
 func HandleUserEdit(c echo.Context) error {
 	form, err := c.FormParams()
-	//fmt.Println(form)
 	username := c.FormValue("username")
 	nickname := form["nickname"]
 	bio := form["bio"]
@@ -74,13 +77,14 @@ func HandleUserEdit(c echo.Context) error {
 		hasAvatar = true
 	}
 	var user model.User
-	err = server.Memento.DbConn.First(&user, "username=?", username).Error
+	err = memento.GetDbConnection().First(&user, "username=?", username).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			// Username already exists
-			return c.String(http.StatusBadRequest, fmt.Sprintf("username %s not exists", username))
+			return utils.RespondError(c, fmt.Sprintf("username %s not exists", username))
 		}
-		return c.String(http.StatusBadRequest, "unknown query error")
+		log.Errorf(err.Error())
+		return utils.RespondError(c, "unknown query error")
 	}
 	if len(nickname) == 1 {
 		user.Nickname = nickname[0]
@@ -92,39 +96,44 @@ func HandleUserEdit(c echo.Context) error {
 		// Source
 		file, err := avatar.Open()
 		if err != nil {
-			return c.String(http.StatusBadRequest, "form file open error")
+			log.Errorf(err.Error())
+			return utils.RespondError(c, "form file open error")
 		}
 		defer file.Close()
 		ext := path.Ext(avatar.Filename)
 		filename := utils.Md5string(strconv.FormatInt(time.Now().UnixMilli(), 10)) + ext
 		// Destination
-		filepath := path.Join(server.Memento.Config.ServerConfig.FilePath, "avatar", filename)
+		filepath := path.Join(memento.GetAvatarPath(), filename)
 		dst, err := os.Create(filepath)
 		if err != nil {
-			return c.String(http.StatusBadRequest, "os file open error")
+			log.Errorf(err.Error())
+			return utils.RespondError(c, "os file open error")
 		}
 		defer dst.Close()
 		// Copy
 		if _, err = io.Copy(dst, file); err != nil {
-			return c.String(http.StatusBadRequest, "data copy error")
+			log.Errorf(err.Error())
+			return utils.RespondError(c, "data copy error")
 		}
-		user.AvatarUrl = filename
+		user.AvatarUrl = filepath
 	}
-	server.Memento.DbConn.Save(&user)
-	//fmt.Println(user)
-	return c.String(http.StatusOK, "edit succeeded")
+	if err := memento.GetDbConnection().Save(&user).Error; err != nil {
+		log.Errorf(err.Error())
+		return utils.RespondError(c, "unknown save error")
+	}
+	return utils.RespondOk(c, "edit succeeded")
 }
 
 func HandleUserGetInfo(c echo.Context) error {
 	username := c.QueryParam("username")
 	var user model.User
-	err := server.Memento.DbConn.First(&user, "username=?", username).Error
+	err := memento.GetDbConnection().First(&user, "username=?", username).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			// Username already exists
-			return c.String(http.StatusBadRequest, fmt.Sprintf("username %s not exists", username))
+			return utils.RespondError(c, fmt.Sprintf("username %s not exists", username))
 		}
-		return c.String(http.StatusBadRequest, "unknown query error")
+		log.Errorf(err.Error())
+		return utils.RespondError(c, "unknown query error")
 	}
 	return c.JSON(http.StatusOK, struct {
 		Username     string
@@ -147,33 +156,34 @@ func HandleUserGetInfo(c echo.Context) error {
 func HandleUserGetAvatar(c echo.Context) error {
 	username := c.QueryParam("username")
 	var user model.User
-	err := server.Memento.DbConn.First(&user, "username=?", username).Error
+	err := memento.GetDbConnection().First(&user, "username=?", username).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			// Username already exists
-			return c.String(http.StatusBadRequest, fmt.Sprintf("username %s not exists", username))
+			return utils.RespondError(c, fmt.Sprintf("username %s not exists", username))
 		}
-		return c.String(http.StatusBadRequest, "unknown query error")
+		log.Errorf(err.Error())
+		return utils.RespondError(c, "unknown query error")
 	}
-	return c.File(path.Join(server.Memento.Config.FilePath, "avatar", user.AvatarUrl))
+	return c.File(user.AvatarUrl)
 }
 
-func HandleUserLogin(c echo.Context) error {
+func HandleLogin(c echo.Context) error {
 	username := c.FormValue("username")
 	password := c.FormValue("password")
 	var user model.User
-	err := server.Memento.DbConn.First(&user, "username=?", username).Error
+	err := memento.GetDbConnection().First(&user, "username=?", username).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			// Username already exists
-			return c.String(http.StatusBadRequest, fmt.Sprintf("username %s not exists", username))
+			return utils.RespondError(c, fmt.Sprintf("username %s not exists", username))
 		}
-		return c.String(http.StatusBadRequest, "unknown query error")
+		log.Errorf(err.Error())
+		return utils.RespondError(c, "unknown query error")
 	}
 	if utils.Md5string(password) != user.PasswordHash {
-		return c.String(http.StatusBadRequest, "incorrect Username or Password")
+		return utils.RespondError(c, "incorrect Username or Password")
 	}
-	return c.String(http.StatusOK, "login succeeded")
+	return echoserver.HandleTokenRequest(c)
 }
 
 func HandleUserChangePwd(c echo.Context) error {
@@ -181,17 +191,20 @@ func HandleUserChangePwd(c echo.Context) error {
 	oldPassword := c.FormValue("oldPassword")
 	newPassword := c.FormValue("newPassword")
 	var user model.User
-	err := server.Memento.DbConn.First(&user, "username=?", username).Error
+	err := memento.GetDbConnection().First(&user, "username=?", username).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			// Username already exists
-			return c.String(http.StatusBadRequest, fmt.Sprintf("username %s not exists", username))
+			return utils.RespondError(c, fmt.Sprintf("username %s not exists", username))
 		}
-		return c.String(http.StatusBadRequest, "unknown query error")
+		log.Errorf(err.Error())
+		return utils.RespondError(c, "unknown query error")
 	}
 	if utils.Md5string(oldPassword) != user.PasswordHash {
-		return c.String(http.StatusBadRequest, "incorrect old password")
+		return utils.RespondError(c, "incorrect old password")
 	}
-	server.Memento.DbConn.Model(&user).Update("password_hash", utils.Md5string(newPassword))
-	return c.String(http.StatusOK, "password changed")
+	if err := memento.GetDbConnection().Model(&user).Update("password_hash", utils.Md5string(newPassword)).Error; err != nil {
+		log.Errorf(err.Error())
+		return utils.RespondError(c, "unknown update error")
+	}
+	return utils.RespondOk(c, "password changed")
 }

@@ -7,8 +7,7 @@ import (
 
 type Post struct {
 	gorm.Model
-	Id         int64 `gorm:"primaryKey"`
-	UserId     int64
+	UserId     uint
 	User       User
 	Liked      int64
 	CreatedAt  time.Time
