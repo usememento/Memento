@@ -22,6 +22,7 @@ class Memento extends StatelessWidget {
       initialRoute: '/',
       debugShowCheckedModeBanner: false,
       navigatorObservers: [App.observer],
+      theme: ThemeData.from(colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue)),
       onGenerateRoute: (settings) {
         final builder = routes[settings.name]
             ?? (context) => const UnknownRoutePage();

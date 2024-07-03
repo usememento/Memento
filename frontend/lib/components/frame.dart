@@ -2,6 +2,7 @@ import 'dart:collection';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:frontend/components/user.dart';
 import 'package:frontend/foundation/app.dart';
 
 class Frame extends StatefulWidget {
@@ -86,6 +87,7 @@ class _FrameState extends State<Frame> {
 
   @override
   Widget build(BuildContext context) {
+    appdata.useTestUser();
     var body = Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 1400),
@@ -188,7 +190,7 @@ class _FrameState extends State<Frame> {
           toAndRemoveAll(routes[name]!);
         },
         child: HoverBox(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(8),
           child: AnimatedContainer(
             key: ValueKey(name),
             duration: const Duration(milliseconds: 200),
@@ -198,7 +200,7 @@ class _FrameState extends State<Frame> {
                 color: isActive
                     ? Theme.of(context).colorScheme.primaryContainer
                     : null,
-                borderRadius: BorderRadius.circular(16)),
+                borderRadius: BorderRadius.circular(8)),
             child: Row(
               children: [
                 Icon(isActive ? iconsActive[name] : icons[name]),
@@ -227,7 +229,22 @@ class _FrameState extends State<Frame> {
         child: SingleChildScrollView(
           padding: const EdgeInsets.only(top: 16),
           child: Column(
-            children: routes.keys.map((e) => buildItem(e)).toList(),
+            children:[
+              HoverBox(
+                borderRadius: BorderRadius.circular(8),
+                child: Row(
+                  children: [
+                    Avatar(url: appdata.user.avatar, size: 36,),
+                    const SizedBox(width: 12,),
+                    Text(appdata.user.name),
+                  ],
+                ).paddingHorizontal(8).paddingVertical(8),
+              ).onTap(() {
+                to("/user");
+              }),
+              const SizedBox(height: 16,),
+              ...routes.keys.map((e) => buildItem(e))
+            ],
           ),
         ),
       ).paddingHorizontal(16),
@@ -256,7 +273,7 @@ class _FrameState extends State<Frame> {
                 padding: const EdgeInsets.symmetric(horizontal: 4),
                 decoration: BoxDecoration(
                   color: Theme.of(context).colorScheme.surfaceContainer,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: TextField(
                   decoration: const InputDecoration(
@@ -289,7 +306,7 @@ class _FrameState extends State<Frame> {
           toAndRemoveAll(routePath ?? routes[name]!);
         },
         child: HoverBox(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(8),
           child: AnimatedContainer(
             key: ValueKey(name),
             duration: const Duration(milliseconds: 200),
@@ -299,7 +316,7 @@ class _FrameState extends State<Frame> {
                 color: isActive
                     ? Theme.of(context).colorScheme.primaryContainer
                     : null,
-                borderRadius: BorderRadius.circular(16)),
+                borderRadius: BorderRadius.circular(8)),
             child: Icon(isActive ? iconsActive[name] : icons[name]),
           ),
         ),
@@ -321,6 +338,17 @@ class _FrameState extends State<Frame> {
           padding: const EdgeInsets.only(top: 16),
           child: Column(
             children: [
+              HoverBox(
+                borderRadius: BorderRadius.circular(8),
+                child: SizedBox(
+                  height: 48,
+                  width: 56,
+                  child: Avatar(url: appdata.user.avatar, size: 36,).toCenter(),
+                ),
+              ).onTap(() {
+                to("/user");
+              }),
+              const SizedBox(height: 16,),
               ...routes.keys.map((e) => buildItem(e)),
               buildItem("Search", "/search"),
             ],
@@ -344,11 +372,14 @@ class _FrameState extends State<Frame> {
         padding: EdgeInsets.only(bottom: context.padding.bottom),
         child: Row(
           children: [
-            IconButton(
-              icon: const Icon(Icons.menu),
-              onPressed: () {
-                // TODO: show drawer
+            GestureDetector(
+              onTap: () {
+                to("/");
               },
+              child: HoverBox(
+                borderRadius: BorderRadius.circular(36),
+                child: Avatar(url: appdata.user.avatar, size: 36,),
+              ),
             ),
             const Spacer(),
             const Text("Memento"),

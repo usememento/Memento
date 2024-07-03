@@ -64,6 +64,10 @@ extension WidgetExtension on Widget{
   Widget fixHeight(double height){
     return SizedBox(height: height, child: this);
   }
+
+  Widget onTap(Function() onTap){
+    return GestureDetector(onTap: onTap, child: this);
+  }
 }
 
 extension ContextExt on BuildContext {

@@ -7,6 +7,7 @@ import 'package:frontend/components/frame.dart';
 
 export "widget_utils.dart";
 export 'page_route.dart';
+export 'appdata.dart';
 
 
 class _App {
