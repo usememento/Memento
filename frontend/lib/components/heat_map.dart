@@ -4,10 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:frontend/foundation/app.dart';
 import 'package:frontend/utils/translation.dart';
 
-/// Data for the heat map.
-///
-/// The key is the date in the format of `yyyy-MM-dd`.
-typedef HeatMapData = Map<String, int>;
+class HeatMapData {
+  /// dailyData: a map from date to the number of memos on that day.
+  ///
+  /// key: date in the format of "yyyy-mm-dd".
+  final Map<String, int> dailyData;
+  final int totalMemos;
+  final int totalDays;
+  final int totalTags;
+
+  const HeatMapData(this.dailyData, this.totalMemos, this.totalDays, this.totalTags);
+}
 
 // TODO: remove this function and replace it with real data.
 HeatMapData getTestData() {
@@ -21,7 +28,7 @@ HeatMapData getTestData() {
     time = time.subtract(const Duration(days: 1));
   }
 
-  return data;
+  return HeatMapData(data, 114, 51, 4);
 }
 
 class HeatMap extends StatelessWidget {
@@ -52,13 +59,48 @@ class HeatMap extends StatelessWidget {
 
       return Column(
         children: [
+          buildStatistic(context),
+          const SizedBox(height: 8),
           Row(
             children: columns.reversed.toList(),
           ),
+          const SizedBox(height: 8),
           buildMonthInfo(monthInfo, maxColumns),
         ],
       ).fixWidth(_kSquareSize*maxColumns + _kPadding*(maxColumns)*2).toCenter();
     }).fixWidth(double.infinity);
+  }
+
+  Widget buildStatistic(BuildContext context) {
+    Widget buildItem(String title, int count) {
+      return Column(
+        children: [
+          Text(
+            count.toString(),
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Text(
+            title.tl,
+            style: const TextStyle(
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ).paddingHorizontal(8);
+    }
+
+    return Row(
+      children: [
+        buildItem("Memos", data.totalMemos),
+        const Spacer(),
+        buildItem("Days", data.totalDays),
+        const Spacer(),
+        buildItem("Tags", data.totalTags),
+      ],
+    );
   }
 
   Widget buildOneDay(String time, int count, Color primary, Color bg) {
@@ -101,7 +143,7 @@ class HeatMap extends StatelessWidget {
         monthInfo[date.month] = columnIndex;
       }
       var key = date.toIso8601String().substring(0, 10);
-      var count = data[key] ?? 0;
+      var count = data.dailyData[key] ?? 0;
       var primary = App.mainColor;
       var bg = context.colorScheme.surfaceContainer;
       var time = "${date.month}-${date.day}";

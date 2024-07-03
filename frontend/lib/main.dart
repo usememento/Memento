@@ -26,11 +26,19 @@ class Memento extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       navigatorObservers: [App.observer],
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: App.mainColor),
+        colorScheme: ColorScheme.fromSeed(seedColor: App.mainColor).copyWith(
+          surface: Colors.white
+        ),
         fontFamily: App.isWindows ? "Microsoft YaHei" : null,
       ),
       darkTheme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: App.mainColor),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: App.mainColor,
+          brightness: Brightness.dark
+        ).copyWith(
+          surface: Colors.black
+        ),
+        fontFamily: App.isWindows ? "Microsoft YaHei" : null,
       ),
       onGenerateRoute: (settings) {
         final builder = routes[settings.name]

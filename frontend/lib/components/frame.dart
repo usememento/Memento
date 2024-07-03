@@ -61,6 +61,8 @@ class _FrameState extends State<Frame> {
 
   static const _kMinBodyWidth = 400.0;
 
+  static const _kDrawerWidth = 256.0;
+
   static const routes = {
     "Home": "/",
     "Explore": "/explore",
@@ -85,6 +87,8 @@ class _FrameState extends State<Frame> {
     "Settings": Icons.settings,
     "Search": Icons.search,
   };
+
+  bool isDrawerOpen = false;
 
   @override
   Widget build(BuildContext context) {
@@ -148,6 +152,29 @@ class _FrameState extends State<Frame> {
                     bottom: 0,
                     child: buildRightFull(),
                   ),
+                Positioned.fill(
+                  child: IgnorePointer(
+                    ignoring: !isDrawerOpen,
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          isDrawerOpen = false;
+                        });
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        color: Colors.black.withOpacity(0.3 * (isDrawerOpen ? 1 : 0))
+                      ),
+                    ),
+                  ),
+                ),
+                AnimatedPositioned(
+                  duration: const Duration(milliseconds: 200),
+                  left: isDrawerOpen ? 0 : -_kDrawerWidth,
+                  top: 0,
+                  bottom: 0,
+                  child: buildSideBar(),
+                ),
               ],
             );
           },
@@ -377,7 +404,9 @@ class _FrameState extends State<Frame> {
           children: [
             GestureDetector(
               onTap: () {
-                to("/");
+                setState(() {
+                  isDrawerOpen = !isDrawerOpen;
+                });
               },
               child: HoverBox(
                 borderRadius: BorderRadius.circular(36),
@@ -437,6 +466,43 @@ class _FrameState extends State<Frame> {
       ),
       child: Row(
         children: routes.keys.map((e) => buildItem(e)).toList(),
+      ),
+    );
+  }
+
+  Widget buildSideBar() {
+    return Container(
+      width: _kDrawerWidth,
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(
+        color: context.colorScheme.surface,
+        borderRadius: const BorderRadius.only(
+            topRight: Radius.circular(8),
+            bottomRight: Radius.circular(8)),
+      ),
+      child: Column(
+        children: [
+          const SizedBox(height: 16,),
+          HoverBox(
+            borderRadius: BorderRadius.circular(8),
+            child: Row(
+              children: [
+                Avatar(url: appdata.user.avatar, size: 36,),
+                const SizedBox(width: 12,),
+                Text(appdata.user.name),
+              ],
+            ).paddingHorizontal(8).paddingVertical(8),
+          ).onTap(() {
+            setState(() {
+              isDrawerOpen = false;
+            });
+            to("/user");
+          }),
+          const SizedBox(height: 8,),
+          const Divider(height: 1,),
+          const SizedBox(height: 8,),
+          HeatMap(data: getTestData())
+        ],
       ),
     );
   }
