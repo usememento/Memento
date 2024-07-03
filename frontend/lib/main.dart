@@ -27,7 +27,7 @@ class Memento extends StatelessWidget {
       navigatorObservers: [App.observer],
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: App.mainColor).copyWith(
-          surface: Colors.white
+          surface: Colors.white,
         ),
         fontFamily: App.isWindows ? "Microsoft YaHei" : null,
       ),
@@ -50,7 +50,10 @@ class Memento extends StatelessWidget {
           return Text(details.exceptionAsString());
         };
         if(widget == null)  throw "Widget is null!";
-        return Overlay.wrap(child: Material(child: Frame(widget, App.observer),));
+        return Overlay.wrap(child: Material(
+          color: context.colorScheme.surface,
+          child: Frame(widget, App.observer),
+        ));
       },
 
     );

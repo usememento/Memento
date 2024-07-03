@@ -46,10 +46,8 @@ class _FrameState extends State<Frame> {
   }
 
   void onNavigation() {
-    Future.delayed(const Duration(milliseconds: 200), () {
-      setState(() {
-        path = naviObserver.routes.lastOrNull?.settings.name ?? "unknown";
-      });
+    setState(() {
+      path = naviObserver.routes.lastOrNull?.settings.name ?? "unknown";
     });
   }
 
@@ -93,7 +91,7 @@ class _FrameState extends State<Frame> {
   @override
   Widget build(BuildContext context) {
     appdata.useTestUser();
-    var body = Center(
+    Widget body = Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 1400),
         child: LayoutBuilder(
@@ -104,22 +102,27 @@ class _FrameState extends State<Frame> {
             bool showMobileUI = width <= _kPhoneMaxWidth;
             return Stack(
               children: [
-                Positioned(
+                AnimatedPositioned(
+                  duration: const Duration(milliseconds: 200),
                   left: showFullSideBar
                       ? _kSideBarWidth
                       : (showSmallSideBar ? _kSmallSideBarWidth : 0),
                   right: showFullSideBar ? _kSideBarWidth : 0,
-                  top: 0,
-                  bottom: 0,
+                  top: isRoot ? 58 + context.padding.top : 0,
+                  bottom: isRoot ? 64 : 0,
                   child: ClipRect(
-                    child: widget.child,
+                    child: MediaQuery.removePadding(
+                      context: context,
+                      removeTop: !showMobileUI,
+                      child: widget.child,
+                    ),
                   ),
                 ),
                 if (showMobileUI)
                   AnimatedPositioned(
                     duration: const Duration(milliseconds: 200),
                     left: 0,
-                    top: isRoot ? 0 : -58,
+                    top: isRoot ? 0 : -58 - context.padding.top,
                     right: 0,
                     child: buildTop(),
                   ),
@@ -181,6 +184,10 @@ class _FrameState extends State<Frame> {
         ),
       ),
     );
+
+    if(context.width > _kPhoneMaxWidth) {
+      body = body.paddingTop(context.padding.top);
+    }
 
     return _NaviPopScope(
       popGesture: true,
@@ -376,7 +383,9 @@ class _FrameState extends State<Frame> {
                   child: Avatar(url: appdata.user.avatar, size: 36,).toCenter(),
                 ),
               ).onTap(() {
-                to("/user");
+                setState(() {
+                  isDrawerOpen = !isDrawerOpen;
+                });
               }),
               const SizedBox(height: 16,),
               ...routes.keys.map((e) => buildItem(e)),
@@ -397,9 +406,9 @@ class _FrameState extends State<Frame> {
                 width: 0.4)),
       ),
       width: double.infinity,
-      height: 58 + context.padding.bottom,
+      height: 58 + context.padding.top,
       child: Padding(
-        padding: EdgeInsets.only(bottom: context.padding.bottom),
+        padding: EdgeInsets.only(top: context.padding.top),
         child: Row(
           children: [
             GestureDetector(
