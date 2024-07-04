@@ -6,6 +6,8 @@ import 'package:frontend/components/heat_map.dart';
 import 'package:frontend/components/user.dart';
 import 'package:frontend/foundation/app.dart';
 
+import 'button.dart';
+
 class Frame extends StatefulWidget {
   const Frame(this.child, this.naviObserver, {super.key});
 
@@ -46,9 +48,9 @@ class _FrameState extends State<Frame> {
   }
 
   void onNavigation() {
-    setState(() {
+    Future.microtask(() => setState(() {
       path = naviObserver.routes.lastOrNull?.settings.name ?? "unknown";
-    });
+    }));
   }
 
   static const _kSideBarWidth = 284.0;
@@ -90,7 +92,9 @@ class _FrameState extends State<Frame> {
 
   @override
   Widget build(BuildContext context) {
-    appdata.useTestUser();
+    if(!appdata.isLogin) {
+      return widget.child;
+    }
     Widget body = Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 1400),
@@ -565,40 +569,6 @@ class NaviObserver extends NavigatorObserver implements Listenable {
     for (var listener in listeners) {
       listener();
     }
-  }
-}
-
-class HoverBox extends StatefulWidget {
-  const HoverBox(
-      {super.key, required this.child, this.borderRadius = BorderRadius.zero});
-
-  final Widget child;
-
-  final BorderRadius borderRadius;
-
-  @override
-  State<HoverBox> createState() => _HoverBoxState();
-}
-
-class _HoverBoxState extends State<HoverBox> {
-  bool isHover = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) => setState(() => isHover = true),
-      onExit: (_) => setState(() => isHover = false),
-      cursor: SystemMouseCursors.click,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        decoration: BoxDecoration(
-            color: isHover
-                ? Theme.of(context).colorScheme.surfaceContainerHigh
-                : null,
-            borderRadius: widget.borderRadius),
-        child: widget.child,
-      ),
-    );
   }
 }
 

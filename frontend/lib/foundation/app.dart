@@ -6,7 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/components/frame.dart';
 
-export "widget_utils.dart";
+export "../utils/widget_utils.dart";
 export 'page_route.dart';
 export 'appdata.dart';
 
@@ -32,7 +32,7 @@ class _App {
 
   var observer = NaviObserver();
 
-  final mainColor = Colors.blue;
+  final mainColor = Colors.blue.shade600;
 }
 
 // ignore: non_constant_identifier_names

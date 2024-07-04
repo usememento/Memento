@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/components/frame.dart';
+import 'package:frontend/components/overlay.dart';
 import 'package:frontend/foundation/app.dart';
 import 'package:frontend/pages/home_page.dart';
+import 'package:frontend/pages/auth.dart';
 import 'package:frontend/pages/page_404.dart';
 import 'package:frontend/utils/translation.dart';
 
@@ -16,6 +18,8 @@ class Memento extends StatelessWidget {
 
   static Map<String, Widget Function(BuildContext context)> routes = {
     '/': (context) => const HomePage(),
+    '/login': (context) => const LoginPage(),
+    '/register': (context) => const RegisterPage(),
   };
 
   @override
@@ -28,6 +32,7 @@ class Memento extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: App.mainColor).copyWith(
           surface: Colors.white,
+          primary: Colors.blue.shade600
         ),
         fontFamily: App.isWindows ? "Microsoft YaHei" : null,
       ),
@@ -36,11 +41,17 @@ class Memento extends StatelessWidget {
           seedColor: App.mainColor,
           brightness: Brightness.dark
         ).copyWith(
-          surface: Colors.black
+          surface: Colors.black,
+          primary: Colors.blue.shade400
         ),
         fontFamily: App.isWindows ? "Microsoft YaHei" : null,
       ),
       onGenerateRoute: (settings) {
+        if(!appdata.isLogin
+            && settings.name != '/login'
+            && settings.name != '/register') {
+          settings = const RouteSettings(name: '/login');
+        }
         final builder = routes[settings.name]
             ?? (context) => const UnknownRoutePage();
         return AppPageRoute(builder: builder, settings: settings);
@@ -50,7 +61,7 @@ class Memento extends StatelessWidget {
           return Text(details.exceptionAsString());
         };
         if(widget == null)  throw "Widget is null!";
-        return Overlay.wrap(child: Material(
+        return OverlayWidget(Material(
           color: context.colorScheme.surface,
           child: Frame(widget, App.observer),
         ));

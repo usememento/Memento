@@ -7,12 +7,8 @@ class _Appdata {
 
   bool get isLogin => _user != null;
 
-  void useTestUser() {
-    _user = const User(
-      avatar: "https://avatars.githubusercontent.com/u/67669799?v=4&size=64",
-      name: "Testuser",
-      token: "testuser_token",
-    );
+  set user(User user) {
+    _user = user;
   }
 }
 
