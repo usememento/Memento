@@ -83,6 +83,10 @@ extension WidgetExtension on Widget {
   Widget withSurface([Color? color]) {
     return _Surface(this, color);
   }
+
+  Widget toSliver() {
+    return SliverToBoxAdapter(child: this);
+  }
 }
 
 class _Surface extends StatelessWidget {

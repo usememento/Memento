@@ -74,6 +74,21 @@ class Button extends StatefulWidget {
       this.isLoading = false})
       : type = ButtonType.text;
 
+  static Widget icon(
+      {Key? key,
+      required Widget icon,
+      required VoidCallback onPressed,
+      double? size,
+      String? tooltip}) {
+    return _IconButton(
+      key: key,
+      icon: icon,
+      onPressed: onPressed,
+      size: size,
+      tooltip: tooltip,
+    );
+  }
+
   final ButtonType type;
 
   final Widget child;
@@ -117,14 +132,14 @@ class _ButtonState extends State<Button> {
       style: TextStyle(color: textColor, fontSize: 16),
       child: isLoading
           ? CircularProgressIndicator(
-        color: widget.type == ButtonType.filled
-            ? context.colorScheme.inversePrimary
-            : context.colorScheme.primary,
-        strokeWidth: 1.8,
-      ).fixWidth(16).fixHeight(16)
+              color: widget.type == ButtonType.filled
+                  ? context.colorScheme.inversePrimary
+                  : context.colorScheme.primary,
+              strokeWidth: 1.8,
+            ).fixWidth(16).fixHeight(16)
           : widget.child,
     );
-    if(width != null || height != null){
+    if (width != null || height != null) {
       child = child.toCenter();
     }
     return MouseRegion(
@@ -135,10 +150,10 @@ class _ButtonState extends State<Button> {
         onTap: isLoading ? null : widget.onPressed,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 160),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
           decoration: BoxDecoration(
             color: buttonColor,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(16),
             border: widget.type == ButtonType.outlined
                 ? Border.all(
                     color: Theme.of(context).colorScheme.outlineVariant)
@@ -175,5 +190,57 @@ class _ButtonState extends State<Button> {
         : (widget.type == ButtonType.text
             ? context.colorScheme.primary
             : context.colorScheme.onSurface);
+  }
+}
+
+class _IconButton extends StatefulWidget {
+  const _IconButton(
+      {super.key,
+      required this.icon,
+      required this.onPressed,
+      this.size,
+      this.tooltip});
+
+  final Widget icon;
+
+  final VoidCallback onPressed;
+
+  final double? size;
+
+  final String? tooltip;
+
+  @override
+  State<_IconButton> createState() => _IconButtonState();
+}
+
+class _IconButtonState extends State<_IconButton> {
+  bool isHover = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: widget.onPressed,
+      mouseCursor: SystemMouseCursors.click,
+      customBorder: const CircleBorder(),
+      child: Tooltip(
+        message: widget.tooltip ?? "",
+        child: Container(
+          decoration: BoxDecoration(
+            color: isHover
+                ? Theme.of(context).colorScheme.surfaceContainer
+                : null,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          padding: const EdgeInsets.all(6),
+          child: IconTheme(
+            data: IconThemeData(
+              size: widget.size ?? 24,
+              color: context.colorScheme.primary
+            ),
+            child: widget.icon,
+          ),
+        ),
+      ),
+    );
   }
 }

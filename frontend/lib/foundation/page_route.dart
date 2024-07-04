@@ -19,6 +19,7 @@ class AppPageRoute<T> extends PageRoute<T> with _AppRouteTransitionMixin {
     super.barrierDismissible = false,
     this.enableIOSGesture = true,
     this.preventRebuild = true,
+    this.isRootRoute = false,
   }) {
     assert(opaque);
   }
@@ -42,6 +43,9 @@ class AppPageRoute<T> extends PageRoute<T> with _AppRouteTransitionMixin {
 
   @override
   final bool preventRebuild;
+
+  @override
+  final bool isRootRoute;
 }
 
 mixin _AppRouteTransitionMixin<T> on PageRoute<T> {
@@ -69,6 +73,8 @@ mixin _AppRouteTransitionMixin<T> on PageRoute<T> {
   bool get preventRebuild;
 
   Widget? _child;
+
+  bool get isRootRoute;
 
   @override
   Widget buildPage(
@@ -108,6 +114,22 @@ mixin _AppRouteTransitionMixin<T> on PageRoute<T> {
   @override
   Widget buildTransitions(BuildContext context, Animation<double> animation,
       Animation<double> secondaryAnimation, Widget child) {
+    if(isRootRoute) {
+      return FadeTransition(
+        opacity: Tween<double>(begin: 0, end: 1.0).animate(CurvedAnimation(
+            parent: animation,
+            curve: Curves.ease
+        )),
+        child: FadeTransition(
+          opacity: Tween<double>(begin: 1.0, end: 0).animate(CurvedAnimation(
+              parent: secondaryAnimation,
+              curve: Curves.ease
+          )),
+          child: child,
+        ),
+      );
+    }
+
     return SlideTransition(
         position: Tween<Offset>(
           begin: const Offset(1, 0),

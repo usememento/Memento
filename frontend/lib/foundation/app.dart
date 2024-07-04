@@ -1,10 +1,8 @@
 import 'dart:io';
 import 'dart:ui';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:frontend/components/frame.dart';
 
 export "../utils/widget_utils.dart";
 export 'page_route.dart';
@@ -28,11 +26,11 @@ class _App {
     return PlatformDispatcher.instance.locale;
   }
 
-  NavigatorState? get navigatorState => observer.navigator;
+  NavigatorState? get navigatorState => navigatorKey?.currentState;
 
-  var observer = NaviObserver();
+  GlobalKey<NavigatorState>? navigatorKey;
 
-  final mainColor = Colors.blue.shade600;
+  final mainColor = Colors.blue;
 }
 
 // ignore: non_constant_identifier_names
