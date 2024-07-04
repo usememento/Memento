@@ -109,6 +109,7 @@ func HandleFileDelete(c echo.Context) error {
 	if err != nil {
 		return utils.RespondError(c, "unknown transaction error")
 	}
+	os.Remove(file.ContentUrl)
 	return c.NoContent(http.StatusOK)
 }
 

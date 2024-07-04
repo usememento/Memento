@@ -60,9 +60,22 @@ func HandlePostCreate(c echo.Context) error {
 		return utils.RespondError(c, "data copy error")
 	}
 	post.ContentUrl = contentFilepath
+	contentData, _ := os.ReadFile(contentFilepath)
+	contentTags := utils.GetTags(string(contentData))
 	err = memento.GetDbConnection().Transaction(
 		func(tx *gorm.DB) error {
+			// add all non-existing tags to database
+			for _, t := range contentTags {
+				var tag model.Tag
+				err := tx.Where("name=?", t).FirstOrCreate(&tag).Error
+				if err != nil {
+					log.Errorf(err.Error())
+					return utils.RespondError(c, "unknown insertion error")
+				}
+				tx.Model(&tag).Association("Posts").Append(&post)
+			}
 			err = tx.Create(&post).Error
+			tx.Model(&post).Association("Tags").Append(contentTags)
 			if err != nil {
 				log.Errorf(err.Error())
 				return err
@@ -70,6 +83,7 @@ func HandlePostCreate(c echo.Context) error {
 			tx.Model(&user).Association("Posts").Append(&post)
 			user.TotalPosts += 1
 			tx.Save(&user)
+			tx.Save(&post)
 			return nil
 		})
 	if err != nil {
@@ -96,6 +110,11 @@ func HandlePostDelete(c echo.Context) error {
 				log.Errorf(err.Error())
 				return err
 			}
+			var tags []model.Tag
+			tx.Model(&post).Association("Tags").Find(&tags)
+			for _, tag := range tags {
+				tx.Model(&tag).Association("Posts").Delete(&post)
+			}
 			err = tx.Model(&user).Association("Posts").Delete(&post)
 			if err != nil {
 				log.Errorf(err.Error())
@@ -113,6 +132,7 @@ func HandlePostDelete(c echo.Context) error {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown deletion error")
 	}
+	os.Remove(post.ContentUrl)
 	return c.NoContent(http.StatusOK)
 }
 func HandlePostEdit(c echo.Context) error {
@@ -126,6 +146,8 @@ func HandlePostEdit(c echo.Context) error {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown query error")
 	}
+	oldContent, _ := os.ReadFile(post.ContentUrl)
+	oldTags := utils.GetTags(string(oldContent))
 	contentFile, err := c.FormFile("content")
 	if err != nil {
 		return utils.RespondError(c, "post content not uploaded")
@@ -137,6 +159,7 @@ func HandlePostEdit(c echo.Context) error {
 	}
 	defer contentBody.Close()
 	contentFilepath := post.ContentUrl
+
 	content, err := os.Create(contentFilepath)
 	if err != nil {
 		log.Errorf(err.Error())
@@ -148,11 +171,31 @@ func HandlePostEdit(c echo.Context) error {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "data copy error")
 	}
-
-	err = memento.GetDbConnection().Model(&post).Update("edited_at", time.Now()).Error
+	newContent, _ := os.ReadFile(post.ContentUrl)
+	newTags := utils.GetTags(string(newContent))
+	tagsToAdd, tagsToDel := utils.CalcTagsDiff(oldTags, newTags)
+	err = memento.GetDbConnection().Transaction(
+		func(tx *gorm.DB) error {
+			for _, t := range tagsToAdd {
+				var tag model.Tag
+				if err := tx.Where("name=?", t).FirstOrCreate(&tag).Error; err != nil {
+					continue
+				}
+				tx.Model(&tag).Association("Posts").Append(&post)
+			}
+			for _, tag := range tagsToDel {
+				tx.Model(&post).Association("Tags").Delete(&tag)
+			}
+			err = memento.GetDbConnection().Model(&post).Update("edited_at", time.Now()).Error
+			if err != nil {
+				log.Errorf(err.Error())
+				return err
+			}
+			return nil
+		})
 	if err != nil {
 		log.Errorf(err.Error())
-		return utils.RespondError(c, "unknown update error")
+		return utils.RespondError(c, "unknown query error")
 	}
 	return c.NoContent(http.StatusOK)
 }
@@ -219,5 +262,9 @@ func HandlePostLike(c echo.Context) error {
 }
 
 func HandlePostCancelLike(c echo.Context) error {
+	return nil
+}
+
+func HandleGetTaggedPost(c echo.Context) error {
 	return nil
 }

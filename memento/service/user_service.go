@@ -111,6 +111,9 @@ func HandleUserEdit(c echo.Context) error {
 			log.Errorf(err.Error())
 			return utils.RespondError(c, "data copy error")
 		}
+		if user.AvatarUrl != "" {
+			os.Remove(user.AvatarUrl)
+		}
 		user.AvatarUrl = filepath
 	}
 	if err := memento.GetDbConnection().Save(&user).Error; err != nil {

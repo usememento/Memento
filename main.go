@@ -55,6 +55,8 @@ func main() {
 			userApi.POST("/edit", service.HandleUserEdit)
 			userApi.DELETE("/delete", service.HandleUserDelete)
 			userApi.GET("/heatmap", service.HandleUserHeatMap)
+			userApi.POST("/follow", service.HandleUserHeatMap)
+			userApi.POST("/unfollow", service.HandleUserUnfollow)
 		}
 		fileApi := api.Group("/file")
 		{

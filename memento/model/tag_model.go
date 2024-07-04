@@ -4,6 +4,6 @@ import "gorm.io/gorm"
 
 type Tag struct {
 	gorm.Model
-	Name  string
+	Name  string  `gorm:"uniqueIndex"`
 	Posts []*Post `gorm:"many2many:post_tags;"`
 }
