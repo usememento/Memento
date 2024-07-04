@@ -7,8 +7,17 @@ import (
 
 type Post struct {
 	gorm.Model
-	UserId     uint
-	User       User
+	Username   string
+	Liked      int64
+	CreatedAt  time.Time
+	EditedAt   time.Time
+	ContentUrl string
+	Comments   []Comment
+	Tags       []*Tag `gorm:"many2many:post_tags;"`
+}
+
+type PostViewModel struct {
+	Username   string
 	Liked      int64
 	CreatedAt  time.Time
 	EditedAt   time.Time

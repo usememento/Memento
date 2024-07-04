@@ -43,6 +43,7 @@ func main() {
 		postApi := api.Group("/post")
 		{
 			postApi.GET("/get", service.HandlePostGet)
+			postApi.GET("/userPosts", service.HandleGetUserPosts)
 			postApi.POST("/create", service.HandlePostCreate)
 			postApi.POST("/edit", service.HandlePostEdit)
 			postApi.DELETE("/delete", service.HandlePostDelete)
@@ -59,6 +60,16 @@ func main() {
 		{
 			fileApi.GET("/download", service.HandleFileDownload)
 			fileApi.POST("/upload", service.HandleFileUpload)
+			fileApi.DELETE("/delete", service.HandleFileDelete)
+		}
+		commentApi := api.Group("/comment")
+		{
+			commentApi.POST("/create", service.HandleCommentCreate)
+			commentApi.POST("/edit", service.HandleCommentEdit)
+			commentApi.DELETE("/delete", service.HandleCommentDelete)
+			commentApi.POST("/like", service.HandleCommentLike)
+			commentApi.POST("/unlike", service.HandleCommentCancelLike)
+			commentApi.GET("/postComments", service.HandleGetPostComments)
 		}
 	}
 	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", mServer.Config.ServerConfig.Port)))

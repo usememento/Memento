@@ -2,41 +2,26 @@ package model
 
 import "gorm.io/gorm"
 
-type UserPost struct {
-	gorm.Model
-	UserId uint
-	User   User
-	PostId uint
-	Post   Post
-}
-
-type UserLike struct {
-	gorm.Model
-	UserId uint
-	User   User
-	PostId uint
-	Post   Post
-}
-
-type PostFile struct {
-	gorm.Model
-	PostId  uint
-	Post    Post
-	FileUrl string
-}
-
-type UserFollow struct {
-	gorm.Model
-	UserId   uint
-	User     User
-	FollowId uint
-	Follow   User
-}
+//type UserLike struct {
+//	gorm.Model
+//	Username string
+//	User     User `gorm:"foreignKey:Username"`
+//	PostID   uint
+//	Post     Post
+//}
+//
+//type UserFollow struct {
+//	gorm.Model
+//	Username       string
+//	User           User `gorm:"foreignKey:Username"`
+//	FollowUsername string
+//	Follow         User `gorm:"foreignKey:Username"`
+//}
 
 type PostTag struct {
 	gorm.Model
-	PostId uint
+	PostID uint
 	Post   Post
-	TagId  uint
+	TagID  uint
 	Tag    Tag
 }

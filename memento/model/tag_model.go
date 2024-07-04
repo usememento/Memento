@@ -3,6 +3,7 @@ package model
 import "gorm.io/gorm"
 
 type Tag struct {
-	gorm.DB
-	Name string
+	gorm.Model
+	Name  string
+	Posts []*Post `gorm:"many2many:post_tags;"`
 }

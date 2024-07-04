@@ -3,6 +3,7 @@ package memento
 import (
 	"Memento/memento/model"
 	"Memento/memento/utils"
+	"errors"
 	echoserver "github.com/dasjott/oauth2-echo-server"
 	"github.com/go-oauth2/oauth2/v4/server"
 	"github.com/labstack/echo/v4"
@@ -38,16 +39,21 @@ func Init() *MementoServer {
 	memento.DbConn, err = gorm.Open(sqlite.Open(memento.Config.DbConfig.Database), &gorm.Config{
 		TranslateError:                           true,
 		DisableForeignKeyConstraintWhenMigrating: true,
+		//SkipDefaultTransaction:                   true,
 	})
 	if err != nil {
 		log.Errorf("Error establishing database connection: %s\n", err.Error())
 		return nil
 	}
-	memento.DbConn.AutoMigrate(&model.User{})
+	memento.DbConn.AutoMigrate(&model.Tag{})
+	memento.DbConn.AutoMigrate(&model.File{})
+	memento.DbConn.AutoMigrate(&model.Comment{})
 	memento.DbConn.AutoMigrate(&model.Post{})
-	memento.DbConn.AutoMigrate(&model.UserLike{})
-	memento.DbConn.AutoMigrate(&model.UserPost{})
-	memento.DbConn.AutoMigrate(&model.PostFile{})
+	memento.DbConn.AutoMigrate(&model.User{})
+
+	//memento.DbConn.AutoMigrate(&model.UserLike{})
+	//memento.DbConn.AutoMigrate(&model.UserFollow{})
+	memento.DbConn.AutoMigrate(&model.PostTag{})
 	return &memento
 }
 
@@ -98,4 +104,39 @@ func ValidateToken(cfg *echoserver.Config, eServer *server.Server) echo.Middlewa
 			return next(c)
 		}
 	}
+}
+
+func GetUser(out *model.User, username string) error {
+	err := GetDbConnection().First(&out, "username=?", username).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return err
+		}
+		log.Errorf(err.Error())
+		return err
+	}
+	return nil
+}
+
+func GetPost(out *model.Post, postId string) error {
+	if err := GetDbConnection().First(&out, "id=?", postId).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return err
+		}
+		log.Errorf(err.Error())
+		return err
+	}
+	return nil
+}
+
+func GetFile(out *model.File, url string) error {
+	err := GetDbConnection().First(&out, "content_url=?", url).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return err
+		}
+		log.Errorf(err.Error())
+		return err
+	}
+	return nil
 }

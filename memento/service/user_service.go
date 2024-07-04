@@ -131,16 +131,7 @@ func HandleUserGet(c echo.Context) error {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown query error")
 	}
-	return c.JSON(http.StatusOK, struct {
-		Username     string
-		Nickname     string
-		Bio          string
-		TotalLiked   int64
-		TotalComment int64
-		TotalPosts   int64
-		RegisteredAt time.Time
-		AvatarUrl    string
-	}{
+	return c.JSON(http.StatusOK, model.UserViewModel{
 		Username:     user.Username,
 		Nickname:     user.Nickname,
 		Bio:          user.Bio,
@@ -204,18 +195,104 @@ func HandleUserHeatMap(c echo.Context) error {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown query error")
 	}
-	var posts []model.Post
 	sixMonthsAgo := time.Now().AddDate(0, -6, 0)
 	heatmap := make(map[string]int)
-	err = memento.GetDbConnection().Where("user_id = ? and edited_at >= ?", user.ID, sixMonthsAgo).
-		Order("created_at DESC").
-		Find(&posts).Error
+	var posts []model.Post
+	err = memento.GetDbConnection().Model(&user).Association("Posts").Find(&posts)
 	if err != nil {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown query error")
 	}
 	for _, p := range posts {
+		if p.EditedAt.Compare(sixMonthsAgo) < 0 {
+			continue
+		}
 		heatmap[p.EditedAt.Format("2006/01/02")] += 1
 	}
 	return c.JSON(http.StatusOK, heatmap)
+}
+
+func HandleUserFollow(c echo.Context) error {
+	username := c.FormValue("username")
+	foUsername := c.FormValue("followee")
+	var user, followee model.User
+	err := memento.GetDbConnection().First(&user, "username=?", username).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return utils.RespondError(c, "username not exists")
+		}
+		log.Errorf(err.Error())
+		return utils.RespondError(c, "unknown query error")
+	}
+	err = memento.GetDbConnection().First(&followee, "username=?", foUsername).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return utils.RespondError(c, "username not exists")
+		}
+		log.Errorf(err.Error())
+		return utils.RespondError(c, "unknown query error")
+	}
+	err = memento.GetDbConnection().Transaction(
+		func(tx *gorm.DB) error {
+			err := tx.Model(&user).Association("Follows").Append(&followee)
+			if err != nil {
+				return err
+			}
+			err = tx.Model(&followee).Association("Followers").Append(&user)
+			if err != nil {
+				return err
+			}
+			followee.TotalFollower += 1
+			user.TotalFollows += 1
+			tx.Save(&user)
+			tx.Save(&followee)
+			return nil
+		})
+	if err != nil {
+		log.Errorf(err.Error())
+		return utils.RespondError(c, "unknown query error")
+	}
+	return c.NoContent(http.StatusOK)
+}
+func HandleUserUnfollow(c echo.Context) error {
+	username := c.FormValue("username")
+	foUsername := c.FormValue("followee")
+	var user, followee model.User
+	err := memento.GetDbConnection().First(&user, "username=?", username).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return utils.RespondError(c, "username not exists")
+		}
+		log.Errorf(err.Error())
+		return utils.RespondError(c, "unknown query error")
+	}
+	err = memento.GetDbConnection().First(&followee, "username=?", foUsername).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return utils.RespondError(c, "username not exists")
+		}
+		log.Errorf(err.Error())
+		return utils.RespondError(c, "unknown query error")
+	}
+	err = memento.GetDbConnection().Transaction(
+		func(tx *gorm.DB) error {
+			err := tx.Model(&user).Association("Follows").Delete(&followee)
+			if err != nil {
+				return err
+			}
+			err = tx.Model(&followee).Association("Followers").Delete(&user)
+			if err != nil {
+				return err
+			}
+			followee.TotalFollower -= 1
+			user.TotalFollows -= 1
+			tx.Save(&user)
+			tx.Save(&followee)
+			return nil
+		})
+	if err != nil {
+		log.Errorf(err.Error())
+		return utils.RespondError(c, "unknown query error")
+	}
+	return c.NoContent(http.StatusOK)
 }

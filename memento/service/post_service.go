@@ -31,7 +31,7 @@ func HandlePostCreate(c echo.Context) error {
 	}
 	now := time.Now()
 	post := model.Post{
-		UserId:    user.ID,
+		Username:  user.Username,
 		Liked:     0,
 		CreatedAt: now,
 		EditedAt:  now,
@@ -60,7 +60,18 @@ func HandlePostCreate(c echo.Context) error {
 		return utils.RespondError(c, "data copy error")
 	}
 	post.ContentUrl = contentFilepath
-	err = memento.GetDbConnection().Create(&post).Error
+	err = memento.GetDbConnection().Transaction(
+		func(tx *gorm.DB) error {
+			err = tx.Create(&post).Error
+			if err != nil {
+				log.Errorf(err.Error())
+				return err
+			}
+			tx.Model(&user).Association("Posts").Append(&post)
+			user.TotalPosts += 1
+			tx.Save(&user)
+			return nil
+		})
 	if err != nil {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown insertion error")
@@ -70,15 +81,35 @@ func HandlePostCreate(c echo.Context) error {
 func HandlePostDelete(c echo.Context) error {
 	id := c.FormValue("id")
 	var post model.Post
-	err := memento.GetDbConnection().First(&post, "id=?", id).Error
-	if err != nil {
+	if err := memento.GetDbConnection().First(&post, "id=?", id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return utils.RespondError(c, "post not exists")
 		}
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown query error")
 	}
-	if err := memento.GetDbConnection().Delete(&post).Error; err != nil {
+	err := memento.GetDbConnection().Transaction(
+		func(tx *gorm.DB) error {
+			var user model.User
+			err := tx.First(&user, "username=?", post.Username).Error
+			if err != nil {
+				log.Errorf(err.Error())
+				return err
+			}
+			err = tx.Model(&user).Association("Posts").Delete(&post)
+			if err != nil {
+				log.Errorf(err.Error())
+				return err
+			}
+			if err = tx.Delete(&post).Error; err != nil {
+				log.Errorf(err.Error())
+				return err
+			}
+			user.TotalPosts -= 1
+			tx.Save(&user)
+			return nil
+		})
+	if err != nil {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown deletion error")
 	}
@@ -143,17 +174,50 @@ func HandlePostGet(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, struct {
 		Id        uint
-		UserId    uint
+		Username  string
 		Liked     int64
 		CreatedAt time.Time
 		EditedAt  time.Time
 		Content   string
 	}{
 		Id:        post.ID,
-		UserId:    post.UserId,
+		Username:  post.Username,
 		Liked:     post.Liked,
 		CreatedAt: post.CreatedAt,
 		EditedAt:  post.EditedAt,
 		Content:   string(content),
 	})
+}
+
+func HandleGetUserPosts(c echo.Context) error {
+	username := c.QueryParam("username")
+	var user model.User
+	err := memento.GetDbConnection().First(&user, "username=?", username).Error
+	if err != nil {
+		return utils.RespondError(c, "username not exists")
+	}
+	var posts []model.Post
+	err = memento.GetDbConnection().Model(&user).Association("Posts").Find(&posts)
+	if err != nil {
+		return utils.RespondError(c, "unknown query error")
+	}
+	var ids []model.PostViewModel
+	for _, post := range posts {
+		ids = append(ids, model.PostViewModel{
+			Username:   post.Username,
+			Liked:      post.Liked,
+			CreatedAt:  post.CreatedAt,
+			EditedAt:   post.EditedAt,
+			ContentUrl: post.ContentUrl,
+		})
+	}
+	return c.JSON(http.StatusOK, ids)
+}
+
+func HandlePostLike(c echo.Context) error {
+	return nil
+}
+
+func HandlePostCancelLike(c echo.Context) error {
+	return nil
 }
