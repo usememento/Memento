@@ -40,8 +40,9 @@ func main() {
 	e := echo.New()
 	// Middleware
 	e.Use(middleware.Logger())
-	e.POST("/login", service.HandleLogin)
-	e.POST("/create", service.HandleUserCreate)
+	service.ServeFrontend(e)
+	e.POST("/user/login", service.HandleLogin)
+	e.POST("/user/create", service.HandleUserCreate)
 	api := e.Group("/api")
 	{
 		api.Use(memento.TokenValidator(&echoserver.DefaultConfig, eServer))
