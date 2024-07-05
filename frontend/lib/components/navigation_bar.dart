@@ -165,6 +165,16 @@ class _NaviPaneState extends State<NaviPane>
             final value = controller.value;
             return Stack(
               children: [
+                Positioned(
+                  top: _kTopBarHeight * ((1 - value).clamp(0, 1)) +
+                      MediaQuery.of(context).padding.top,
+                  left: _kFoldedSideBarWidth * ((value - 1).clamp(0, 1)) +
+                      (_kSideBarWidth - _kFoldedSideBarWidth) *
+                          ((value - 2).clamp(0, 1)),
+                  right: 0,
+                  bottom: bottomBarHeight * ((1 - value).clamp(0, 1)),
+                  child: widget.pageBuilder(currentPage),
+                ),
                 if (value <= 1)
                   Positioned(
                     left: 0,
@@ -186,16 +196,6 @@ class _NaviPaneState extends State<NaviPane>
                   bottom: 0,
                   child: buildLeft(),
                 ),
-                Positioned(
-                  top: _kTopBarHeight * ((1 - value).clamp(0, 1)) +
-                      MediaQuery.of(context).padding.top,
-                  left: _kFoldedSideBarWidth * ((value - 1).clamp(0, 1)) +
-                      (_kSideBarWidth - _kFoldedSideBarWidth) *
-                          ((value - 2).clamp(0, 1)),
-                  right: 0,
-                  bottom: bottomBarHeight * ((1 - value).clamp(0, 1)),
-                  child: widget.pageBuilder(currentPage),
-                )
               ],
             );
           },
@@ -291,8 +291,8 @@ class _NaviPaneState extends State<NaviPane>
           children: [
             SizedBox(
               width: value == 3
-                  ? (_kSideBarWidth - padding*2)
-                  : (_kFoldedSideBarWidth - padding*2),
+                  ? (_kSideBarWidth - padding * 2)
+                  : (_kFoldedSideBarWidth - padding * 2),
               child: Column(
                 children: [
                   const SizedBox(
@@ -595,18 +595,21 @@ class NaviObserver extends NavigatorObserver implements Listenable {
   void didPop(Route route, Route? previousRoute) {
     routes.removeLast();
     notifyListeners();
+    debugPrint("Pop route ${route.settings.name}");
   }
 
   @override
   void didPush(Route route, Route? previousRoute) {
     routes.addLast(route);
     notifyListeners();
+    debugPrint("Going to route ${route.settings.name}");
   }
 
   @override
   void didRemove(Route route, Route? previousRoute) {
     routes.remove(route);
     notifyListeners();
+    debugPrint("Remove route ${route.settings.name}");
   }
 
   @override
@@ -616,6 +619,8 @@ class NaviObserver extends NavigatorObserver implements Listenable {
       routes.add(newRoute);
     }
     notifyListeners();
+    debugPrint(
+        "Replace route ${oldRoute?.settings.name} with ${newRoute?.settings.name}");
   }
 
   List<VoidCallback> listeners = [];

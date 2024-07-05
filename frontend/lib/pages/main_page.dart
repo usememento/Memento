@@ -89,7 +89,7 @@ class _MainPageState extends State<MainPage> {
               children: [
                 Avatar(url: appdata.user.avatar, size: 36,),
                 const SizedBox(width: 12,),
-                Text(appdata.user.name),
+                Text(appdata.user.nickname),
               ],
             ).paddingHorizontal(8).paddingVertical(8),
           ).onTap(() {

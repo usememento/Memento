@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/button.dart';
+import 'package:frontend/components/memo.dart';
+import 'package:frontend/components/states.dart';
 import 'package:frontend/foundation/app.dart';
+import 'package:frontend/network/network.dart';
 import 'package:frontend/utils/translation.dart';
 
 import '../components/heat_map.dart';
@@ -23,6 +26,7 @@ class _HomePageState extends State<HomePage> {
             child: CustomScrollView(
               slivers: [
                 WritingArea(),
+                _HomePageMemosList(),
               ],
             ),
           ),
@@ -340,13 +344,16 @@ class MemoEditingController extends TextEditingController {
   MemoEditingController({super.text});
 
   bool isTag(String text) {
-    return text.startsWith('#') && text.length <= 20 && text.length > 1;
+    return text.startsWith('#') &&
+        text.length <= 20 &&
+        text.length > 1 &&
+        text[1] != '#';
   }
 
   bool isTitle(String line) {
     var splits = line.split(' ');
-    if(splits.length == 1)  return false;
-    if(splits[1].trim().isEmpty) return false;
+    if (splits.length == 1) return false;
+    if (splits[1].trim().isEmpty) return false;
     var s = splits.first;
     bool isTitle = true;
     for (var char in s.characters) {
@@ -359,22 +366,21 @@ class MemoEditingController extends TextEditingController {
   }
 
   @override
-  TextSpan buildTextSpan({required BuildContext context,
-    TextStyle? style,
-    required bool withComposing}) {
+  TextSpan buildTextSpan(
+      {required BuildContext context,
+      TextStyle? style,
+      required bool withComposing}) {
     var lines = text.split("\n");
     var spans = <TextSpan>[];
     for (int i = 0; i < lines.length; i++) {
       var line = lines[i];
-      if(i != lines.length - 1) {
+      if (i != lines.length - 1) {
         line += '\n';
       }
       if (isTitle(line)) {
         spans.add(TextSpan(
           text: line,
-          style: const TextStyle(
-              fontWeight: FontWeight.bold
-          ),
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ));
       } else if (!line.contains('#')) {
         spans.add(TextSpan(
@@ -407,5 +413,49 @@ class MemoEditingController extends TextEditingController {
       }
     }
     return TextSpan(children: spans, style: style);
+  }
+}
+
+class _HomePageMemosList extends StatefulWidget {
+  const _HomePageMemosList();
+
+  @override
+  State<_HomePageMemosList> createState() => _HomePageMemosListState();
+}
+
+class _HomePageMemosListState
+    extends MultiPageLoadingState<_HomePageMemosList, Memo> {
+  @override
+  Widget buildLoading(BuildContext context) {
+    return SliverToBoxAdapter(
+      child: Center(
+        child: const CircularProgressIndicator(
+          strokeWidth: 2,
+        ).fixWidth(18).fixHeight(18),
+      ).fixHeight(64),
+    );
+  }
+
+  @override
+  Widget buildError(BuildContext context, String error) {
+    return SliverToBoxAdapter(
+      child: super.buildError(context, error),
+    );
+  }
+
+  @override
+  Widget buildContent(BuildContext context, List<Memo> data) {
+    return SliverList(
+        delegate: SliverChildBuilderDelegate(
+      (context, index) {
+        return MemoWidget(memo: data[index]);
+      },
+      childCount: data.length,
+    ));
+  }
+
+  @override
+  Future<Res<List<Memo>>> loadData(int page) {
+    return Network().getHomePage(page);
   }
 }

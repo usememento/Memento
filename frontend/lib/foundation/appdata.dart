@@ -1,13 +1,13 @@
 import '../network/models.dart';
 
 class _Appdata {
-  User? _user;
+  Account? _user;
 
-  User get user => _user!;
+  Account get user => _user!;
 
   bool get isLogin => _user != null;
 
-  set user(User user) {
+  set user(Account user) {
     _user = user;
   }
 }

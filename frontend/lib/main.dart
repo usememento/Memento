@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/components/overlay.dart';
 import 'package:frontend/foundation/app.dart';
 import 'package:frontend/pages/auth.dart';
 import 'package:frontend/pages/main_page.dart';
@@ -54,7 +55,7 @@ class Memento extends StatelessWidget {
         if (widget == null) throw "Widget is null!";
         return Material(
           color: context.colorScheme.surface,
-          child: widget,
+          child: OverlayWidget(widget),
         );
       },
     );

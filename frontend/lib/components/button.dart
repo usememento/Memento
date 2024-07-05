@@ -26,7 +26,7 @@ class _HoverBoxState extends State<HoverBox> {
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
             color: isHover
-                ? Theme.of(context).colorScheme.surfaceContainerHigh
+                ? Theme.of(context).colorScheme.surfaceContainerLow
                 : null,
             borderRadius: widget.borderRadius),
         child: widget.child,
@@ -35,7 +35,7 @@ class _HoverBoxState extends State<HoverBox> {
   }
 }
 
-enum ButtonType { filled, outlined, text }
+enum ButtonType { filled, outlined, text, normal }
 
 class Button extends StatefulWidget {
   const Button(
@@ -45,6 +45,7 @@ class Button extends StatefulWidget {
       this.isLoading = false,
       this.width,
       this.height,
+        this.padding,
       required this.onPressed});
 
   const Button.filled(
@@ -53,6 +54,7 @@ class Button extends StatefulWidget {
       required this.onPressed,
       this.width,
       this.height,
+        this.padding,
       this.isLoading = false})
       : type = ButtonType.filled;
 
@@ -62,6 +64,7 @@ class Button extends StatefulWidget {
       required this.onPressed,
       this.width,
       this.height,
+        this.padding,
       this.isLoading = false})
       : type = ButtonType.outlined;
 
@@ -71,8 +74,19 @@ class Button extends StatefulWidget {
       required this.onPressed,
       this.width,
       this.height,
+        this.padding,
       this.isLoading = false})
       : type = ButtonType.text;
+
+  const Button.normal(
+      {super.key,
+      required this.child,
+      required this.onPressed,
+      this.width,
+      this.height,
+        this.padding,
+      this.isLoading = false})
+      : type = ButtonType.normal;
 
   static Widget icon(
       {Key? key,
@@ -100,6 +114,8 @@ class Button extends StatefulWidget {
   final double? width;
 
   final double? height;
+
+  final EdgeInsets? padding;
 
   @override
   State<Button> createState() => _ButtonState();
@@ -129,7 +145,7 @@ class _ButtonState extends State<Button> {
       height = height - 16;
     }
     Widget child = DefaultTextStyle(
-      style: TextStyle(color: textColor, fontSize: 16),
+      style: TextStyle(color: textColor, fontSize: 16, ),
       child: isLoading
           ? CircularProgressIndicator(
               color: widget.type == ButtonType.filled
@@ -150,7 +166,7 @@ class _ButtonState extends State<Button> {
         onTap: isLoading ? null : widget.onPressed,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 160),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          padding: widget.padding ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
           decoration: BoxDecoration(
             color: buttonColor,
             borderRadius: BorderRadius.circular(16),
@@ -179,7 +195,7 @@ class _ButtonState extends State<Button> {
       }
     }
     if (isHover) {
-      return context.colorScheme.surfaceContainerHigh;
+      return context.colorScheme.outline.withOpacity(0.2);
     }
     return Colors.transparent;
   }
