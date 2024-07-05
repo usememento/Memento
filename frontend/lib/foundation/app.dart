@@ -30,6 +30,8 @@ class _App {
 
   GlobalKey<NavigatorState>? navigatorKey;
 
+  GlobalKey<NavigatorState>? rootNavigatorKey;
+
   final mainColor = Colors.blue;
 }
 

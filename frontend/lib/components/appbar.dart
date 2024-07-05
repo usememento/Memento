@@ -38,7 +38,7 @@ class Appbar extends StatelessWidget {
           ),
           ...actions,
         ],
-      ).paddingTop(context.padding.top + 8).paddingHorizontal(12),
+      ).fixHeight(_kAppBarHeight).paddingTop(context.padding.top).paddingHorizontal(8),
     );
   }
 }
