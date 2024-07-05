@@ -18,9 +18,8 @@ class _App {
   bool get isWindows => !isWeb && Platform.isWindows;
   bool get isLinux => !isWeb && Platform.isLinux;
   bool get isMacOS => !isWeb && Platform.isMacOS;
-  bool get isDesktop =>
-      Platform.isWindows || Platform.isLinux || Platform.isMacOS;
-  bool get isMobile => Platform.isAndroid || Platform.isIOS;
+  bool get isDesktop => isWindows || isLinux || isMacOS;
+  bool get isMobile => isAndroid || isIOS;
 
   Locale get locale {
     return PlatformDispatcher.instance.locale;
