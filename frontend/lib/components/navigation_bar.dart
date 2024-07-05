@@ -167,13 +167,18 @@ class _NaviPaneState extends State<NaviPane>
               children: [
                 Positioned(
                   top: _kTopBarHeight * ((1 - value).clamp(0, 1)) +
-                      MediaQuery.of(context).padding.top,
+                      MediaQuery.of(context).padding.top *
+                          ((1 - value).clamp(0, 1)),
                   left: _kFoldedSideBarWidth * ((value - 1).clamp(0, 1)) +
                       (_kSideBarWidth - _kFoldedSideBarWidth) *
                           ((value - 2).clamp(0, 1)),
                   right: 0,
                   bottom: bottomBarHeight * ((1 - value).clamp(0, 1)),
-                  child: widget.pageBuilder(currentPage),
+                  child: MediaQuery.removePadding(
+                    context: context,
+                    removeTop: value == 0,
+                    child: widget.pageBuilder(currentPage),
+                  ),
                 ),
                 if (value <= 1)
                   Positioned(

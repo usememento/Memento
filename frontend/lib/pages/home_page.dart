@@ -22,11 +22,13 @@ class _HomePageState extends State<HomePage> {
     return LayoutBuilder(builder: (context, constrains) {
       return Row(
         children: [
-          const Expanded(
+          Expanded(
             child: CustomScrollView(
               slivers: [
-                WritingArea(),
-                _HomePageMemosList(),
+                SliverPadding(
+                    padding: EdgeInsets.only(top: context.padding.top)),
+                const WritingArea(),
+                const _HomePageMemosList(),
               ],
             ),
           ),
@@ -34,7 +36,11 @@ class _HomePageState extends State<HomePage> {
             Container(
               width: (constrains.maxWidth - 324).clamp(0, 286),
               height: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16) +
+                  EdgeInsets.only(
+                    top: context.padding.top,
+                    bottom: context.padding.bottom,
+                  ),
               decoration: BoxDecoration(
                 border: Border(
                   left: BorderSide(
@@ -47,7 +53,7 @@ class _HomePageState extends State<HomePage> {
                 child: Column(
                   children: [
                     const SizedBox(
-                      height: 16,
+                      height: 8,
                     ),
                     Container(
                       height: 42,

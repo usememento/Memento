@@ -1,13 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/components/overlay.dart';
+import 'package:frontend/components/window_border.dart';
 import 'package:frontend/foundation/app.dart';
 import 'package:frontend/pages/auth.dart';
 import 'package:frontend/pages/main_page.dart';
 import 'package:frontend/utils/translation.dart';
+import 'package:window_manager/window_manager.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Translation.init();
+  if (App.isDesktop) {
+    await WindowManager.instance.ensureInitialized();
+    windowManager.waitUntilReadyToShow().then((_) async {
+      await windowManager.setTitleBarStyle(
+        TitleBarStyle.hidden,
+        windowButtonVisibility: App.isMacOS,
+      );
+      if (App.isLinux) {
+        // https://github.com/leanflutter/window_manager/issues/460
+        return;
+      }
+      await windowManager.setMinimumSize(const Size(500, 600));
+      await windowManager.show();
+    });
+  }
   runApp(const Memento());
 }
 
@@ -55,7 +72,7 @@ class Memento extends StatelessWidget {
         if (widget == null) throw "Widget is null!";
         return Material(
           color: context.colorScheme.surface,
-          child: OverlayWidget(widget),
+          child: OverlayWidget(WindowBorder(child: widget,)),
         );
       },
     );
