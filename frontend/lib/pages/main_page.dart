@@ -62,9 +62,8 @@ class _MainPageState extends State<MainPage> {
           ),
         ],
         paneActions: [
-          if(context.width <= 600)
-            PaneActionEntry(
-                label: "Search", icon: Icons.search, onTap: () {}),
+          if (context.width <= 600)
+            PaneActionEntry(label: "Search", icon: Icons.search, onTap: () {}),
           PaneActionEntry(
               label: "Settings", icon: Icons.settings_outlined, onTap: () {}),
         ],
@@ -78,7 +77,10 @@ class _MainPageState extends State<MainPage> {
             child: SizedBox(
               height: 48,
               width: 48,
-              child: Avatar(url: appdata.user.avatar, size: 36,).toCenter(),
+              child: Avatar(
+                url: appdata.user.avatar,
+                size: 36,
+              ).toCenter(),
             ),
           ).onTap(() {
             // TODO
@@ -87,8 +89,13 @@ class _MainPageState extends State<MainPage> {
             borderRadius: BorderRadius.circular(8),
             child: Row(
               children: [
-                Avatar(url: appdata.user.avatar, size: 36,),
-                const SizedBox(width: 12,),
+                Avatar(
+                  url: appdata.user.avatar,
+                  size: 36,
+                ),
+                const SizedBox(
+                  width: 12,
+                ),
                 Text(appdata.user.nickname),
               ],
             ).paddingHorizontal(8).paddingVertical(8),
@@ -104,13 +111,39 @@ class _MainPageState extends State<MainPage> {
             ],
             initialRoute: mainPageRoutes[index],
             onGenerateRoute: (settings) {
-              final builder =
-                  routes[settings.name] ?? (context) => const UnknownRoutePage();
+              var builder = routes[settings.name];
+              var params = <String, String>{};
+              if (builder == null && settings.name != null) {
+                var keys = routes.keys;
+                for (var key in keys) {
+                  params.clear();
+                  var routeSegments = key.split('/');
+                  var settingsSegments = settings.name!.split('/');
+                  if (routeSegments.length == settingsSegments.length) {
+                    var match = true;
+                    for (var i = 0; i < routeSegments.length; i++) {
+                      if (routeSegments[i] != settingsSegments[i] &&
+                          !routeSegments[i].startsWith(':')) {
+                        match = false;
+                        break;
+                      }
+                      if (routeSegments[i].startsWith(':')) {
+                        params[routeSegments[i].substring(1)] =
+                            settingsSegments[i];
+                      }
+                    }
+                    if (match) {
+                      builder = routes[key];
+                      break;
+                    }
+                  }
+                }
+              }
               return AppPageRoute(
-                  builder: builder,
-                  settings: settings,
-                  isRootRoute: mainPageRoutes.contains(settings.name)
-              );
+                  builder: builder ?? (context) => const UnknownRoutePage(),
+                  settings:
+                      RouteSettings(name: settings.name, arguments: params),
+                  isRootRoute: mainPageRoutes.contains(settings.name));
             },
           );
         },
