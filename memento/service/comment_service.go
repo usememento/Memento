@@ -13,7 +13,10 @@ import (
 )
 
 func HandleCommentCreate(c echo.Context) error {
-	username := c.FormValue("username")
+	username := c.Get("username")
+	if username == "" {
+		return utils.RespondError(c, "invalid token")
+	}
 	postId := c.FormValue("post_id")
 	content := c.FormValue("content")
 
@@ -67,10 +70,17 @@ func HandleCommentCreate(c echo.Context) error {
 }
 
 func HandleCommentEdit(c echo.Context) error {
+	username := c.Get("username")
+	if username == "" {
+		return utils.RespondError(c, "invalid token")
+	}
 	commentId := c.FormValue("comment_id")
 	content := c.FormValue("content")
 	var comment model.Comment
 	memento.GetDbConnection().First(&comment, "id=?", commentId)
+	if comment.Username != username {
+		return utils.RespondError(c, "permission denied")
+	}
 	comment.EditedAt = time.Now()
 	comment.Content = content
 	memento.GetDbConnection().Save(&comment)
@@ -87,6 +97,13 @@ func HandleCommentDelete(c echo.Context) error {
 		}
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown query error")
+	}
+	username := c.Get("username")
+	if username == "" {
+		return utils.RespondError(c, "invalid token")
+	}
+	if comment.Username != username {
+		utils.RespondError(c, "permission denied")
 	}
 	var user model.User
 	err = memento.GetDbConnection().First(&user, "username=?", comment.Username).Error
@@ -127,116 +144,28 @@ func HandleCommentDelete(c echo.Context) error {
 }
 
 func HandleCommentLike(c echo.Context) error {
-	username := c.FormValue("username")
-	postId := c.FormValue("post_id")
-	var user model.User
-	err := memento.GetDbConnection().First(&user, "username=?", username).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return utils.RespondError(c, "username not exists")
-		}
-		log.Errorf(err.Error())
-		return utils.RespondError(c, "unknown query error")
-	}
-	var post model.Post
-	err = memento.GetDbConnection().First(&post, "id=?", postId).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return utils.RespondError(c, "post not exists")
-		}
-		log.Errorf(err.Error())
-		return utils.RespondError(c, "unknown query error")
-	}
-	var likedPost model.Post
-	err = memento.GetDbConnection().Model(&user).Association("Likes").Find(&likedPost, "id=?", post.ID)
-	if err == nil {
-		return utils.RespondError(c, "already liked")
-	} else {
-		if !errors.Is(err, gorm.ErrRecordNotFound) {
-			return utils.RespondError(c, "unknown query error")
-		}
-	}
-	var author model.User
-	err = memento.GetDbConnection().First(&author, "username=?", post.Username).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return utils.RespondError(c, "post not exists")
-		}
-		log.Errorf(err.Error())
-		return utils.RespondError(c, "unknown query error")
-	}
-	err = memento.GetDbConnection().Transaction(
+	commentId := c.FormValue("comment_id")
+	var comment model.Comment
+	memento.GetDbConnection().First(&comment, "id=?", commentId)
+	memento.GetDbConnection().Transaction(
 		func(tx *gorm.DB) error {
-			err := tx.Model(&user).Association("Likes").Append(&post)
-			if err != nil {
-				return err
-			}
-			post.Liked += 1
-			author.TotalLiked += 1
-			tx.Save(&post)
-			tx.Save(&user)
+			comment.Liked += 1
+			tx.Save(&comment)
 			return nil
 		})
-	if err != nil {
-		return utils.RespondError(c, "unknown query error")
-	}
-	return c.NoContent(http.StatusOK)
+	return nil
 }
 func HandleCommentCancelLike(c echo.Context) error {
-	username := c.FormValue("username")
-	postId := c.FormValue("post_id")
-	var user model.User
-	err := memento.GetDbConnection().First(&user, "username=?", username).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return utils.RespondError(c, "username not exists")
-		}
-		log.Errorf(err.Error())
-		return utils.RespondError(c, "unknown query error")
-	}
-	var post model.Post
-	err = memento.GetDbConnection().First(&post, "id=?", postId).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return utils.RespondError(c, "post not exists")
-		}
-		log.Errorf(err.Error())
-		return utils.RespondError(c, "unknown query error")
-	}
-	var likedPost model.Post
-	err = memento.GetDbConnection().Model(&user).Association("Likes").Find(&likedPost, "id=?", post.ID)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return utils.RespondError(c, "not liked yet")
-		}
-		log.Errorf(err.Error())
-		return utils.RespondError(c, "unknown query error")
-	}
-	var author model.User
-	err = memento.GetDbConnection().First(&author, "username=?", post.Username).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return utils.RespondError(c, "post not exists")
-		}
-		log.Errorf(err.Error())
-		return utils.RespondError(c, "unknown query error")
-	}
-	err = memento.GetDbConnection().Transaction(
+	commentId := c.FormValue("comment_id")
+	var comment model.Comment
+	memento.GetDbConnection().First(&comment, "id=?", commentId)
+	memento.GetDbConnection().Transaction(
 		func(tx *gorm.DB) error {
-			err := tx.Model(&user).Association("Likes").Delete(&post)
-			if err != nil {
-				return err
-			}
-			post.Liked -= 1
-			author.TotalLiked -= 1
-			tx.Save(&post)
-			tx.Save(&user)
+			comment.Liked -= 1
+			tx.Save(&comment)
 			return nil
 		})
-	if err != nil {
-		return utils.RespondError(c, "unknown query error")
-	}
-	return c.NoContent(http.StatusOK)
+	return nil
 }
 
 func HandleGetPostComments(c echo.Context) error {
@@ -257,14 +186,7 @@ func HandleGetPostComments(c echo.Context) error {
 	}
 	var result []model.CommentViewModel
 	for _, comm := range comments {
-		result = append(result, model.CommentViewModel{
-			PostID:    comm.PostID,
-			Username:  comm.Username,
-			CreatedAt: comm.CreatedAt,
-			EditedAt:  comm.EditedAt,
-			Content:   comm.Content,
-			Liked:     comm.Liked,
-		})
+		result = append(result, *utils.CommentToView(&comm))
 	}
 	return c.JSON(http.StatusOK, result)
 }

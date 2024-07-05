@@ -4,7 +4,9 @@ import (
 	"Memento/memento/model"
 	"Memento/memento/utils"
 	"errors"
+	"fmt"
 	echoserver "github.com/dasjott/oauth2-echo-server"
+	"github.com/go-oauth2/oauth2/v4"
 	"github.com/go-oauth2/oauth2/v4/server"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
@@ -22,6 +24,7 @@ type MementoServer struct {
 	lock   sync.Locker
 }
 
+var JwtSecret = []byte("secret")
 var memento MementoServer
 
 func Init() *MementoServer {
@@ -84,7 +87,8 @@ func Unlock() {
 	memento.lock.Unlock()
 }
 
-func ValidateToken(cfg *echoserver.Config, eServer *server.Server) echo.MiddlewareFunc {
+// TokenValidator middleware
+func TokenValidator(cfg *echoserver.Config, eServer *server.Server) echo.MiddlewareFunc {
 	tokenKey := cfg.TokenKey
 	if tokenKey == "" {
 		tokenKey = echoserver.DefaultConfig.TokenKey
@@ -99,13 +103,20 @@ func ValidateToken(cfg *echoserver.Config, eServer *server.Server) echo.Middlewa
 			if err != nil {
 				return utils.RespondError(c, "invalid token")
 			}
-
+			fmt.Printf("token validator: %s\n", ti.GetUserID())
 			c.Set(tokenKey, ti)
+			c.Set("username", ti.GetUserID())
 			return next(c)
 		}
 	}
 }
 
+func AllowAuthorizedHandler(clientID string, grant oauth2.GrantType) (allowed bool, err error) {
+	if grant.String() == "password" {
+		return true, nil
+	}
+	return false, nil
+}
 func GetUser(out *model.User, username string) error {
 	err := GetDbConnection().First(&out, "username=?", username).Error
 	if err != nil {

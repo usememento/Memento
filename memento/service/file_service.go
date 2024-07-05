@@ -18,7 +18,10 @@ import (
 
 func HandleFileUpload(c echo.Context) error {
 	now := time.Now()
-	username := c.FormValue("username")
+	username := c.Get("username")
+	if username == "" {
+		return utils.RespondError(c, "invalid token")
+	}
 	var user model.User
 	if err := memento.GetDbConnection().First(&user, "username=?", username).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -76,7 +79,10 @@ func HandleFileUpload(c echo.Context) error {
 }
 
 func HandleFileDelete(c echo.Context) error {
-	username := c.FormValue("Username")
+	username := c.Get("username")
+	if username == "" {
+		return utils.RespondError(c, "invalid token")
+	}
 	filepath := c.FormValue("url")
 	var user model.User
 	err := memento.GetDbConnection().First(&user, "username=?", username).Error

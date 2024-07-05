@@ -10,7 +10,10 @@ import (
 	"github.com/go-oauth2/oauth2/v4/server"
 	"github.com/go-oauth2/oauth2/v4/store"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
+
+var AuthServer *server.Server
 
 func main() {
 	mServer := memento.Init()
@@ -28,18 +31,20 @@ func main() {
 		Domain: "http://localhost",
 	})
 	manager.MapClientStorage(clientStore)
-
 	// Initialize the oauth2 service
 	eServer := echoserver.InitServer(manager)
 	echoserver.SetAllowGetAccessRequest(true)
+	echoserver.SetClientAuthorizedHandler(memento.AllowAuthorizedHandler)
 	echoserver.SetClientInfoHandler(server.ClientFormHandler)
+	echoserver.SetPasswordAuthorizationHandler(service.PasswordAuthorizationHandler)
 	e := echo.New()
-
+	// Middleware
+	e.Use(middleware.Logger())
 	e.POST("/login", service.HandleLogin)
 	e.POST("/create", service.HandleUserCreate)
 	api := e.Group("/api")
 	{
-		api.Use(memento.ValidateToken(&echoserver.DefaultConfig, eServer))
+		api.Use(memento.TokenValidator(&echoserver.DefaultConfig, eServer))
 		postApi := api.Group("/post")
 		{
 			postApi.GET("/get", service.HandlePostGet)
@@ -47,6 +52,9 @@ func main() {
 			postApi.POST("/create", service.HandlePostCreate)
 			postApi.POST("/edit", service.HandlePostEdit)
 			postApi.DELETE("/delete", service.HandlePostDelete)
+			postApi.POST("/like", service.HandlePostLike)
+			postApi.POST("/unlike", service.HandlePostCancelLike)
+			postApi.POST("/taggedPosts", service.HandleGetTaggedPost)
 		}
 		userApi := api.Group("/user")
 		{
@@ -55,7 +63,7 @@ func main() {
 			userApi.POST("/edit", service.HandleUserEdit)
 			userApi.DELETE("/delete", service.HandleUserDelete)
 			userApi.GET("/heatmap", service.HandleUserHeatMap)
-			userApi.POST("/follow", service.HandleUserHeatMap)
+			userApi.POST("/follow", service.HandleUserFollow)
 			userApi.POST("/unfollow", service.HandleUserUnfollow)
 		}
 		fileApi := api.Group("/file")

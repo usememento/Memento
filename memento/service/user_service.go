@@ -4,6 +4,7 @@ import (
 	"Memento/memento"
 	"Memento/memento/model"
 	"Memento/memento/utils"
+	"context"
 	"errors"
 	echoserver "github.com/dasjott/oauth2-echo-server"
 	"github.com/labstack/echo/v4"
@@ -45,7 +46,10 @@ func HandleUserCreate(c echo.Context) error {
 }
 
 func HandleUserDelete(c echo.Context) error {
-	username := c.FormValue("username")
+	username := c.Get("username")
+	if username == "" {
+		return utils.RespondError(c, "invalid token")
+	}
 	password := c.FormValue("password")
 	var user model.User
 	err := memento.GetDbConnection().First(&user, "username=?", username).Error
@@ -65,7 +69,10 @@ func HandleUserDelete(c echo.Context) error {
 
 func HandleUserEdit(c echo.Context) error {
 	form, err := c.FormParams()
-	username := c.FormValue("username")
+	username := c.Get("username")
+	if username == "" {
+		return utils.RespondError(c, "invalid token")
+	}
 	nickname := form["nickname"]
 	bio := form["bio"]
 	hasAvatar := true
@@ -159,13 +166,31 @@ func HandleLogin(c echo.Context) error {
 		return utils.RespondError(c, "unknown query error")
 	}
 	if utils.Md5string(password) != user.PasswordHash {
-		return utils.RespondError(c, "incorrect username or password")
+		return utils.RespondError(c, "incorrect password")
 	}
 	return echoserver.HandleTokenRequest(c)
 }
-
+func PasswordAuthorizationHandler(ctx context.Context, clientID, username, password string) (userID string, err error) {
+	var user model.User
+	log.Debugf("PasswordAuthorizationHandler: %s\n", username)
+	err = memento.GetDbConnection().First(&user, "username=?", username).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return "", err
+		}
+		log.Errorf(err.Error())
+		return "", err
+	}
+	if utils.Md5string(password) != user.PasswordHash {
+		return "", err
+	}
+	return username, nil
+}
 func HandleUserChangePwd(c echo.Context) error {
-	username := c.FormValue("username")
+	username := c.Get("username")
+	if username == "" {
+		return utils.RespondError(c, "invalid token")
+	}
 	oldPassword := c.FormValue("oldPassword")
 	newPassword := c.FormValue("newPassword")
 	var user model.User
@@ -216,7 +241,10 @@ func HandleUserHeatMap(c echo.Context) error {
 }
 
 func HandleUserFollow(c echo.Context) error {
-	username := c.FormValue("username")
+	username := c.Get("username")
+	if username == "" {
+		return utils.RespondError(c, "invalid token")
+	}
 	foUsername := c.FormValue("followee")
 	var user, followee model.User
 	err := memento.GetDbConnection().First(&user, "username=?", username).Error
@@ -258,7 +286,10 @@ func HandleUserFollow(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 func HandleUserUnfollow(c echo.Context) error {
-	username := c.FormValue("username")
+	username := c.Get("username")
+	if username == "" {
+		return utils.RespondError(c, "invalid token")
+	}
 	foUsername := c.FormValue("followee")
 	var user, followee model.User
 	err := memento.GetDbConnection().First(&user, "username=?", username).Error

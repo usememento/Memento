@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/labstack/echo/v4"
 	"net/http"
+	"os"
 	"regexp"
 	"strings"
 )
@@ -79,4 +80,31 @@ func CalcTagsDiff(oldTags []string, newTags []string) (tagToAdd []string, tagToD
 		}
 	}
 	return tagToAdd, tagToDel
+}
+
+func PostToView(post *model.Post) (*model.PostViewModel, error) {
+	content, err := os.ReadFile(post.ContentUrl)
+	if err != nil {
+		return nil, err
+	}
+	return &model.PostViewModel{
+		PostID:    post.ID,
+		Username:  post.Username,
+		Liked:     post.Liked,
+		CreatedAt: post.CreatedAt,
+		EditedAt:  post.EditedAt,
+		Content:   string(content),
+	}, nil
+}
+
+func CommentToView(comment *model.Comment) *model.CommentViewModel {
+	return &model.CommentViewModel{
+		CommentID: comment.ID,
+		PostID:    comment.PostID,
+		Username:  comment.Username,
+		CreatedAt: comment.CreatedAt,
+		EditedAt:  comment.EditedAt,
+		Content:   comment.Content,
+		Liked:     0,
+	}
 }

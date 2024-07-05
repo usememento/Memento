@@ -17,9 +17,10 @@ type Post struct {
 }
 
 type PostViewModel struct {
-	Username   string
-	Liked      int64
-	CreatedAt  time.Time
-	EditedAt   time.Time
-	ContentUrl string
+	PostID    uint
+	Username  string
+	Liked     int64
+	CreatedAt time.Time
+	EditedAt  time.Time
+	Content   string
 }
