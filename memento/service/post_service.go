@@ -215,7 +215,7 @@ func HandlePostEdit(c echo.Context) error {
 	}
 	return c.NoContent(http.StatusOK)
 }
-func HandlePostGet(c echo.Context) error {
+func HandleGetPost(c echo.Context) error {
 	id := c.QueryParam("id")
 	var post model.Post
 	err := memento.GetDbConnection().First(&post, "id=?", id).Error

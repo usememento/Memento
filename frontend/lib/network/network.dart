@@ -1,3 +1,7 @@
+import 'dart:convert';
+
+import 'package:dio/dio.dart';
+
 import 'res.dart';
 import 'models.dart';
 
@@ -6,15 +10,32 @@ export 'res.dart';
 
 class Network {
   static Network? instance;
-
+  static String serverAddr="http://localhost:1323";
   Network._internal();
+  final dio=Dio();
 
   factory Network() => instance ??= Network._internal();
 
   Future<Res<Account>> login(String username, String password) async {
     await Future.delayed(const Duration(seconds: 1));
+    final queryData={
+      "client_id":"000000",
+      "client_secret":"999999",
+      "grant_type":"password",
+      "scope":"read"
+    };
+    final formData = FormData.fromMap(
+      {
+        "username": username,
+        "password": password,
+      },
+    );
+    final response=await dio.post("$serverAddr/user/login",queryParameters: queryData,data:formData);
+    print(response);
+    final user=await dio.get<Map<String,dynamic>>("$serverAddr/api/user/get",queryParameters: {"username":username});
+
     return const Res(Account(
-      avatar: "https://avatars.githubusercontent.com/u/67669799?v=4&size=64",
+      avatar: "$serverAddr/api/file/download?url=$user.ContentUrl",
       nickname: "Testuser",
       username: "testuser",
       token: "testuser_token",

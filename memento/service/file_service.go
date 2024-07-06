@@ -119,7 +119,7 @@ func HandleFileDelete(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-func HandleFileDownload(c echo.Context) error {
-	url := c.FormValue("url")
+func HandleGetFile(c echo.Context) error {
+	url := c.QueryParam("url")
 	return c.File(url)
 }

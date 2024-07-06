@@ -108,3 +108,16 @@ func CommentToView(comment *model.Comment) *model.CommentViewModel {
 		Liked:     0,
 	}
 }
+
+func UserToView(user *model.User) *model.UserViewModel {
+	return &model.UserViewModel{
+		Username:     user.Username,
+		Nickname:     user.Nickname,
+		Bio:          user.Bio,
+		RegisteredAt: user.RegisteredAt,
+		TotalLiked:   user.TotalLiked,
+		TotalComment: user.TotalComment,
+		TotalPosts:   user.TotalPosts,
+		AvatarUrl:    user.AvatarUrl,
+	}
+}

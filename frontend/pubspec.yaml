@@ -34,7 +34,7 @@ dependencies:
   markdown_widget: ^2.3.2+6
   url_launcher: ^6.3.0
   window_manager: ^0.3.8
-
+  dio:
 
 
   # The following adds the Cupertino Icons font to your application.

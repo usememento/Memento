@@ -6,7 +6,7 @@ import (
 	"Memento/memento/utils"
 	"context"
 	"errors"
-	echoserver "github.com/dasjott/oauth2-echo-server"
+	"github.com/go-oauth2/oauth2/v4/server"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
 	"gorm.io/gorm"
@@ -18,11 +18,11 @@ import (
 	"time"
 )
 
-func HandleUserCreate(c echo.Context) error {
+func HandleUserCreateWrapper(c echo.Context, s *server.Server) error {
 	username := c.FormValue("username")
 	password := c.FormValue("password")
 	hashedPassword := utils.Md5string(password)
-	err := memento.GetDbConnection().Create(&model.User{
+	user := model.User{
 		Username:     username,
 		PasswordHash: hashedPassword,
 		AvatarUrl:    "",
@@ -32,7 +32,8 @@ func HandleUserCreate(c echo.Context) error {
 		TotalComment: 0,
 		TotalPosts:   0,
 		RegisteredAt: time.Now(),
-	}).Error
+	}
+	err := memento.GetDbConnection().Create(&user).Error
 	if err != nil {
 		// Check if the error is due to a unique constraint violation
 		if errors.Is(err, gorm.ErrDuplicatedKey) {
@@ -42,7 +43,20 @@ func HandleUserCreate(c echo.Context) error {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown insertion error")
 	}
-	return utils.RespondOk(c, username)
+
+	gt, tgr, err := s.ValidationTokenRequest(c.Request())
+	if err != nil {
+		return utils.RespondError(c, err.Error())
+	}
+
+	ti, err := s.GetAccessToken(c.Request().Context(), gt, tgr)
+	if err != nil {
+		return utils.RespondError(c, err.Error())
+	}
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"token": s.GetTokenData(ti),
+		"user":  utils.UserToView(&user),
+	})
 }
 
 func HandleUserDelete(c echo.Context) error {
@@ -130,7 +144,7 @@ func HandleUserEdit(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-func HandleUserGet(c echo.Context) error {
+func HandleGetUser(c echo.Context) error {
 	username := c.QueryParam("username")
 	var user model.User
 	err := memento.GetDbConnection().First(&user, "username=?", username).Error
@@ -141,19 +155,9 @@ func HandleUserGet(c echo.Context) error {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown query error")
 	}
-	return c.JSON(http.StatusOK, model.UserViewModel{
-		Username:     user.Username,
-		Nickname:     user.Nickname,
-		Bio:          user.Bio,
-		RegisteredAt: user.RegisteredAt,
-		TotalLiked:   user.TotalLiked,
-		TotalComment: user.TotalComment,
-		TotalPosts:   user.TotalPosts,
-		AvatarUrl:    user.AvatarUrl,
-	})
+	return c.JSON(http.StatusOK, utils.UserToView(&user))
 }
-
-func HandleLogin(c echo.Context) error {
+func HandleUserLoginWrapper(c echo.Context, s *server.Server) error {
 	username := c.FormValue("username")
 	password := c.FormValue("password")
 	var user model.User
@@ -168,7 +172,20 @@ func HandleLogin(c echo.Context) error {
 	if utils.Md5string(password) != user.PasswordHash {
 		return utils.RespondError(c, "incorrect password")
 	}
-	return echoserver.HandleTokenRequest(c)
+
+	gt, tgr, err := s.ValidationTokenRequest(c.Request())
+	if err != nil {
+		return utils.RespondError(c, err.Error())
+	}
+
+	ti, err := s.GetAccessToken(c.Request().Context(), gt, tgr)
+	if err != nil {
+		return utils.RespondError(c, err.Error())
+	}
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"token": s.GetTokenData(ti),
+		"user":  utils.UserToView(&user),
+	})
 }
 func PasswordAuthorizationHandler(ctx context.Context, clientID, username, password string) (userID string, err error) {
 	var user model.User

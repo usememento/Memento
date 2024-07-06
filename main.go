@@ -32,7 +32,7 @@ func main() {
 	})
 	manager.MapClientStorage(clientStore)
 	// Initialize the oauth2 service
-	eServer := echoserver.InitServer(manager)
+	AuthServer = echoserver.InitServer(manager)
 	echoserver.SetAllowGetAccessRequest(true)
 	echoserver.SetClientAuthorizedHandler(memento.AllowAuthorizedHandler)
 	echoserver.SetClientInfoHandler(server.ClientFormHandler)
@@ -41,14 +41,16 @@ func main() {
 	// Middleware
 	e.Use(middleware.Logger())
 	service.ServeFrontend(e)
-	e.POST("/user/login", service.HandleLogin)
-	e.POST("/user/create", service.HandleUserCreate)
+	e.POST("/api/user/login", func(c echo.Context) error {
+		return service.HandleUserLoginWrapper(c, AuthServer)
+	})
+	e.POST("/api/user/create", func(c echo.Context) error { return service.HandleUserCreateWrapper(c, AuthServer) })
 	api := e.Group("/api")
 	{
-		api.Use(memento.TokenValidator(&echoserver.DefaultConfig, eServer))
+		api.Use(memento.TokenValidator(&echoserver.DefaultConfig, AuthServer))
 		postApi := api.Group("/post")
 		{
-			postApi.GET("/get", service.HandlePostGet)
+			postApi.GET("/get", service.HandleGetPost)
 			postApi.GET("/userPosts", service.HandleGetUserPosts)
 			postApi.POST("/create", service.HandlePostCreate)
 			postApi.POST("/edit", service.HandlePostEdit)
@@ -59,7 +61,7 @@ func main() {
 		}
 		userApi := api.Group("/user")
 		{
-			userApi.GET("/get", service.HandleUserGet)
+			userApi.GET("/get", service.HandleGetUser)
 			userApi.POST("/changePwd", service.HandleUserChangePwd)
 			userApi.POST("/edit", service.HandleUserEdit)
 			userApi.DELETE("/delete", service.HandleUserDelete)
@@ -69,7 +71,7 @@ func main() {
 		}
 		fileApi := api.Group("/file")
 		{
-			fileApi.GET("/download", service.HandleFileDownload)
+			fileApi.GET("/download", service.HandleGetFile)
 			fileApi.POST("/upload", service.HandleFileUpload)
 			fileApi.DELETE("/delete", service.HandleFileDelete)
 		}
