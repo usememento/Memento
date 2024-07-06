@@ -75,68 +75,69 @@ class _MemoDetailsState extends State<_MemoDetails> {
       primary: App.isMobile || context.width <= 600,
       color: context.colorScheme.surface.withOpacity(0.6),
       actions: [
-        if(context.width <= 600)
-        Tooltip(
-          message: 'Outline'.tl,
-          child: Button.icon(
-            icon: const Icon(Icons.format_list_bulleted),
-            onPressed: () {
-              App.rootNavigatorKey!.currentState!.push(PageRouteBuilder(
-                  transitionDuration: const Duration(milliseconds: 200),
-                  opaque: false,
-                  fullscreenDialog: true,
-                  pageBuilder: (context, animation, secondaryAnimation) {
-                return AnimatedBuilder(
-                  animation: CurvedAnimation(
-                      parent: animation, curve: Curves.ease),
-                  builder: (context, child) {
-                    var value = animation.value;
-                    return Stack(
-                      children: [
-                        Positioned.fill(
-                            child: GestureDetector(
-                              onTap: () {
-                                Navigator.pop(context);
-                              },
-                              child: Container(
-                                color: Colors.black.withOpacity(0.4 * value),
-                              ),
-                            )),
-                        Positioned(
-                          right: -300 * (1 - value),
-                          top: 0,
-                          bottom: 0,
-                          child: Container(
-                            height: double.infinity,
-                            width: 300,
-                            padding: EdgeInsets.only(
-                              top: context.padding.top,
-                              bottom: context.padding.bottom,
-                              left: 8,
-                              right: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: context.colorScheme.surface,
-                              border: Border(
-                                left: BorderSide(
-                                  color: context.colorScheme.outlineVariant,
-                                  width: 0.4,
+        if (context.width <= 600)
+          Tooltip(
+            message: 'Outline'.tl,
+            child: Button.icon(
+              icon: const Icon(Icons.format_list_bulleted),
+              onPressed: () {
+                App.rootNavigatorKey!.currentState!.push(PageRouteBuilder(
+                    transitionDuration: const Duration(milliseconds: 200),
+                    opaque: false,
+                    fullscreenDialog: true,
+                    pageBuilder: (context, animation, secondaryAnimation) {
+                      return AnimatedBuilder(
+                        animation: CurvedAnimation(
+                            parent: animation, curve: Curves.ease),
+                        builder: (context, child) {
+                          var value = animation.value;
+                          return Stack(
+                            children: [
+                              Positioned.fill(
+                                  child: GestureDetector(
+                                onTap: () {
+                                  Navigator.pop(context);
+                                },
+                                child: Container(
+                                  color: Colors.black.withOpacity(0.4 * value),
                                 ),
-                              ),
-                            ),
-                            child: SingleChildScrollView(
-                              child: buildOutline(),
-                            ),
-                          ).withSurface(),
-                        )
-                      ],
-                    );
-                  },
-                );
-              }));
-            },
-          ),
-        )
+                              )),
+                              Positioned(
+                                right: -300 * (1 - value),
+                                top: 0,
+                                bottom: 0,
+                                child: Container(
+                                  height: double.infinity,
+                                  width: 300,
+                                  padding: EdgeInsets.only(
+                                    top: context.padding.top,
+                                    bottom: context.padding.bottom,
+                                    left: 8,
+                                    right: 8,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: context.colorScheme.surface,
+                                    border: Border(
+                                      left: BorderSide(
+                                        color:
+                                            context.colorScheme.outlineVariant,
+                                        width: 0.4,
+                                      ),
+                                    ),
+                                  ),
+                                  child: SingleChildScrollView(
+                                    child: buildOutline(),
+                                  ),
+                                ).withSurface(),
+                              )
+                            ],
+                          );
+                        },
+                      );
+                    }));
+              },
+            ),
+          )
       ],
     );
   }
@@ -155,7 +156,8 @@ class _MemoDetailsState extends State<_MemoDetails> {
 
   @override
   Widget build(BuildContext context) {
-    var markdownContent = MarkdownGenerator().buildWidgets(onTocList: (t) {
+    var markdownContent =
+        getMemoMarkdownGenerator().buildWidgets(onTocList: (t) {
       toc ??= t;
       title ??= t.first.node.build().toPlainText();
     }, widget.memo.content, config: getMemoMarkdownConfig(context));

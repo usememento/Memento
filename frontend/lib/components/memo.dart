@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_math_fork/flutter_math.dart';
 import 'package:frontend/components/user.dart';
 import 'package:frontend/foundation/app.dart';
 import 'package:frontend/utils/ext.dart';
 import 'package:frontend/utils/translation.dart';
-import 'package:markdown_widget/config/all.dart';
-import 'package:markdown_widget/widget/all.dart';
+import 'package:markdown/markdown.dart' as m;
+import 'package:markdown_widget/markdown_widget.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:flutter_highlight/themes/a11y-light.dart';
 import 'package:flutter_highlight/themes/a11y-dark.dart';
@@ -34,7 +35,8 @@ class _MemoWidgetState extends State<MemoWidget> {
     content = isFolded
         ? content.split('\n').sublist(0, _maxLines).join('\n')
         : content;
-    return SelectionArea(child: InkWell(
+    return SelectionArea(
+        child: InkWell(
       onTap: () => context.to("/memo/${widget.memo.id}", {
         'memo': widget.memo,
       }),
@@ -69,19 +71,21 @@ class _MemoWidgetState extends State<MemoWidget> {
                         if (widget.memo.author != null)
                           Text(widget.memo.author!.nickname,
                               style:
-                              const TextStyle(fontWeight: FontWeight.bold)),
+                                  const TextStyle(fontWeight: FontWeight.bold)),
                         const SizedBox(height: 8),
                         Container(
                           constraints: const BoxConstraints(maxHeight: 400),
                           child: Stack(
-                            children: [Positioned(
-                              top: 0,
-                              left: 0,
-                              right: 0,
-                              child: MemoContent(
-                                content: content,
-                              ),
-                            )],
+                            children: [
+                              Positioned(
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                child: MemoContent(
+                                  content: content,
+                                ),
+                              )
+                            ],
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -96,7 +100,7 @@ class _MemoWidgetState extends State<MemoWidget> {
                   Button.normal(
                     onPressed: like,
                     padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     isLoading: isLiking,
                     height: 36,
                     width: calcButtonWidth(widget.memo.linksCount),
@@ -123,7 +127,7 @@ class _MemoWidgetState extends State<MemoWidget> {
                   Button.normal(
                     onPressed: reply,
                     padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     height: 36,
                     width: calcButtonWidth(widget.memo.repliesCount),
                     child: Row(
@@ -231,6 +235,79 @@ void _handleLink(String link) {
   }
 }
 
+SpanNodeGeneratorWithTag latexGenerator = SpanNodeGeneratorWithTag(
+    tag: _latexTag,
+    generator: (e, config, visitor) =>
+        LatexNode(e.attributes, e.textContent, config));
+
+const _latexTag = 'latex';
+
+class LatexSyntax extends m.InlineSyntax {
+  LatexSyntax() : super(r'(\$\$[\s\S]+\$\$)|(\$.+?\$)');
+
+  @override
+  bool onMatch(m.InlineParser parser, Match match) {
+    final input = match.input;
+    final matchValue = input.substring(match.start, match.end);
+    String content = '';
+    bool isInline = true;
+    const blockSyntax = '\$\$';
+    const inlineSyntax = '\$';
+    if (matchValue.startsWith(blockSyntax) &&
+        matchValue.endsWith(blockSyntax) &&
+        (matchValue != blockSyntax)) {
+      content = matchValue.substring(2, matchValue.length - 2);
+      isInline = false;
+    } else if (matchValue.startsWith(inlineSyntax) &&
+        matchValue.endsWith(inlineSyntax) &&
+        matchValue != inlineSyntax) {
+      content = matchValue.substring(1, matchValue.length - 1);
+    }
+    m.Element el = m.Element.text(_latexTag, matchValue);
+    el.attributes['content'] = content;
+    el.attributes['isInline'] = '$isInline';
+    parser.addNode(el);
+    return true;
+  }
+}
+
+class LatexNode extends SpanNode {
+  final Map<String, String> attributes;
+  final String textContent;
+  final MarkdownConfig config;
+
+  LatexNode(this.attributes, this.textContent, this.config);
+
+  @override
+  InlineSpan build() {
+    final content = attributes['content'] ?? '';
+    final isInline = attributes['isInline'] == 'true';
+    final style = parentStyle ?? config.p.textStyle;
+    if (content.isEmpty) return TextSpan(style: style, text: textContent);
+    final latex = Math.tex(
+      content,
+      mathStyle: MathStyle.text,
+      textStyle: style,
+      textScaleFactor: 1,
+      onErrorFallback: (error) {
+        return Text(
+          textContent,
+          style: style.copyWith(color: Colors.red),
+        );
+      },
+    );
+    return WidgetSpan(
+        alignment: PlaceholderAlignment.middle,
+        child: !isInline
+            ? Container(
+          width: double.infinity,
+          margin: const EdgeInsets.symmetric(vertical: 16),
+          child: Center(child: latex),
+        )
+            : latex);
+  }
+}
+
 MarkdownConfig getMemoMarkdownConfig(BuildContext context) {
   return MarkdownConfig(configs: [
     const PConfig(textStyle: TextStyle()),
@@ -241,12 +318,9 @@ MarkdownConfig getMemoMarkdownConfig(BuildContext context) {
     const _H1Config(),
     const _H2Config(),
     const _H3Config(),
-    const H4Config(
-        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-    const H5Config(
-        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-    const H6Config(
-        style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+    const H4Config(style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+    const H5Config(style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+    const H6Config(style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
     PreConfig(
       theme: context.colorScheme.brightness == Brightness.dark
           ? a11yDarkTheme
@@ -279,11 +353,14 @@ MarkdownConfig getMemoMarkdownConfig(BuildContext context) {
                   onPressed: () {
                     Clipboard.setData(ClipboardData(text: code));
                   },
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   child: Row(
                     children: [
                       const Icon(Icons.copy, size: 16),
-                      const SizedBox(width: 4,),
+                      const SizedBox(
+                        width: 4,
+                      ),
                       Text("Copy".tl, style: const TextStyle(fontSize: 14)),
                     ],
                   ),
@@ -297,13 +374,25 @@ MarkdownConfig getMemoMarkdownConfig(BuildContext context) {
       ),
     ),
     CodeConfig(
-        style: TextStyle(
-            backgroundColor: context.colorScheme.surfaceContainer)),
+        style:
+            TextStyle(backgroundColor: context.colorScheme.surfaceContainer)),
     BlockquoteConfig(
       sideColor: context.colorScheme.outline,
       textColor: context.colorScheme.outline,
     ),
   ]);
+}
+
+MarkdownGenerator getMemoMarkdownGenerator() {
+  const latexTag = 'latex';
+  SpanNodeGeneratorWithTag latexGenerator = SpanNodeGeneratorWithTag(
+      tag: latexTag,
+      generator: (e, config, visitor) =>
+          LatexNode(e.attributes, e.textContent, config));
+  return MarkdownGenerator(
+    generators: [latexGenerator],
+    inlineSyntaxList: [LatexSyntax()],
+  );
 }
 
 class MemoContent extends StatelessWidget {
@@ -334,6 +423,7 @@ class MemoContent extends StatelessWidget {
       data: data,
       selectable: selectable,
       config: getMemoMarkdownConfig(context),
+      generator: getMemoMarkdownGenerator(),
     );
   }
 
