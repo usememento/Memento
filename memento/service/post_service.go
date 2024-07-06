@@ -50,7 +50,7 @@ func HandlePostCreate(c echo.Context) error {
 		return utils.RespondError(c, "can not open content file")
 	}
 	defer contentBody.Close()
-	content, err := os.Create(contentFilepath)
+	content, err := os.OpenFile(contentFilepath, os.O_CREATE|os.O_RDWR, 0777)
 	if err != nil {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "os file open error")
@@ -231,15 +231,8 @@ func HandleGetPost(c echo.Context) error {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "cannot read post content")
 	}
-	return c.JSON(http.StatusOK, struct {
-		Id        uint
-		Username  string
-		Liked     int64
-		CreatedAt time.Time
-		EditedAt  time.Time
-		Content   string
-	}{
-		Id:        post.ID,
+	return c.JSON(http.StatusOK, model.PostViewModel{
+		PostID:    post.ID,
 		Username:  post.Username,
 		Liked:     post.Liked,
 		CreatedAt: post.CreatedAt,
@@ -256,11 +249,11 @@ func HandleGetUserPosts(c echo.Context) error {
 		return utils.RespondError(c, "username not exists")
 	}
 	var posts []model.Post
-	err = memento.GetDbConnection().Model(&user).Association("Posts").Find(&posts)
+	err = memento.GetDbConnection().Model(&user).Association("Posts").Find(&posts, memento.GetDbConnection())
 	if err != nil {
 		return utils.RespondError(c, "unknown query error")
 	}
-	var result []model.PostViewModel
+	result := make([]model.PostViewModel, 0, len(posts))
 	for _, post := range posts {
 		pv, err := utils.PostToView(&post)
 		if err != nil {

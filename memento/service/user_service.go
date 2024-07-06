@@ -26,7 +26,7 @@ func HandleUserCreateWrapper(c echo.Context, s *server.Server) error {
 		Username:     username,
 		PasswordHash: hashedPassword,
 		AvatarUrl:    "",
-		Nickname:     "",
+		Nickname:     username,
 		Bio:          "",
 		TotalLiked:   0,
 		TotalComment: 0,
@@ -252,7 +252,7 @@ func HandleUserHeatMap(c echo.Context) error {
 		if p.EditedAt.Compare(sixMonthsAgo) < 0 {
 			continue
 		}
-		heatmap[p.EditedAt.Format("2006/01/02")] += 1
+		heatmap[p.EditedAt.Format("2006-01-02")] += 1
 	}
 	return c.JSON(http.StatusOK, heatmap)
 }

@@ -13,6 +13,7 @@ import (
 	"gopkg.in/yaml.v3"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	"net/http"
 	"os"
 	"path"
 	"sync"
@@ -101,7 +102,9 @@ func TokenValidator(cfg *echoserver.Config, eServer *server.Server) echo.Middlew
 			}
 			ti, err := eServer.ValidationBearerToken(c.Request())
 			if err != nil {
-				return utils.RespondError(c, "invalid token")
+				return c.JSON(http.StatusUnauthorized, map[string]string{
+					"message": "invalid token",
+				})
 			}
 			fmt.Printf("token validator: %s\n", ti.GetUserID())
 			c.Set(tokenKey, ti)
