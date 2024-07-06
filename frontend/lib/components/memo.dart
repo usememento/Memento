@@ -34,8 +34,10 @@ class _MemoWidgetState extends State<MemoWidget> {
     content = isFolded
         ? content.split('\n').sublist(0, _maxLines).join('\n')
         : content;
-    return InkWell(
-      onTap: () => context.to("/memo/${widget.memo.id}"),
+    return SelectionArea(child: InkWell(
+      onTap: () => context.to("/memo/${widget.memo.id}", {
+        'memo': widget.memo,
+      }),
       child: Container(
         decoration: BoxDecoration(
           border: Border(
@@ -67,16 +69,21 @@ class _MemoWidgetState extends State<MemoWidget> {
                         if (widget.memo.author != null)
                           Text(widget.memo.author!.nickname,
                               style:
-                                  const TextStyle(fontWeight: FontWeight.bold)),
+                              const TextStyle(fontWeight: FontWeight.bold)),
                         const SizedBox(height: 8),
-                        MemoContent(
-                          content: content,
+                        Container(
+                          constraints: const BoxConstraints(maxHeight: 400),
+                          child: Stack(
+                            children: [Positioned(
+                              top: 0,
+                              left: 0,
+                              right: 0,
+                              child: MemoContent(
+                                content: content,
+                              ),
+                            )],
+                          ),
                         ),
-                        if (isFolded)
-                          Text("Click to view more".tl,
-                              style: TextStyle(
-                                  color: context.colorScheme.outline,
-                                  fontSize: 12)),
                         const SizedBox(height: 8),
                       ],
                     ),
@@ -89,7 +96,7 @@ class _MemoWidgetState extends State<MemoWidget> {
                   Button.normal(
                     onPressed: like,
                     padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     isLoading: isLiking,
                     height: 36,
                     width: calcButtonWidth(widget.memo.linksCount),
@@ -116,7 +123,7 @@ class _MemoWidgetState extends State<MemoWidget> {
                   Button.normal(
                     onPressed: reply,
                     padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     height: 36,
                     width: calcButtonWidth(widget.memo.repliesCount),
                     child: Row(
@@ -170,7 +177,7 @@ class _MemoWidgetState extends State<MemoWidget> {
           ),
         ),
       ),
-    );
+    ));
   }
 
   double calcButtonWidth(int number) {
@@ -206,6 +213,99 @@ class _MemoWidgetState extends State<MemoWidget> {
   void edit() {}
 }
 
+void _handleLink(String link) {
+  if (!link.isURL) {
+    var lr = link.split(':');
+    if (lr.length != 2) {
+      return;
+    }
+    var context = App.navigatorKey!.currentContext!;
+    switch (lr[0]) {
+      case 'tag':
+        context.to('/tag/${lr[1]}');
+      case 'user':
+        context.to('/user/${lr[1]}');
+    }
+  } else {
+    launchUrlString(link);
+  }
+}
+
+MarkdownConfig getMemoMarkdownConfig(BuildContext context) {
+  return MarkdownConfig(configs: [
+    const PConfig(textStyle: TextStyle()),
+    LinkConfig(
+      style: TextStyle(color: context.colorScheme.primary),
+      onTap: _handleLink,
+    ),
+    const _H1Config(),
+    const _H2Config(),
+    const _H3Config(),
+    const H4Config(
+        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+    const H5Config(
+        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+    const H6Config(
+        style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+    PreConfig(
+      theme: context.colorScheme.brightness == Brightness.dark
+          ? a11yDarkTheme
+          : a11yLightTheme,
+      textStyle: const TextStyle(
+        fontFamily: 'Consolas',
+        fontSize: 14,
+        fontFamilyFallback: ['Monaco', 'Courier New', 'monospace', 'Arial'],
+      ),
+      decoration: const BoxDecoration(),
+      padding: EdgeInsets.zero,
+      wrapper: (child, code, lang) => Container(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+        decoration: BoxDecoration(
+          color: context.colorScheme.brightness == Brightness.dark
+              ? const Color(0xff323232)
+              : const Color(0xffeff1f3),
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Text(
+                  lang,
+                  style: const TextStyle(fontSize: 14),
+                ),
+                const Spacer(),
+                Button.normal(
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: code));
+                  },
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.copy, size: 16),
+                      const SizedBox(width: 4,),
+                      Text("Copy".tl, style: const TextStyle(fontSize: 14)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const Divider(),
+            child,
+          ],
+        ),
+      ),
+    ),
+    CodeConfig(
+        style: TextStyle(
+            backgroundColor: context.colorScheme.surfaceContainer)),
+    BlockquoteConfig(
+      sideColor: context.colorScheme.outline,
+      textColor: context.colorScheme.outline,
+    ),
+  ]);
+}
+
 class MemoContent extends StatelessWidget {
   const MemoContent(
       {super.key, required this.content, this.selectable = false});
@@ -213,24 +313,6 @@ class MemoContent extends StatelessWidget {
   final String content;
 
   final bool selectable;
-
-  void handleLink(String link) {
-    if (!link.isURL) {
-      var lr = link.split(':');
-      if (lr.length != 2) {
-        return;
-      }
-      var context = App.navigatorKey!.currentContext!;
-      switch (lr[0]) {
-        case 'tag':
-          context.to('/tag/${lr[1]}');
-        case 'user':
-          context.to('/user/${lr[1]}');
-      }
-    } else {
-      launchUrlString(link);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -251,78 +333,7 @@ class MemoContent extends StatelessWidget {
     return MarkdownBlock(
       data: data,
       selectable: selectable,
-      config: MarkdownConfig(configs: [
-        const PConfig(textStyle: TextStyle()),
-        LinkConfig(
-          style: TextStyle(color: context.colorScheme.primary),
-          onTap: handleLink,
-        ),
-        const _H1Config(),
-        const _H2Config(),
-        const _H3Config(),
-        const H4Config(
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-        const H5Config(
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-        const H6Config(
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
-        PreConfig(
-          theme: context.colorScheme.brightness == Brightness.dark
-              ? a11yDarkTheme
-              : a11yLightTheme,
-          textStyle: const TextStyle(
-            fontFamily: 'Consolas',
-            fontSize: 14,
-            fontFamilyFallback: ['Monaco', 'Courier New', 'monospace', 'Arial'],
-          ),
-          decoration: const BoxDecoration(),
-          padding: EdgeInsets.zero,
-          wrapper: (child, code, lang) => Container(
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-            decoration: BoxDecoration(
-              color: context.colorScheme.brightness == Brightness.dark
-                  ? const Color(0xff323232)
-                  : const Color(0xffeff1f3),
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      lang,
-                      style: const TextStyle(fontSize: 14),
-                    ),
-                    const Spacer(),
-                    Button.normal(
-                      onPressed: () {
-                        Clipboard.setData(ClipboardData(text: code));
-                      },
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.copy, size: 16),
-                          const SizedBox(width: 4,),
-                          Text("Copy".tl, style: const TextStyle(fontSize: 14)),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const Divider(),
-                child,
-              ],
-            ),
-          ),
-        ),
-        CodeConfig(
-            style: TextStyle(
-                backgroundColor: context.colorScheme.surfaceContainer)),
-        BlockquoteConfig(
-          sideColor: context.colorScheme.outline,
-          textColor: context.colorScheme.outline,
-        ),
-      ]),
+      config: getMemoMarkdownConfig(context),
     );
   }
 

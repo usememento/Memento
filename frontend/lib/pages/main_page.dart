@@ -6,6 +6,7 @@ import '../components/button.dart';
 import '../components/user.dart';
 import '../foundation/app.dart';
 import 'home_page.dart';
+import 'memo_details_page.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -17,6 +18,7 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   static Map<String, Widget Function(BuildContext context)> routes = {
     '/': (context) => const HomePage(),
+    '/memo/:id': (context) => const MemoDetailsPage(),
   };
 
   static const mainPageRoutes = [
@@ -112,7 +114,7 @@ class _MainPageState extends State<MainPage> {
             initialRoute: mainPageRoutes[index],
             onGenerateRoute: (settings) {
               var builder = routes[settings.name];
-              var params = <String, String>{};
+              var params = <String, dynamic>{};
               if (builder == null && settings.name != null) {
                 var keys = routes.keys;
                 for (var key in keys) {
@@ -122,14 +124,15 @@ class _MainPageState extends State<MainPage> {
                   if (routeSegments.length == settingsSegments.length) {
                     var match = true;
                     for (var i = 0; i < routeSegments.length; i++) {
-                      if (routeSegments[i] != settingsSegments[i] &&
-                          !routeSegments[i].startsWith(':')) {
-                        match = false;
-                        break;
+                      if (routeSegments[i] == settingsSegments[i]){
+                        continue;
                       }
                       if (routeSegments[i].startsWith(':')) {
                         params[routeSegments[i].substring(1)] =
                             settingsSegments[i];
+                      } else {
+                        match = false;
+                        break;
                       }
                     }
                     if (match) {
@@ -138,6 +141,9 @@ class _MainPageState extends State<MainPage> {
                     }
                   }
                 }
+              }
+              if(settings.arguments is Map<String, dynamic>){
+                params.addAll(settings.arguments as Map<String, dynamic>);
               }
               return AppPageRoute(
                   builder: builder ?? (context) => const UnknownRoutePage(),
