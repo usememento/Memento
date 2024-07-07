@@ -291,7 +291,7 @@ func HandleGetUserPosts(c echo.Context) error {
 	result := make([]model.PostViewModel, 0, memento.PageSize)
 	for _, post := range posts {
 		var likePosts []model.Post
-		memento.GetDbConnection().Model(&user).Association("Likes").Find(&likePosts, "id=?", post.ID)
+		memento.GetDbConnection().Model(&user).Association("Likes").Find(&likePosts, memento.GetDbConnection().Order("created_at desc"), "id=?", post.ID)
 		pv, err := utils.PostToView(&post, utils.UserToView(&user), len(likePosts) > 0)
 		if err != nil {
 			log.Errorf(err.Error())
@@ -435,7 +435,7 @@ func HandleGetTaggedPost(c echo.Context) error {
 		return utils.RespondError(c, "unknown query error")
 	}
 	posts := make([]model.Post, 0, memento.PageSize)
-	memento.GetDbConnection().Model(&tag).Association("Posts").Find(&posts, memento.GetDbConnection().Offset(page*memento.PageSize).Limit(memento.PageSize))
+	memento.GetDbConnection().Model(&tag).Association("Posts").Find(&posts, memento.GetDbConnection().Order("created_at desc"), memento.GetDbConnection().Offset(page*memento.PageSize).Limit(memento.PageSize))
 	var result []model.PostViewModel
 	for _, p := range posts {
 		var user model.User
@@ -452,7 +452,7 @@ func HandleGetTaggedPost(c echo.Context) error {
 	return c.JSON(http.StatusOK, result)
 }
 
-func HandlerGetAllPosts(c echo.Context) error {
+func HandleGetAllPosts(c echo.Context) error {
 	page, err := strconv.Atoi(c.QueryParam("page"))
 	if err != nil {
 		return utils.RespondError(c, "invalid page")

@@ -55,6 +55,7 @@ func main() {
 		api.Use(memento.TokenValidator(&echoserver.DefaultConfig, AuthServer))
 		postApi := api.Group("/post")
 		{
+			postApi.GET("/all", service.HandleGetAllPosts)
 			postApi.GET("/get", service.HandleGetPost)
 			postApi.GET("/userPosts", service.HandleGetUserPosts)
 			postApi.POST("/create", service.HandlePostCreate)
