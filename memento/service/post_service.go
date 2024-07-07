@@ -88,9 +88,10 @@ func HandlePostCreate(c echo.Context) error {
 				if err != nil {
 					if errors.Is(err, gorm.ErrRecordNotFound) {
 						tx.Create(&tag)
+					} else {
+						log.Errorf(err.Error())
+						return utils.RespondError(c, "unknown insertion error")
 					}
-					log.Errorf(err.Error())
-					return utils.RespondError(c, "unknown insertion error")
 				}
 				tx.Model(&tag).Association("Posts").Append(&post)
 			}
