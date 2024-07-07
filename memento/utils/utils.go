@@ -4,11 +4,9 @@ import (
 	"Memento/memento/model"
 	"crypto/md5"
 	"encoding/hex"
-	"fmt"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"os"
-	"regexp"
 	"strings"
 )
 
@@ -55,17 +53,13 @@ func GetPostIndex(posts []model.Post, post model.Post) int {
 }
 
 func GetTags(content string) []string {
-	pattern := `#\w+ `
-
-	re, err := regexp.Compile(pattern)
-	if err != nil {
-		fmt.Println("Error compiling regex:", err)
-		return nil
-	}
-	matches := re.FindAllString(content, -1)
+	blocks := strings.Split(content, " ")
 	var result []string
-	for _, m := range matches {
-		result = append(result, strings.TrimSpace(m))
+
+	for _, b := range blocks {
+		if len(b) > 1 && len(b) <= 21 && b[0] == '#' {
+			result = append(result, b)
+		}
 	}
 	return result
 }

@@ -451,3 +451,26 @@ func HandleGetTaggedPost(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, result)
 }
+
+func HandlerGetAllPosts(c echo.Context) error {
+	page, err := strconv.Atoi(c.QueryParam("page"))
+	if err != nil {
+		return utils.RespondError(c, "invalid page")
+	}
+	posts := make([]model.Post, 0, memento.PageSize)
+	memento.GetDbConnection().Find(&posts, memento.GetDbConnection().Order("created_at desc"), memento.GetDbConnection().Offset(page*memento.PageSize).Limit(memento.PageSize))
+	var result []model.PostViewModel
+	for _, p := range posts {
+		var user model.User
+		memento.GetDbConnection().First(&user, "username=?", p.Username)
+		var likePosts []model.Post
+		memento.GetDbConnection().Model(&user).Association("likes").Find(&likePosts, "id=?", p.ID)
+		pv, err := utils.PostToView(&p, utils.UserToView(&user), len(likePosts) > 0)
+		if err != nil {
+			log.Errorf(err.Error())
+			continue
+		}
+		result = append(result, *pv)
+	}
+	return c.JSON(http.StatusOK, result)
+}

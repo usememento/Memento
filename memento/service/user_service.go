@@ -93,13 +93,15 @@ func HandleUserRefreshToken(c echo.Context, s *server.Server) error {
 	if err != nil {
 		return utils.RespondError(c, err.Error())
 	}
-
 	ti, err := s.GetAccessToken(c.Request().Context(), gt, tgr)
 	if err != nil {
 		return utils.RespondError(c, err.Error())
 	}
+	var user model.User
+	memento.GetDbConnection().First(&user, "username=?", ti.GetUserID())
 	return c.JSON(http.StatusOK, echo.Map{
 		"token": s.GetTokenData(ti),
+		"user":  *utils.UserToView(&user),
 	})
 }
 func HandleUserDelete(c echo.Context) error {
@@ -371,9 +373,35 @@ func HandleUserUnfollow(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 func HandlerGetUserFollower(c echo.Context) error {
-	return nil
+	username := c.QueryParam("username")
+	var user model.User
+	memento.GetDbConnection().First(&user, "username=?", username)
+	page, err := strconv.Atoi(c.QueryParam("page"))
+	if err != nil {
+		return utils.RespondError(c, "invalid page")
+	}
+	followers := make([]model.User, 0, memento.PageSize)
+	memento.GetDbConnection().Model(&user).Association("Followers").Find(&followers, memento.GetDbConnection().Offset(page*memento.PageSize).Limit(memento.PageSize))
+	result := make([]model.UserViewModel, 0, memento.PageSize)
+	for _, f := range followers {
+		result = append(result, *utils.UserToView(&f))
+	}
+	return c.JSON(http.StatusOK, result)
 }
 
 func HandlerGetUserFollowing(c echo.Context) error {
-	return nil
+	username := c.QueryParam("username")
+	var user model.User
+	memento.GetDbConnection().First(&user, "username=?", username)
+	page, err := strconv.Atoi(c.QueryParam("page"))
+	if err != nil {
+		return utils.RespondError(c, "invalid page")
+	}
+	followers := make([]model.User, 0, memento.PageSize)
+	memento.GetDbConnection().Model(&user).Association("Follows").Find(&followers, memento.GetDbConnection().Offset(page*memento.PageSize).Limit(memento.PageSize))
+	result := make([]model.UserViewModel, 0, memento.PageSize)
+	for _, f := range followers {
+		result = append(result, *utils.UserToView(&f))
+	}
+	return c.JSON(http.StatusOK, result)
 }
