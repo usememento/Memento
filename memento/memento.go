@@ -119,7 +119,7 @@ func TokenValidator(cfg *echoserver.Config, eServer *server.Server) echo.Middlew
 }
 
 func AllowAuthorizedHandler(clientID string, grant oauth2.GrantType) (allowed bool, err error) {
-	if grant.String() == "password" {
+	if grant.String() == "password" || grant.String() == "refresh_token" {
 		return true, nil
 	}
 	return false, nil
@@ -157,4 +157,11 @@ func GetFile(out *model.File, url string) error {
 		return err
 	}
 	return nil
+}
+
+type Token struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	TokenType    string `json:"token_type"`
+	Expiry       int64  `json:"expiry"`
 }

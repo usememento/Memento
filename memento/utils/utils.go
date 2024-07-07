@@ -20,22 +20,28 @@ func Md5string(s string) string {
 
 func RespondError(c echo.Context, msg interface{}) error {
 	return c.JSON(http.StatusBadRequest,
-		map[string]interface{}{
+		echo.Map{
 			"message": msg,
 		})
 }
 
 func RespondOk(c echo.Context, msg interface{}) error {
 	return c.JSON(http.StatusOK,
-		map[string]interface{}{
+		echo.Map{
 			"message": msg,
 		})
 }
 
 func RespondUnauthorized(c echo.Context) error {
 	return c.JSON(http.StatusUnauthorized,
-		map[string]interface{}{
+		echo.Map{
 			"message": "invalid token",
+		})
+}
+func RespondInternalError(c echo.Context, msg interface{}) error {
+	return c.JSON(http.StatusInternalServerError,
+		echo.Map{
+			"message": msg,
 		})
 }
 

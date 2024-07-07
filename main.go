@@ -5,6 +5,7 @@ import (
 	"Memento/memento/service"
 	"fmt"
 	echoserver "github.com/dasjott/oauth2-echo-server"
+	"github.com/go-oauth2/oauth2/v4"
 	"github.com/go-oauth2/oauth2/v4/manage"
 	"github.com/go-oauth2/oauth2/v4/models"
 	"github.com/go-oauth2/oauth2/v4/server"
@@ -32,19 +33,23 @@ func main() {
 	})
 	manager.MapClientStorage(clientStore)
 	// Initialize the oauth2 service
-	AuthServer = echoserver.InitServer(manager)
-	echoserver.SetAllowGetAccessRequest(true)
-	echoserver.SetClientAuthorizedHandler(memento.AllowAuthorizedHandler)
-	echoserver.SetClientInfoHandler(server.ClientFormHandler)
-	echoserver.SetPasswordAuthorizationHandler(service.PasswordAuthorizationHandler)
+	AuthServer = server.NewDefaultServer(manager)
+	AuthServer.Config.AllowGetAccessRequest = true
+	AuthServer.SetAllowedGrantType(oauth2.Refreshing, oauth2.PasswordCredentials)
+	AuthServer.SetClientInfoHandler(server.ClientFormHandler)
+	AuthServer.SetPasswordAuthorizationHandler(service.PasswordAuthorizationHandler)
 	e := echo.New()
 	// Middleware
 	e.Use(middleware.Logger())
 	service.ServeFrontend(e)
+	e.POST("/api/user/refresh", func(c echo.Context) error {
+		return service.HandleUserRefreshToken(c, AuthServer)
+	})
 	e.POST("/api/user/login", func(c echo.Context) error {
 		return service.HandleUserLoginWrapper(c, AuthServer)
 	})
 	e.POST("/api/user/create", func(c echo.Context) error { return service.HandleUserCreateWrapper(c, AuthServer) })
+
 	api := e.Group("/api")
 	{
 		api.Use(memento.TokenValidator(&echoserver.DefaultConfig, AuthServer))
