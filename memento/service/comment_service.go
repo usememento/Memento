@@ -9,13 +9,14 @@ import (
 	"github.com/labstack/gommon/log"
 	"gorm.io/gorm"
 	"net/http"
+	"strconv"
 	"time"
 )
 
 func HandleCommentCreate(c echo.Context) error {
 	username := c.Get("username")
 	if username == "" {
-		return utils.RespondError(c, "invalid token")
+		return utils.RespondUnauthorized(c)
 	}
 	postId := c.FormValue("post_id")
 	content := c.FormValue("content")
@@ -59,6 +60,7 @@ func HandleCommentCreate(c echo.Context) error {
 				return err
 			}
 			user.TotalComment += 1
+			post.TotalComment += 1
 			tx.Save(&user)
 			tx.Save(&post)
 			return nil
@@ -66,13 +68,13 @@ func HandleCommentCreate(c echo.Context) error {
 	if err != nil {
 		return utils.RespondError(c, "unknown query error")
 	}
-	return utils.RespondOk(c, comment.ID)
+	return c.JSON(http.StatusOK, utils.CommentToView(&comment, utils.UserToView(&user)))
 }
 
 func HandleCommentEdit(c echo.Context) error {
 	username := c.Get("username")
 	if username == "" {
-		return utils.RespondError(c, "invalid token")
+		return utils.RespondUnauthorized(c)
 	}
 	commentId := c.FormValue("comment_id")
 	content := c.FormValue("content")
@@ -88,6 +90,10 @@ func HandleCommentEdit(c echo.Context) error {
 }
 
 func HandleCommentDelete(c echo.Context) error {
+	username := c.Get("username")
+	if username == "" {
+		return utils.RespondUnauthorized(c)
+	}
 	commentId := c.FormValue("comment_id")
 	var comment model.Comment
 	err := memento.GetDbConnection().First(&comment, "id=?", commentId).Error
@@ -97,10 +103,6 @@ func HandleCommentDelete(c echo.Context) error {
 		}
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown query error")
-	}
-	username := c.Get("username")
-	if username == "" {
-		return utils.RespondError(c, "invalid token")
 	}
 	if comment.Username != username {
 		utils.RespondError(c, "permission denied")
@@ -135,6 +137,7 @@ func HandleCommentDelete(c echo.Context) error {
 			}
 			tx.Delete(&comment)
 			user.TotalComment -= 1
+			post.TotalComment -= 1
 			return nil
 		})
 	if err != nil {
@@ -170,8 +173,12 @@ func HandleCommentCancelLike(c echo.Context) error {
 
 func HandleGetPostComments(c echo.Context) error {
 	postId := c.QueryParam("post_id")
+	page, err := strconv.Atoi(c.QueryParam("page"))
+	if err != nil {
+		return utils.RespondError(c, "invalid page")
+	}
 	var post model.Post
-	err := memento.GetDbConnection().First(&post, "id=?", postId).Error
+	err = memento.GetDbConnection().First(&post, "id=?", postId).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return utils.RespondError(c, "post not exists")
@@ -179,14 +186,16 @@ func HandleGetPostComments(c echo.Context) error {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown query error")
 	}
-	var comments []model.Comment
-	err = memento.GetDbConnection().Model(&post).Association("Comments").Find(&comments)
+	comments := make([]model.Comment, 0, memento.PageSize)
+	err = memento.GetDbConnection().Model(&post).Association("Comments").Find(&comments, memento.GetDbConnection().Offset(page*memento.PageSize).Limit(memento.PageSize))
 	if err != nil {
 		return utils.RespondError(c, "unknown query error")
 	}
-	var result []model.CommentViewModel
+	result := make([]model.CommentViewModel, 0, memento.PageSize)
 	for _, comm := range comments {
-		result = append(result, *utils.CommentToView(&comm))
+		var user model.User
+		memento.GetDbConnection().First(&user, "username=?", comm.Username)
+		result = append(result, *utils.CommentToView(&comm, utils.UserToView(&user)))
 	}
 	return c.JSON(http.StatusOK, result)
 }

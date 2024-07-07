@@ -58,11 +58,40 @@ func HandleUserCreateWrapper(c echo.Context, s *server.Server) error {
 		"user":  utils.UserToView(&user),
 	})
 }
+func HandleUserLoginWrapper(c echo.Context, s *server.Server) error {
+	username := c.FormValue("username")
+	password := c.FormValue("password")
+	var user model.User
+	err := memento.GetDbConnection().First(&user, "username=?", username).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return utils.RespondError(c, "username not exists")
+		}
+		log.Errorf(err.Error())
+		return utils.RespondError(c, "unknown query error")
+	}
+	if utils.Md5string(password) != user.PasswordHash {
+		return utils.RespondError(c, "incorrect password")
+	}
 
+	gt, tgr, err := s.ValidationTokenRequest(c.Request())
+	if err != nil {
+		return utils.RespondError(c, err.Error())
+	}
+
+	ti, err := s.GetAccessToken(c.Request().Context(), gt, tgr)
+	if err != nil {
+		return utils.RespondError(c, err.Error())
+	}
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"token": s.GetTokenData(ti),
+		"user":  utils.UserToView(&user),
+	})
+}
 func HandleUserDelete(c echo.Context) error {
 	username := c.Get("username")
 	if username == "" {
-		return utils.RespondError(c, "invalid token")
+		return utils.RespondUnauthorized(c)
 	}
 	password := c.FormValue("password")
 	var user model.User
@@ -85,7 +114,7 @@ func HandleUserEdit(c echo.Context) error {
 	form, err := c.FormParams()
 	username := c.Get("username")
 	if username == "" {
-		return utils.RespondError(c, "invalid token")
+		return utils.RespondUnauthorized(c)
 	}
 	nickname := form["nickname"]
 	bio := form["bio"]
@@ -121,7 +150,7 @@ func HandleUserEdit(c echo.Context) error {
 		filename := utils.Md5string(strconv.FormatInt(time.Now().UnixMilli(), 10)) + ext
 		// Destination
 		filepath := path.Join(memento.GetAvatarPath(), filename)
-		dst, err := os.Create(filepath)
+		dst, err := os.OpenFile(filepath, os.O_CREATE|os.O_RDWR, 0777)
 		if err != nil {
 			log.Errorf(err.Error())
 			return utils.RespondError(c, "os file open error")
@@ -133,7 +162,8 @@ func HandleUserEdit(c echo.Context) error {
 			return utils.RespondError(c, "data copy error")
 		}
 		if user.AvatarUrl != "" {
-			os.Remove(user.AvatarUrl)
+			err := os.Remove(user.AvatarUrl)
+			log.Errorf(err.Error())
 		}
 		user.AvatarUrl = filepath
 	}
@@ -157,39 +187,10 @@ func HandleGetUser(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, utils.UserToView(&user))
 }
-func HandleUserLoginWrapper(c echo.Context, s *server.Server) error {
-	username := c.FormValue("username")
-	password := c.FormValue("password")
-	var user model.User
-	err := memento.GetDbConnection().First(&user, "username=?", username).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return utils.RespondError(c, "username not exists")
-		}
-		log.Errorf(err.Error())
-		return utils.RespondError(c, "unknown query error")
-	}
-	if utils.Md5string(password) != user.PasswordHash {
-		return utils.RespondError(c, "incorrect password")
-	}
 
-	gt, tgr, err := s.ValidationTokenRequest(c.Request())
-	if err != nil {
-		return utils.RespondError(c, err.Error())
-	}
-
-	ti, err := s.GetAccessToken(c.Request().Context(), gt, tgr)
-	if err != nil {
-		return utils.RespondError(c, err.Error())
-	}
-	return c.JSON(http.StatusOK, map[string]interface{}{
-		"token": s.GetTokenData(ti),
-		"user":  utils.UserToView(&user),
-	})
-}
 func PasswordAuthorizationHandler(ctx context.Context, clientID, username, password string) (userID string, err error) {
 	var user model.User
-	log.Debugf("PasswordAuthorizationHandler: %s\n", username)
+	//log.Debugf("PasswordAuthorizationHandler: %s\n", username)
 	err = memento.GetDbConnection().First(&user, "username=?", username).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -206,7 +207,7 @@ func PasswordAuthorizationHandler(ctx context.Context, clientID, username, passw
 func HandleUserChangePwd(c echo.Context) error {
 	username := c.Get("username")
 	if username == "" {
-		return utils.RespondError(c, "invalid token")
+		return utils.RespondUnauthorized(c)
 	}
 	oldPassword := c.FormValue("oldPassword")
 	newPassword := c.FormValue("newPassword")
@@ -260,7 +261,7 @@ func HandleUserHeatMap(c echo.Context) error {
 func HandleUserFollow(c echo.Context) error {
 	username := c.Get("username")
 	if username == "" {
-		return utils.RespondError(c, "invalid token")
+		return utils.RespondUnauthorized(c)
 	}
 	foUsername := c.FormValue("followee")
 	var user, followee model.User
@@ -305,7 +306,7 @@ func HandleUserFollow(c echo.Context) error {
 func HandleUserUnfollow(c echo.Context) error {
 	username := c.Get("username")
 	if username == "" {
-		return utils.RespondError(c, "invalid token")
+		return utils.RespondUnauthorized(c)
 	}
 	foUsername := c.FormValue("followee")
 	var user, followee model.User
@@ -346,4 +347,11 @@ func HandleUserUnfollow(c echo.Context) error {
 		return utils.RespondError(c, "unknown query error")
 	}
 	return c.NoContent(http.StatusOK)
+}
+func HandlerGetUserFollower(c echo.Context) error {
+	return nil
+}
+
+func HandlerGetUserFollowing(c echo.Context) error {
+	return nil
 }

@@ -57,7 +57,7 @@ func main() {
 			postApi.DELETE("/delete", service.HandlePostDelete)
 			postApi.POST("/like", service.HandlePostLike)
 			postApi.POST("/unlike", service.HandlePostCancelLike)
-			postApi.POST("/taggedPosts", service.HandleGetTaggedPost)
+			postApi.GET("/taggedPosts", service.HandleGetTaggedPost)
 		}
 		userApi := api.Group("/user")
 		{
@@ -68,6 +68,8 @@ func main() {
 			userApi.GET("/heatmap", service.HandleUserHeatMap)
 			userApi.POST("/follow", service.HandleUserFollow)
 			userApi.POST("/unfollow", service.HandleUserUnfollow)
+			userApi.GET("/myFollower", service.HandlerGetUserFollower)
+			userApi.GET("/myFollowing", service.HandlerGetUserFollowing)
 		}
 		fileApi := api.Group("/file")
 		{

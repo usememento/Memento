@@ -25,6 +25,10 @@ type MementoServer struct {
 	lock   sync.Locker
 }
 
+const (
+	PageSize = 20
+)
+
 var JwtSecret = []byte("secret")
 var memento MementoServer
 

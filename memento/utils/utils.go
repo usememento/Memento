@@ -32,6 +32,13 @@ func RespondOk(c echo.Context, msg interface{}) error {
 		})
 }
 
+func RespondUnauthorized(c echo.Context) error {
+	return c.JSON(http.StatusUnauthorized,
+		map[string]interface{}{
+			"message": "invalid token",
+		})
+}
+
 func GetPostIndex(posts []model.Post, post model.Post) int {
 	for i, p := range posts {
 		if post.ID == p.ID {
@@ -82,42 +89,47 @@ func CalcTagsDiff(oldTags []string, newTags []string) (tagToAdd []string, tagToD
 	return tagToAdd, tagToDel
 }
 
-func PostToView(post *model.Post) (*model.PostViewModel, error) {
+func PostToView(post *model.Post, user *model.UserViewModel) (*model.PostViewModel, error) {
 	content, err := os.ReadFile(post.ContentUrl)
 	if err != nil {
 		return nil, err
 	}
 	return &model.PostViewModel{
-		PostID:    post.ID,
-		Username:  post.Username,
-		Liked:     post.Liked,
-		CreatedAt: post.CreatedAt,
-		EditedAt:  post.EditedAt,
-		Content:   string(content),
+		IsPrivate:    post.IsPrivate,
+		PostID:       post.ID,
+		User:         *user,
+		TotalLiked:   post.TotalLiked,
+		TotalComment: post.TotalComment,
+		CreatedAt:    post.CreatedAt,
+		EditedAt:     post.EditedAt,
+		Content:      string(content),
 	}, nil
 }
 
-func CommentToView(comment *model.Comment) *model.CommentViewModel {
+func CommentToView(comment *model.Comment, user *model.UserViewModel) *model.CommentViewModel {
 	return &model.CommentViewModel{
 		CommentID: comment.ID,
 		PostID:    comment.PostID,
-		Username:  comment.Username,
+		User:      *user,
 		CreatedAt: comment.CreatedAt,
 		EditedAt:  comment.EditedAt,
 		Content:   comment.Content,
-		Liked:     0,
+		Liked:     comment.Liked,
 	}
 }
 
 func UserToView(user *model.User) *model.UserViewModel {
 	return &model.UserViewModel{
-		Username:     user.Username,
-		Nickname:     user.Nickname,
-		Bio:          user.Bio,
-		RegisteredAt: user.RegisteredAt,
-		TotalLiked:   user.TotalLiked,
-		TotalComment: user.TotalComment,
-		TotalPosts:   user.TotalPosts,
-		AvatarUrl:    user.AvatarUrl,
+		Username:      user.Username,
+		Nickname:      user.Nickname,
+		Bio:           user.Bio,
+		RegisteredAt:  user.RegisteredAt,
+		TotalLiked:    user.TotalLiked,
+		TotalComment:  user.TotalComment,
+		TotalFiles:    user.TotalFiles,
+		TotalFollows:  user.TotalFollows,
+		TotalFollower: user.TotalFollower,
+		TotalPosts:    user.TotalPosts,
+		AvatarUrl:     user.AvatarUrl,
 	}
 }

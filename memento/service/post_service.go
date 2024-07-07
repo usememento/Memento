@@ -20,7 +20,16 @@ import (
 func HandlePostCreate(c echo.Context) error {
 	username := c.Get("username")
 	if username == "" {
-		return utils.RespondError(c, "invalid token")
+		return utils.RespondUnauthorized(c)
+	}
+	permission := c.FormValue("permission")
+	private := false
+	if permission == "private" {
+		private = true
+	} else if permission == "public" {
+		private = false
+	} else {
+		return utils.RespondError(c, "invalid permission level")
 	}
 	var user model.User
 	err := memento.GetDbConnection().First(&user, "username=?", username).Error
@@ -31,12 +40,14 @@ func HandlePostCreate(c echo.Context) error {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown query error")
 	}
+
 	now := time.Now()
 	post := model.Post{
-		Username:  user.Username,
-		Liked:     0,
-		CreatedAt: now,
-		EditedAt:  now,
+		IsPrivate:  private,
+		Username:   user.Username,
+		TotalLiked: 0,
+		CreatedAt:  now,
+		EditedAt:   now,
 	}
 	contentFile, err := c.FormFile("content")
 	if err != nil {
@@ -92,12 +103,16 @@ func HandlePostCreate(c echo.Context) error {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown insertion error")
 	}
-	return utils.RespondOk(c, strconv.FormatInt(int64(post.ID), 10))
+	pv, err := utils.PostToView(&post, utils.UserToView(&user))
+	if err != nil {
+		return utils.RespondError(c, "os open file error")
+	}
+	return c.JSON(http.StatusOK, *pv)
 }
 func HandlePostDelete(c echo.Context) error {
 	username := c.Get("username")
 	if username == "" {
-		return utils.RespondError(c, "invalid token")
+		return utils.RespondUnauthorized(c)
 	}
 	id := c.FormValue("id")
 	var post model.Post
@@ -147,11 +162,21 @@ func HandlePostDelete(c echo.Context) error {
 func HandlePostEdit(c echo.Context) error {
 	username := c.Get("username")
 	if username == "" {
-		return utils.RespondError(c, "invalid token")
+		return utils.RespondUnauthorized(c)
 	}
 	id := c.FormValue("id")
+	permission := c.FormValue("permission")
+	private := false
+	if permission == "private" {
+		private = true
+	} else if permission == "public" {
+		private = false
+	} else {
+		return utils.RespondError(c, "invalid permission level")
+	}
 	var post model.Post
 	err := memento.GetDbConnection().First(&post, "id=?", id).Error
+	post.IsPrivate = private
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return utils.RespondError(c, "post not exists")
@@ -176,7 +201,7 @@ func HandlePostEdit(c echo.Context) error {
 	defer contentBody.Close()
 	contentFilepath := post.ContentUrl
 
-	content, err := os.Create(contentFilepath)
+	content, err := os.OpenFile(contentFilepath, os.O_CREATE|os.O_RDWR, 0777)
 	if err != nil {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "os file open error")
@@ -202,7 +227,8 @@ func HandlePostEdit(c echo.Context) error {
 			for _, tag := range tagsToDel {
 				tx.Model(&post).Association("Tags").Delete(&tag)
 			}
-			err = memento.GetDbConnection().Model(&post).Update("edited_at", time.Now()).Error
+			post.EditedAt = time.Now()
+			err = tx.Save(&post).Error
 			if err != nil {
 				log.Errorf(err.Error())
 				return err
@@ -226,36 +252,39 @@ func HandleGetPost(c echo.Context) error {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown query error")
 	}
-	content, err := os.ReadFile(post.ContentUrl)
+	var user model.User
+	memento.GetDbConnection().First(&user, "username=?", post.Username)
+	pv, err := utils.PostToView(&post, utils.UserToView(&user))
 	if err != nil {
-		log.Errorf(err.Error())
-		return utils.RespondError(c, "cannot read post content")
+		return utils.RespondError(c, "os open file error")
 	}
-	return c.JSON(http.StatusOK, model.PostViewModel{
-		PostID:    post.ID,
-		Username:  post.Username,
-		Liked:     post.Liked,
-		CreatedAt: post.CreatedAt,
-		EditedAt:  post.EditedAt,
-		Content:   string(content),
-	})
+	return c.JSON(http.StatusOK, *pv)
 }
 
 func HandleGetUserPosts(c echo.Context) error {
+	userself := c.Get("username")
 	username := c.QueryParam("username")
+	page, err := strconv.Atoi(c.QueryParam("page"))
+	if err != nil {
+		return utils.RespondError(c, "invalid page")
+	}
 	var user model.User
-	err := memento.GetDbConnection().First(&user, "username=?", username).Error
+	err = memento.GetDbConnection().First(&user, "username=?", username).Error
 	if err != nil {
 		return utils.RespondError(c, "username not exists")
 	}
 	var posts []model.Post
-	err = memento.GetDbConnection().Model(&user).Association("Posts").Find(&posts, memento.GetDbConnection())
+	if userself == username {
+		err = memento.GetDbConnection().Model(&user).Association("Posts").Find(&posts, memento.GetDbConnection().Offset(page*memento.PageSize).Limit(memento.PageSize))
+	} else {
+		err = memento.GetDbConnection().Model(&user).Association("Posts").Find(&posts, "is_private=?", 0, memento.GetDbConnection().Offset(page*memento.PageSize).Limit(memento.PageSize))
+	}
 	if err != nil {
 		return utils.RespondError(c, "unknown query error")
 	}
-	result := make([]model.PostViewModel, 0, len(posts))
+	result := make([]model.PostViewModel, 0, memento.PageSize)
 	for _, post := range posts {
-		pv, err := utils.PostToView(&post)
+		pv, err := utils.PostToView(&post, utils.UserToView(&user))
 		if err != nil {
 			log.Errorf(err.Error())
 			continue
@@ -268,7 +297,7 @@ func HandleGetUserPosts(c echo.Context) error {
 func HandlePostLike(c echo.Context) error {
 	username := c.Get("username")
 	if username == "" {
-		return utils.RespondError(c, "invalid token")
+		return utils.RespondUnauthorized(c)
 	}
 	postId := c.FormValue("post_id")
 	var user model.User
@@ -313,7 +342,7 @@ func HandlePostLike(c echo.Context) error {
 			if err != nil {
 				return err
 			}
-			post.Liked += 1
+			post.TotalLiked += 1
 			author.TotalLiked += 1
 			tx.Save(&post)
 			tx.Save(&user)
@@ -328,7 +357,7 @@ func HandlePostLike(c echo.Context) error {
 func HandlePostCancelLike(c echo.Context) error {
 	username := c.Get("username")
 	if username == "" {
-		return utils.RespondError(c, "invalid token")
+		return utils.RespondUnauthorized(c)
 	}
 	postId := c.FormValue("post_id")
 	var user model.User
@@ -373,7 +402,7 @@ func HandlePostCancelLike(c echo.Context) error {
 			if err != nil {
 				return err
 			}
-			post.Liked -= 1
+			post.TotalLiked -= 1
 			author.TotalLiked -= 1
 			tx.Save(&post)
 			tx.Save(&user)
@@ -387,8 +416,12 @@ func HandlePostCancelLike(c echo.Context) error {
 
 func HandleGetTaggedPost(c echo.Context) error {
 	t := c.QueryParam("tag")
+	page, err := strconv.Atoi(c.QueryParam("page"))
+	if err != nil {
+		return utils.RespondError(c, "invalid page")
+	}
 	var tag model.Tag
-	err := memento.GetDbConnection().First(&tag, "name=?", t).Error
+	err = memento.GetDbConnection().First(&tag, "name=?", t).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return utils.RespondError(c, "post not exists")
@@ -396,11 +429,13 @@ func HandleGetTaggedPost(c echo.Context) error {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown query error")
 	}
-	var posts []model.Post
-	memento.GetDbConnection().Model(&tag).Association("Posts").Find(&posts)
+	posts := make([]model.Post, 0, memento.PageSize)
+	memento.GetDbConnection().Model(&tag).Association("Posts").Find(&posts, memento.GetDbConnection().Offset(page*memento.PageSize).Limit(memento.PageSize))
 	var result []model.PostViewModel
 	for _, p := range posts {
-		pv, err := utils.PostToView(&p)
+		var user model.User
+		memento.GetDbConnection().First(&user, "username=?", p.Username)
+		pv, err := utils.PostToView(&p, utils.UserToView(&user))
 		if err != nil {
 			log.Errorf(err.Error())
 			continue

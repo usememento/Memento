@@ -28,12 +28,15 @@ type User struct {
 }
 
 type UserViewModel struct {
-	Username     string
-	Nickname     string
-	Bio          string
-	TotalLiked   int64
-	TotalComment int64
-	TotalPosts   int64
-	RegisteredAt time.Time
-	AvatarUrl    string
+	Username      string
+	Nickname      string
+	Bio           string
+	TotalLiked    int64
+	TotalComment  int64
+	TotalPosts    int64
+	TotalFiles    int64
+	TotalFollower int64
+	TotalFollows  int64
+	RegisteredAt  time.Time
+	AvatarUrl     string
 }

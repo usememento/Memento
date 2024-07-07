@@ -18,7 +18,7 @@ type Comment struct {
 type CommentViewModel struct {
 	CommentID uint
 	PostID    uint
-	Username  string
+	User      UserViewModel
 	CreatedAt time.Time
 	EditedAt  time.Time
 	Content   string
