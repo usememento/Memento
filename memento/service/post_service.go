@@ -43,11 +43,12 @@ func HandlePostCreate(c echo.Context) error {
 
 	now := time.Now()
 	post := model.Post{
-		IsPrivate:  private,
-		Username:   user.Username,
-		TotalLiked: 0,
-		CreatedAt:  now,
-		EditedAt:   now,
+		IsPrivate:    private,
+		Username:     user.Username,
+		TotalLiked:   0,
+		CreatedAt:    now,
+		EditedAt:     now,
+		TotalComment: 0,
 	}
 	contentFile, err := c.FormFile("content")
 	if err != nil {
@@ -77,6 +78,7 @@ func HandlePostCreate(c echo.Context) error {
 	contentTags := utils.GetTags(string(contentData))
 	err = memento.GetDbConnection().Transaction(
 		func(tx *gorm.DB) error {
+			tx.Save(&post)
 			// add all non-existing tags to database
 			for _, t := range contentTags {
 				var tag model.Tag
@@ -87,7 +89,6 @@ func HandlePostCreate(c echo.Context) error {
 				}
 				tx.Model(&tag).Association("Posts").Append(&post)
 			}
-			err = tx.Create(&post).Error
 			tx.Model(&post).Association("Tags").Append(contentTags)
 			if err != nil {
 				log.Errorf(err.Error())
@@ -103,7 +104,10 @@ func HandlePostCreate(c echo.Context) error {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown insertion error")
 	}
-	pv, err := utils.PostToView(&post, utils.UserToView(&user))
+	var likePosts []model.Post
+	memento.GetDbConnection().Model(&user).Association("likes").Find(&likePosts, "id=?", post.ID)
+	//log.Info(likePosts[0].ID)
+	pv, err := utils.PostToView(&post, utils.UserToView(&user), len(likePosts) > 0)
 	if err != nil {
 		return utils.RespondError(c, "os open file error")
 	}
@@ -254,7 +258,9 @@ func HandleGetPost(c echo.Context) error {
 	}
 	var user model.User
 	memento.GetDbConnection().First(&user, "username=?", post.Username)
-	pv, err := utils.PostToView(&post, utils.UserToView(&user))
+	var likePosts []model.Post
+	memento.GetDbConnection().Model(&user).Association("Likes").Find(&likePosts, "id=?", post.ID)
+	pv, err := utils.PostToView(&post, utils.UserToView(&user), len(likePosts) > 0)
 	if err != nil {
 		return utils.RespondError(c, "os open file error")
 	}
@@ -284,7 +290,9 @@ func HandleGetUserPosts(c echo.Context) error {
 	}
 	result := make([]model.PostViewModel, 0, memento.PageSize)
 	for _, post := range posts {
-		pv, err := utils.PostToView(&post, utils.UserToView(&user))
+		var likePosts []model.Post
+		memento.GetDbConnection().Model(&user).Association("Likes").Find(&likePosts, "id=?", post.ID)
+		pv, err := utils.PostToView(&post, utils.UserToView(&user), len(likePosts) > 0)
 		if err != nil {
 			log.Errorf(err.Error())
 			continue
@@ -318,14 +326,11 @@ func HandlePostLike(c echo.Context) error {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown query error")
 	}
-	var likedPost model.Post
-	err = memento.GetDbConnection().Model(&user).Association("Likes").Find(&likedPost, "id=?", post.ID)
-	if err == nil {
+	var likedPost []model.Post
+	memento.GetDbConnection().Model(&user).Association("Likes").Find(&likedPost, "id=?", post.ID)
+	if len(likedPost) > 0 {
+		log.Infof("liked post: %d", len(likedPost))
 		return utils.RespondError(c, "already liked")
-	} else {
-		if !errors.Is(err, gorm.ErrRecordNotFound) {
-			return utils.RespondError(c, "unknown query error")
-		}
 	}
 	var author model.User
 	err = memento.GetDbConnection().First(&author, "username=?", post.Username).Error
@@ -435,7 +440,9 @@ func HandleGetTaggedPost(c echo.Context) error {
 	for _, p := range posts {
 		var user model.User
 		memento.GetDbConnection().First(&user, "username=?", p.Username)
-		pv, err := utils.PostToView(&p, utils.UserToView(&user))
+		var likePosts []model.Post
+		memento.GetDbConnection().Model(&user).Association("likes").Find(&likePosts, "id=?", p.ID)
+		pv, err := utils.PostToView(&p, utils.UserToView(&user), len(likePosts) > 0)
 		if err != nil {
 			log.Errorf(err.Error())
 			continue

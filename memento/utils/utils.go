@@ -95,12 +95,13 @@ func CalcTagsDiff(oldTags []string, newTags []string) (tagToAdd []string, tagToD
 	return tagToAdd, tagToDel
 }
 
-func PostToView(post *model.Post, user *model.UserViewModel) (*model.PostViewModel, error) {
+func PostToView(post *model.Post, user *model.UserViewModel, liked bool) (*model.PostViewModel, error) {
 	content, err := os.ReadFile(post.ContentUrl)
 	if err != nil {
 		return nil, err
 	}
 	return &model.PostViewModel{
+		IsLiked:      liked,
 		IsPrivate:    post.IsPrivate,
 		PostID:       post.ID,
 		User:         *user,

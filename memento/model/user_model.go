@@ -23,7 +23,7 @@ type User struct {
 	Files         []File    `gorm:"foreignKey:Username;references:Username"`
 	Follows       []User    `gorm:"foreignKey:Username;references:Username"`
 	Followers     []User    `gorm:"foreignKey:Username;references:Username"`
-	Likes         []Post    `gorm:"foreignKey:Username;references:Username"`
+	Likes         []Post    `gorm:"many2many:user_liked_posts;foreignKey:Username;;"`
 	Comments      []Comment `gorm:"foreignKey:Username;references:Username"`
 }
 

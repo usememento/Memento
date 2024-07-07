@@ -19,6 +19,7 @@ type Post struct {
 }
 
 type PostViewModel struct {
+	IsLiked      bool
 	IsPrivate    bool
 	PostID       uint
 	User         UserViewModel

@@ -263,13 +263,21 @@ func HandleUserHeatMap(c echo.Context) error {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown query error")
 	}
+	memos := len(posts)
+	var likes int64
+	likes = 0
 	for _, p := range posts {
+		likes += p.TotalLiked
 		if p.EditedAt.Compare(sixMonthsAgo) < 0 {
 			continue
 		}
 		heatmap[p.EditedAt.Format("2006-01-02")] += 1
 	}
-	return c.JSON(http.StatusOK, heatmap)
+	return c.JSON(http.StatusOK, echo.Map{
+		"memos": memos,
+		"likes": likes,
+		"map":   heatmap,
+	})
 }
 
 func HandleUserFollow(c echo.Context) error {
