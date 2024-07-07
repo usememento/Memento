@@ -53,14 +53,21 @@ func GetPostIndex(posts []model.Post, post model.Post) int {
 }
 
 func GetTags(content string) []string {
-	blocks := strings.Split(content, " ")
+	lines := strings.Split(content, "\r\n")
 	var result []string
 
-	for _, b := range blocks {
-		if len(b) > 1 && len(b) <= 21 && b[0] == '#' {
-			result = append(result, b)
+	for _, l := range lines {
+		blocks := strings.Split(l, " ")
+		//log.Infof("%q\n", blocks)
+
+		for _, b := range blocks {
+			if len(b) > 1 && len(b) <= 21 && b[0] == '#' && b[1] != '#' {
+				result = append(result, b)
+			}
 		}
 	}
+
+	//log.Infof("%q\n", result)
 	return result
 }
 
