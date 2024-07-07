@@ -1,35 +1,28 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
+import 'package:frontend/components/states.dart';
 import 'package:frontend/foundation/app.dart';
+import 'package:frontend/network/network.dart';
 import 'package:frontend/utils/translation.dart';
 
-class HeatMapData {
-  /// dailyData: a map from date to the number of memos on that day.
-  ///
-  /// key: date in the format of "yyyy-mm-dd".
-  final Map<String, int> dailyData;
-  final int totalMemos;
-  final int totalDays;
-  final int totalTags;
+class HeatMapWithLoadingState extends StatefulWidget {
+  const HeatMapWithLoadingState({super.key});
 
-  const HeatMapData(this.dailyData, this.totalMemos, this.totalDays, this.totalTags);
+  @override
+  State<HeatMapWithLoadingState> createState() => _HeatMapWithLoadingStateState();
 }
 
-// TODO: remove this function and replace it with real data.
-HeatMapData getTestData() {
-  var time = DateTime.now();
-
-  var data = <String, int>{};
-
-  for (var i = 0; i < 365; i++) {
-    var key = time.toIso8601String().substring(0, 10);
-    data[key] = Random().nextInt(8);
-    time = time.subtract(const Duration(days: 1));
+class _HeatMapWithLoadingStateState extends LoadingState<HeatMapWithLoadingState, HeatMapData> {
+  @override
+  Widget buildContent(BuildContext context, HeatMapData data) {
+    return HeatMap(data: data);
   }
 
-  return HeatMapData(data, 114, 51, 4);
+  @override
+  Future<Res<HeatMapData>> loadData() {
+    return Network().getHeatMapData();
+  }
 }
+
 
 class HeatMap extends StatelessWidget {
   const HeatMap({super.key, required this.data});
@@ -98,7 +91,7 @@ class HeatMap extends StatelessWidget {
         const Spacer(),
         buildItem("Days", data.totalDays),
         const Spacer(),
-        buildItem("Tags", data.totalTags),
+        buildItem("Likes", data.totalLikes),
       ],
     );
   }

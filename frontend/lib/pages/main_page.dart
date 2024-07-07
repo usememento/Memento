@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/components/navigation_bar.dart';
 import 'package:frontend/pages/page_404.dart';
+import 'package:frontend/pages/tagged_memos_list_page.dart';
+import 'package:frontend/utils/translation.dart';
 
 import '../components/button.dart';
 import '../components/user.dart';
 import '../foundation/app.dart';
+import 'explore_page.dart';
 import 'home_page.dart';
 import 'memo_details_page.dart';
 
@@ -18,7 +21,9 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   static Map<String, Widget Function(BuildContext context)> routes = {
     '/': (context) => const HomePage(),
+    '/explore': (context) => const ExplorePage(),
     '/memo/:id': (context) => const MemoDetailsPage(),
+    '/tag/:tag': (context) => const TaggedMemosListPage(),
   };
 
   static const mainPageRoutes = [
@@ -84,8 +89,30 @@ class _MainPageState extends State<MainPage> {
                 size: 36,
               ).toCenter(),
             ),
-          ).onTap(() {
-            // TODO
+          ).onTapAt((location) {
+            showMenu(
+                context: context,
+                elevation: 3,
+                color: context.colorScheme.surface,
+                position: RelativeRect.fromLTRB(location.dx, location.dy, location.dx, location.dy),
+                items: [
+                  PopupMenuItem(
+                    height: 42,
+                    onTap: () {
+                      App.navigatorState!.pushNamed('/user/${appdata.user.username}');
+                    },
+                    child: Text("Profile".tl),
+                  ),
+                  PopupMenuItem(
+                    height: 42,
+                    child: Text("Sign out".tl),
+                    onTap: () {
+                      appdata.logout();
+                      App.rootNavigatorKey!.currentContext!.to('/login');
+                    },
+                  ),
+                ]
+            );
           }),
           large: HoverBox(
             borderRadius: BorderRadius.circular(8),
@@ -101,8 +128,30 @@ class _MainPageState extends State<MainPage> {
                 Text(appdata.user.nickname),
               ],
             ).paddingHorizontal(8).paddingVertical(8),
-          ).onTap(() {
-            // TODO
+          ).onTapAt((location) {
+            showMenu(
+                context: context,
+                elevation: 3,
+                color: context.colorScheme.surface,
+                position: RelativeRect.fromLTRB(location.dx, location.dy, location.dx, location.dy),
+                items: [
+                  PopupMenuItem(
+                    height: 42,
+                    onTap: () {
+                      App.navigatorState!.pushNamed('/user/${appdata.user.username}');
+                    },
+                    child: Text("Profile".tl),
+                  ),
+                  PopupMenuItem(
+                    height: 42,
+                    child: Text("Sign out".tl),
+                    onTap: () {
+                      appdata.logout();
+                      App.rootNavigatorKey!.currentContext!.to('/login');
+                    },
+                  ),
+                ]
+            );
           }),
         ),
         pageBuilder: (index) {

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
 import 'package:frontend/components/user.dart';
 import 'package:frontend/foundation/app.dart';
+import 'package:frontend/pages/memo_edit_page.dart';
 import 'package:frontend/utils/ext.dart';
 import 'package:frontend/utils/translation.dart';
 import 'package:markdown/markdown.dart' as m;
@@ -15,9 +16,11 @@ import '../network/network.dart';
 import 'button.dart';
 
 class MemoWidget extends StatefulWidget {
-  const MemoWidget({super.key, required this.memo});
+  const MemoWidget({super.key, required this.memo, this.showUser = true});
 
   final Memo memo;
+
+  final bool showUser;
 
   @override
   State<MemoWidget> createState() => _MemoWidgetState();
@@ -56,7 +59,7 @@ class _MemoWidgetState extends State<MemoWidget> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (widget.memo.author != null)
+                  if (widget.memo.author != null && widget.showUser)
                     Avatar(
                       url: widget.memo.author!.avatar,
                       size: 36,
@@ -68,24 +71,18 @@ class _MemoWidgetState extends State<MemoWidget> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (widget.memo.author != null)
+                        if (widget.memo.author != null && widget.showUser)
                           Text(widget.memo.author!.nickname,
                               style:
                                   const TextStyle(fontWeight: FontWeight.bold)),
                         const SizedBox(height: 8),
                         Container(
                           constraints: const BoxConstraints(maxHeight: 400),
-                          child: Stack(
-                            children: [
-                              Positioned(
-                                top: 0,
-                                left: 0,
-                                right: 0,
-                                child: MemoContent(
-                                  content: content,
-                                ),
-                              )
-                            ],
+                          child: SingleChildScrollView(
+                            physics: const NeverScrollableScrollPhysics(),
+                            child: MemoContent(
+                              content: content,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -96,14 +93,15 @@ class _MemoWidgetState extends State<MemoWidget> {
               ),
               Row(
                 children: [
-                  if (widget.memo.author != null) const SizedBox(width: 36),
+                  if (widget.memo.author != null && widget.showUser)
+                    const SizedBox(width: 36),
                   Button.normal(
                     onPressed: like,
                     padding:
                         const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     isLoading: isLiking,
                     height: 36,
-                    width: calcButtonWidth(widget.memo.linksCount),
+                    width: calcButtonWidth(widget.memo.likesCount),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -117,7 +115,7 @@ class _MemoWidgetState extends State<MemoWidget> {
                           ),
                         const Spacer(),
                         Text(
-                          widget.memo.linksCount.toString(),
+                          widget.memo.likesCount.toString(),
                           style: const TextStyle(fontSize: 14),
                         ).paddingBottom(2),
                       ],
@@ -193,15 +191,16 @@ class _MemoWidgetState extends State<MemoWidget> {
     setState(() {
       isLiking = true;
     });
-    final res = await Network().favoriteOrUnfavorite(widget.memo.id);
+    final res =
+        await Network().likeOrUnlike(widget.memo.id, !widget.memo.isLiked);
     if (res.success) {
       setState(() {
         isLiking = false;
         widget.memo.isLiked = !widget.memo.isLiked;
         if (widget.memo.isLiked) {
-          widget.memo.linksCount++;
+          widget.memo.likesCount++;
         } else {
-          widget.memo.linksCount--;
+          widget.memo.likesCount--;
         }
       });
     } else {
@@ -214,7 +213,17 @@ class _MemoWidgetState extends State<MemoWidget> {
 
   void reply() {}
 
-  void edit() {}
+  void edit() async {
+    var res =
+        await context.toWidget((context) => MemoEditPage(memo: widget.memo));
+    if (res is Map) {
+      widget.memo.content = res['content'];
+      widget.memo.isPublic = res['isPublic'];
+      if (mounted) {
+        setState(() {});
+      }
+    }
+  }
 }
 
 void _handleLink(String link) {
@@ -300,10 +309,10 @@ class LatexNode extends SpanNode {
         alignment: PlaceholderAlignment.middle,
         child: !isInline
             ? Container(
-          width: double.infinity,
-          margin: const EdgeInsets.symmetric(vertical: 16),
-          child: Center(child: latex),
-        )
+                width: double.infinity,
+                margin: const EdgeInsets.symmetric(vertical: 16),
+                child: Center(child: latex),
+              )
             : latex);
   }
 }

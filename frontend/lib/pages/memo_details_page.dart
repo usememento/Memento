@@ -154,13 +154,34 @@ class _MemoDetailsState extends State<_MemoDetails> {
     return const SizedBox();
   }
 
+  bool isTag(String text) {
+    return text.startsWith('#') &&
+        text.length <= 20 &&
+        text.length > 1 &&
+        text[1] != '#';
+  }
+
   @override
   Widget build(BuildContext context) {
+    var content = widget.memo.content;
+    var lines = content.split('\n');
+    for (var i = 0; i < lines.length; i++) {
+      var line = lines[i];
+      var split = line.split(' ');
+      for (var j = 0; j < split.length; j++) {
+        var text = split[j];
+        if (isTag(text)) {
+          split[j] = '[${split[j]}](tag:${split[j].substring(1)})';
+        }
+      }
+      lines[i] = split.join(' ');
+    }
+    content = lines.join('\n');
     var markdownContent =
         getMemoMarkdownGenerator().buildWidgets(onTocList: (t) {
       toc ??= t;
-      title ??= t.first.node.build().toPlainText();
-    }, widget.memo.content, config: getMemoMarkdownConfig(context));
+      title ??= t.firstOrNull?.node.build().toPlainText();
+    }, content, config: getMemoMarkdownConfig(context));
     return LayoutBuilder(builder: (context, constrains) {
       return Row(
         children: [

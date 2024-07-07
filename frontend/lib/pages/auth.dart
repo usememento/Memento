@@ -17,7 +17,8 @@ class _LoginPageState extends State<LoginPage> {
 
   String password = '';
 
-  bool rememberMe = false;
+  var domainController =
+      TextEditingController(text: appdata.settings['domain']);
 
   bool isLoading = false;
 
@@ -45,26 +46,16 @@ class _LoginPageState extends State<LoginPage> {
               style:
                   const TextStyle(fontWeight: FontWeight.bold, fontSize: 26)),
           const SizedBox(height: 12),
+          if (!App.isWeb)
+            buildTextField("Domain".tl, (value) {
+              appdata.settings['domain'] = value;
+            }, Icons.language, domainController),
           buildTextField("Username".tl, (value) {
             username = value;
           }, Icons.person),
           buildTextField("Password".tl, (value) {
             password = value;
           }, Icons.lock),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Checkbox(
-                  value: rememberMe,
-                  onChanged: (value) {
-                    setState(() {
-                      rememberMe = value!;
-                    });
-                  }),
-              const SizedBox(width: 8),
-              Text("Remember me".tl),
-            ],
-          ),
           const SizedBox(height: 12),
           Button.filled(
               isLoading: isLoading,
@@ -93,9 +84,12 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Widget buildTextField(
-      String hintText, void Function(String) onChanged, IconData icon) {
+      String hintText, void Function(String) onChanged, IconData icon,
+      [TextEditingController? controller]) {
     return TextField(
       onChanged: onChanged,
+      controller: controller,
+      obscureText: hintText == "Password".tl,
       decoration: InputDecoration(
         labelText: hintText,
         border: const OutlineInputBorder(),
@@ -137,6 +131,9 @@ class _RegisterPageState extends State<RegisterPage> {
 
   bool isLoading = false;
 
+  var domainController =
+      TextEditingController(text: appdata.settings['domain']);
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -161,6 +158,10 @@ class _RegisterPageState extends State<RegisterPage> {
               style:
                   const TextStyle(fontWeight: FontWeight.bold, fontSize: 26)),
           const SizedBox(height: 12),
+          if (!App.isWeb)
+            buildTextField("Domain".tl, (value) {
+              appdata.settings['domain'] = value;
+            }, Icons.language, domainController),
           buildTextField("Username".tl, (value) {
             username = value;
           }, Icons.person),
@@ -169,12 +170,11 @@ class _RegisterPageState extends State<RegisterPage> {
           }, Icons.lock),
           const SizedBox(height: 12),
           Button.filled(
-                  isLoading: isLoading,
-                  onPressed: register,
-                  width: double.infinity,
-                  height: 38,
-                  child: Text("Continue".tl).toCenter().expanded())
-              .fixHeight(42),
+              isLoading: isLoading,
+              onPressed: register,
+              width: double.infinity,
+              height: 38,
+              child: Text("Continue".tl).toCenter().expanded()),
           Text.rich(
             TextSpan(
               text: "Already have an account? ".tl,
@@ -196,9 +196,12 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   Widget buildTextField(
-      String hintText, void Function(String) onChanged, IconData icon) {
+      String hintText, void Function(String) onChanged, IconData icon,
+      [TextEditingController? controller]) {
     return TextField(
       onChanged: onChanged,
+      controller: controller,
+      obscureText: hintText == "Password".tl,
       decoration: InputDecoration(
         labelText: hintText,
         border: const OutlineInputBorder(),
