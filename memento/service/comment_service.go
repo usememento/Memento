@@ -187,7 +187,7 @@ func HandleGetPostComments(c echo.Context) error {
 		return utils.RespondError(c, "unknown query error")
 	}
 	comments := make([]model.Comment, 0, memento.PageSize)
-	err = memento.GetDbConnection().Model(&post).Association("Comments").Find(&comments, memento.GetDbConnection().Order("created_at desc"), memento.GetDbConnection().Offset(page*memento.PageSize).Limit(memento.PageSize))
+	err = memento.GetDbConnection().Model(&post).Association("Comments").Find(&comments, memento.GetDbConnection().Order("created_at desc").Offset(page*memento.PageSize).Limit(memento.PageSize))
 	if err != nil {
 		return utils.RespondError(c, "unknown query error")
 	}
