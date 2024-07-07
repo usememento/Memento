@@ -84,7 +84,7 @@ func HandlePostCreate(c echo.Context) error {
 				log.Info(t)
 				var tag model.Tag
 				tag.Name = t
-				err := tx.First(&tag).Error
+				err := tx.First(&tag, "name=?", t).Error
 				if err != nil {
 					if errors.Is(err, gorm.ErrRecordNotFound) {
 						tx.Create(&tag)
@@ -229,7 +229,7 @@ func HandlePostEdit(c echo.Context) error {
 			for _, t := range tagsToAdd {
 				var tag model.Tag
 				tag.Name = t
-				err := tx.First(&tag).Error
+				err := tx.First(&tag, "name=?", t).Error
 				if err != nil {
 					if errors.Is(err, gorm.ErrRecordNotFound) {
 						tx.Create(&tag)
