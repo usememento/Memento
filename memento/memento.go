@@ -26,25 +26,52 @@ type MementoServer struct {
 }
 
 const (
-	PageSize = 20
+	PageSize       = 20
+	ConfigFileName = "memento_cfg.yaml"
 )
 
 var JwtSecret = []byte("secret")
 var memento MementoServer
 
 func Init() *MementoServer {
-	data, err := os.ReadFile("./memento/configuration.yaml")
+	home, err := os.UserHomeDir()
 	if err != nil {
-		log.Errorf("Error opening configuration file: %s\n", err.Error())
+		log.Errorf("Error getting home directory: %s\n", err.Error())
 		return nil
 	}
-	err = yaml.Unmarshal(data, &memento.Config)
+	data, err := os.ReadFile(path.Join(home, ".memento", ConfigFileName))
 	if err != nil {
-		log.Errorf("Error unmarshalling yaml file: %s\n", err.Error())
-		return nil
+		if errors.Is(err, os.ErrNotExist) {
+			memento.Config = utils.DefaultConfig
+			memento.Config.FilePath = path.Join(home, ".memento")
+			f, err := os.Create(path.Join(memento.Config.FilePath, ConfigFileName))
+			if err != nil {
+				log.Errorf("Error creating configuration file: %s\n", err.Error())
+				return nil
+			}
+			data, err := yaml.Marshal(utils.DefaultConfig)
+			if err != nil {
+				log.Errorf("Error marshalling configuration: %s\n", err.Error())
+				return nil
+			}
+			_, err = f.Write(data)
+			if err != nil {
+				log.Errorf("Error writing configuration to file: %s\n", err.Error())
+				return nil
+			}
+		} else {
+			log.Errorf("Error opening configuration file: %s\n", err.Error())
+			return nil
+		}
+	} else {
+		err = yaml.Unmarshal(data, &memento.Config)
+		if err != nil {
+			log.Errorf("Error unmarshalling yaml file: %s\n", err.Error())
+			return nil
+		}
 	}
 
-	memento.DbConn, err = gorm.Open(sqlite.Open(memento.Config.DbConfig.Database), &gorm.Config{
+	memento.DbConn, err = gorm.Open(sqlite.Open(path.Join(GetBasePath(), GetConfig().DbConfig.Database)), &gorm.Config{
 		TranslateError:                           true,
 		DisableForeignKeyConstraintWhenMigrating: true,
 		//SkipDefaultTransaction:                   true,
@@ -58,11 +85,11 @@ func Init() *MementoServer {
 	memento.DbConn.AutoMigrate(&model.Comment{})
 	memento.DbConn.AutoMigrate(&model.Post{})
 	memento.DbConn.AutoMigrate(&model.User{})
-
-	//memento.DbConn.AutoMigrate(&model.UserLike{})
-	//memento.DbConn.AutoMigrate(&model.UserFollow{})
-	memento.DbConn.AutoMigrate(&model.PostTag{})
+	//memento.DbConn.AutoMigrate(&model.PostTag{})
 	return &memento
+}
+func GetBasePath() string {
+	return memento.Config.FilePath
 }
 
 func GetAvatarPath() string {
@@ -73,8 +100,8 @@ func GetPostPath() string {
 	return path.Join(memento.Config.FilePath, "post")
 }
 
-func GetFilePath() string {
-	return path.Join(memento.Config.FilePath, "file")
+func GetUploadPath() string {
+	return path.Join(memento.Config.FilePath, "upload")
 }
 
 func GetConfig() *utils.MementoConfig {

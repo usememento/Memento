@@ -44,7 +44,7 @@ func HandleFileUpload(c echo.Context) error {
 	defer src.Close()
 	ext := path.Ext(file.Filename)
 	filename := utils.Md5string(fmt.Sprintf("%d%s", now.UnixMilli(), file.Filename)) + ext
-	filepath := path.Join(memento.GetFilePath(), filename)
+	filepath := path.Join(memento.GetUploadPath(), filename)
 	// Destination
 	dst, err := os.Create(filepath)
 	if err != nil {

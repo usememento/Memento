@@ -1,5 +1,25 @@
 package utils
 
+var (
+	DefaultConfig = MementoConfig{
+		DbConfig{
+			User:     "root",
+			Password: "123456",
+			Host:     "127.0.0.1",
+			Port:     1234,
+			Driver:   "sqlite",
+			Database: "memento.db",
+		},
+		ServiceConfig{},
+		ServerConfig{
+			Name:     "Memento",
+			Version:  "0.1.0",
+			Port:     1323,
+			FilePath: "",
+		},
+	}
+)
+
 type DbConfig struct {
 	User     string
 	Password string

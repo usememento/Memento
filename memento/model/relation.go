@@ -1,7 +1,5 @@
 package model
 
-import "gorm.io/gorm"
-
 //type UserLike struct {
 //	gorm.Model
 //	Username string
@@ -18,10 +16,10 @@ import "gorm.io/gorm"
 //	Follow         User `gorm:"foreignKey:Username"`
 //}
 
-type PostTag struct {
-	gorm.Model
-	PostID uint
-	Post   Post
-	TagID  uint
-	Tag    Tag
-}
+//type PostTag struct {
+//	gorm.Model
+//	PostID uint
+//	Post   Post
+//	TagID  uint
+//	Tag    Tag
+//}

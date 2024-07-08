@@ -18,7 +18,7 @@ func HandleCommentCreate(c echo.Context) error {
 	if username == "" {
 		return utils.RespondUnauthorized(c)
 	}
-	postId := c.FormValue("post_id")
+	postId := c.FormValue("id")
 	content := c.FormValue("content")
 
 	var user model.User
@@ -76,7 +76,7 @@ func HandleCommentEdit(c echo.Context) error {
 	if username == "" {
 		return utils.RespondUnauthorized(c)
 	}
-	commentId := c.FormValue("comment_id")
+	commentId := c.FormValue("id")
 	content := c.FormValue("content")
 	var comment model.Comment
 	memento.GetDbConnection().First(&comment, "id=?", commentId)
@@ -94,7 +94,7 @@ func HandleCommentDelete(c echo.Context) error {
 	if username == "" {
 		return utils.RespondUnauthorized(c)
 	}
-	commentId := c.FormValue("comment_id")
+	commentId := c.FormValue("id")
 	var comment model.Comment
 	err := memento.GetDbConnection().First(&comment, "id=?", commentId).Error
 	if err != nil {
@@ -147,7 +147,7 @@ func HandleCommentDelete(c echo.Context) error {
 }
 
 func HandleCommentLike(c echo.Context) error {
-	commentId := c.FormValue("comment_id")
+	commentId := c.FormValue("id")
 	var comment model.Comment
 	memento.GetDbConnection().First(&comment, "id=?", commentId)
 	memento.GetDbConnection().Transaction(
@@ -159,7 +159,7 @@ func HandleCommentLike(c echo.Context) error {
 	return nil
 }
 func HandleCommentCancelLike(c echo.Context) error {
-	commentId := c.FormValue("comment_id")
+	commentId := c.FormValue("id")
 	var comment model.Comment
 	memento.GetDbConnection().First(&comment, "id=?", commentId)
 	memento.GetDbConnection().Transaction(
@@ -172,7 +172,7 @@ func HandleCommentCancelLike(c echo.Context) error {
 }
 
 func HandleGetPostComments(c echo.Context) error {
-	postId := c.QueryParam("post_id")
+	postId := c.QueryParam("id")
 	page, err := strconv.Atoi(c.QueryParam("page"))
 	if err != nil {
 		return utils.RespondError(c, "invalid page")

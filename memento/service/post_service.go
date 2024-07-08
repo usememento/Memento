@@ -320,7 +320,7 @@ func HandlePostLike(c echo.Context) error {
 	if username == "" {
 		return utils.RespondUnauthorized(c)
 	}
-	postId := c.FormValue("post_id")
+	postId := c.FormValue("id")
 	var user model.User
 	err := memento.GetDbConnection().First(&user, "username=?", username).Error
 	if err != nil {
@@ -377,7 +377,7 @@ func HandlePostCancelLike(c echo.Context) error {
 	if username == "" {
 		return utils.RespondUnauthorized(c)
 	}
-	postId := c.FormValue("post_id")
+	postId := c.FormValue("id")
 	var user model.User
 	err := memento.GetDbConnection().First(&user, "username=?", username).Error
 	if err != nil {
