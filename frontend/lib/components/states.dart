@@ -48,7 +48,7 @@ abstract class LoadingState<T extends StatefulWidget, S extends Object> extends 
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(error!),
+          Text(error!, maxLines: 3,),
           const SizedBox(height: 12),
           Button.text(
             onPressed: retry,
@@ -185,7 +185,7 @@ abstract class MultiPageLoadingState<T extends StatefulWidget, S extends Object>
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(error),
+          Text(error, maxLines: 3),
           const SizedBox(height: 12),
           Button.outlined(
             onPressed: () {

@@ -73,7 +73,7 @@ class _NaviPaneState extends State<NaviPane>
   int get currentPage => _currentPage;
 
   set currentPage(int value) {
-    if (value == _currentPage) return;
+    if (value == _currentPage && widget.observer.routes.length == 1) return;
     _currentPage = value;
     widget.onPageChange?.call(value);
   }
@@ -110,6 +110,17 @@ class _NaviPaneState extends State<NaviPane>
     super.initState();
   }
 
+  bool isInitial = false;
+
+  @override
+  void didUpdateWidget(covariant NaviPane oldWidget) {
+    if(!isInitial) {
+      controller.value = targetFromContext(context);
+      isInitial = true;
+    }
+    super.didUpdateWidget(oldWidget);
+  }
+
   @override
   void dispose() {
     controller.dispose();
@@ -119,7 +130,7 @@ class _NaviPaneState extends State<NaviPane>
 
   double? animationTarget;
 
-  void onRebuild(BuildContext context) {
+  double targetFromContext(BuildContext context) {
     var width = MediaQuery.of(context).size.width;
     double target = 0;
     if (widget.observer.pageCount > 1) {
@@ -131,6 +142,12 @@ class _NaviPaneState extends State<NaviPane>
     if (width > _kChangePoint2) {
       target = 3;
     }
+    return target;
+  }
+
+  void onRebuild(BuildContext context) {
+    double target = targetFromContext(context);
+
     if (controller.value != target || animationTarget != target) {
       if (controller.isAnimating) {
         if (animationTarget == target) {

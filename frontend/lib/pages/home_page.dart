@@ -8,6 +8,7 @@ import 'package:frontend/network/network.dart';
 import 'package:frontend/utils/translation.dart';
 
 import '../components/heat_map.dart';
+import 'memo_edit_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -17,6 +18,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  int _memosListKey = 0;
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(builder: (context, constrains) {
@@ -27,8 +30,12 @@ class _HomePageState extends State<HomePage> {
               slivers: [
                 SliverPadding(
                     padding: EdgeInsets.only(top: context.padding.top)),
-                const WritingArea(),
-                const _HomePageMemosList(),
+                WritingArea(onPost: () {
+                  setState(() {
+                    _memosListKey++;
+                  });
+                },),
+                _HomePageMemosList(key: ValueKey(_memosListKey),),
               ],
             ),
           ),
@@ -79,7 +86,7 @@ class _HomePageState extends State<HomePage> {
                     const SizedBox(
                       height: 16,
                     ),
-                    HeatMap(data: getTestData())
+                    const HeatMapWithLoadingState()
                   ],
                 ),
               ),
@@ -91,7 +98,9 @@ class _HomePageState extends State<HomePage> {
 }
 
 class WritingArea extends StatefulWidget {
-  const WritingArea({super.key});
+  const WritingArea({super.key, required this.onPost});
+
+  final VoidCallback onPost;
 
   @override
   State<WritingArea> createState() => _WritingAreaState();
@@ -195,11 +204,25 @@ class _WritingAreaState extends State<WritingArea> {
     ).toSliver();
   }
 
-  void post() {
+  void post() async {
     if (content.isEmpty) {
       return;
     }
-    // Post content to the server
+    var res = await Network().postMemo(content, isPublic);
+    if (mounted) {
+      if(res.error) {
+        context.showMessage(res.errorMessage!);
+      } else {
+        controller.clear();
+        context.showMessage("Post success".tl);
+        widget.onPost();
+      }
+    }
+  }
+
+  void onPost() {
+    controller.clear();
+    widget.onPost();
   }
 
   void fullScreen() async {
@@ -208,6 +231,7 @@ class _WritingAreaState extends State<WritingArea> {
         return WritingPage(
             content: content,
             isPublic: isPublic,
+            onPost: onPost,
             updateContent: (value, isPublic) {
               controller.text = value;
               this.isPublic = isPublic;
@@ -234,11 +258,14 @@ class WritingPage extends StatefulWidget {
       {super.key,
       required this.content,
       required this.updateContent,
+      required this.onPost,
       this.isPublic = false});
 
   final String content;
 
   final void Function(String, bool) updateContent;
+
+  final void Function() onPost;
 
   final bool isPublic;
 
@@ -343,87 +370,26 @@ class _WritingPageState extends State<WritingPage> {
     ).withSurface();
   }
 
-  void post() {}
-}
-
-class MemoEditingController extends TextEditingController {
-  MemoEditingController({super.text});
-
-  bool isTag(String text) {
-    return text.startsWith('#') &&
-        text.length <= 20 &&
-        text.length > 1 &&
-        text[1] != '#';
-  }
-
-  bool isTitle(String line) {
-    var splits = line.split(' ');
-    if (splits.length == 1) return false;
-    if (splits[1].trim().isEmpty) return false;
-    var s = splits.first;
-    bool isTitle = true;
-    for (var char in s.characters) {
-      if (char != '#') {
-        isTitle = false;
-        break;
-      }
+  void post() async{
+    if (controller.text.isEmpty) {
+      return;
     }
-    return isTitle;
-  }
-
-  @override
-  TextSpan buildTextSpan(
-      {required BuildContext context,
-      TextStyle? style,
-      required bool withComposing}) {
-    var lines = text.split("\n");
-    var spans = <TextSpan>[];
-    for (int i = 0; i < lines.length; i++) {
-      var line = lines[i];
-      if (i != lines.length - 1) {
-        line += '\n';
-      }
-      if (isTitle(line)) {
-        spans.add(TextSpan(
-          text: line,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ));
-      } else if (!line.contains('#')) {
-        spans.add(TextSpan(
-          text: line,
-        ));
+    var res = await Network().postMemo(controller.text, isPublic);
+    if (mounted) {
+      if(res.error) {
+        context.showMessage(res.errorMessage!);
       } else {
-        var buffer = '';
-        var splits = line.split(' ');
-        for (var s in splits) {
-          if (isTag(s)) {
-            spans.add(TextSpan(
-              text: buffer,
-            ));
-            spans.add(TextSpan(
-              text: '$s ',
-              style: const TextStyle(
-                color: Colors.blue,
-              ),
-            ));
-            buffer = '';
-          } else {
-            buffer += '$s ';
-          }
-        }
-        if (buffer.isNotEmpty) {
-          spans.add(TextSpan(
-            text: buffer,
-          ));
-        }
+        controller.clear();
+        context.showMessage("Post success".tl);
+        widget.onPost();
+        context.pop();
       }
     }
-    return TextSpan(children: spans, style: style);
   }
 }
 
 class _HomePageMemosList extends StatefulWidget {
-  const _HomePageMemosList();
+  const _HomePageMemosList({super.key});
 
   @override
   State<_HomePageMemosList> createState() => _HomePageMemosListState();
@@ -454,7 +420,7 @@ class _HomePageMemosListState
     return SliverList(
         delegate: SliverChildBuilderDelegate(
       (context, index) {
-        return MemoWidget(memo: data[index]);
+        return MemoWidget(memo: data[index], showUser: false);
       },
       childCount: data.length,
     ));
@@ -462,6 +428,6 @@ class _HomePageMemosListState
 
   @override
   Future<Res<List<Memo>>> loadData(int page) {
-    return Network().getHomePage(page);
+    return Network().getMemosList(page);
   }
 }

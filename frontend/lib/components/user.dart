@@ -11,6 +11,10 @@ class Avatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    ImageProvider image = App.isWeb ? NetworkImage(url) : CachedNetworkImageProvider(url);
+    if(url.isEmpty) {
+      image = const AssetImage('assets/user.png');
+    }
     return Container(
       width: size,
       height: size,
@@ -22,7 +26,7 @@ class Avatar extends StatelessWidget {
         width: double.infinity,
         height: double.infinity,
         fit: BoxFit.cover,
-        image: App.isWeb ? NetworkImage(url) : CachedNetworkImageProvider(url),
+        image: image,
       ),
     );
   }

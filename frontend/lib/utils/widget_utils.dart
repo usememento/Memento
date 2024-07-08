@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:frontend/components/overlay.dart';
+import 'package:frontend/foundation/app.dart';
 
 extension WidgetExtension on Widget {
   Widget padding(EdgeInsetsGeometry padding) {
@@ -75,6 +76,12 @@ extension WidgetExtension on Widget {
     return GestureDetector(onTap: onTap, child: this);
   }
 
+  Widget onTapAt(Function(Offset) onTap) {
+    return GestureDetector(onTapUp: (details) {
+      onTap(details.globalPosition);
+    }, child: this);
+  }
+
   Widget expanded() {
     return SizedBox(
         width: double.infinity, height: double.infinity, child: this);
@@ -112,6 +119,10 @@ extension ContextExt on BuildContext {
     return Navigator.of(this).pushNamed(path, arguments: params);
   }
 
+  Future<T?> toWidget<T>(WidgetBuilder builder, [Map<String, dynamic> params = const {}]) {
+    return Navigator.of(this).push(AppPageRoute(builder: builder));
+  }
+
   Future<T?> toAndRemoveAll<T>(String path,
       [Map<String, String> params = const {}]) {
     return Navigator.of(this)
@@ -140,5 +151,9 @@ extension ContextExt on BuildContext {
 
   void showError(String message) {
     OverlayWidget.of(this).showError(message);
+  }
+
+  dynamic param(String key) {
+    return (ModalRoute.of(this)!.settings.arguments! as Map)[key];
   }
 }
