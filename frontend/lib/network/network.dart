@@ -106,15 +106,14 @@ class Network {
 
   Future<Res<Account>> refresh() async {
     try {
-      var res = await dio.post<Map<String, dynamic>>("/api/user/refresh",
-          data: {
-            "refresh_token": appdata.user.refreshToken,
-          },
-          queryParameters: {
-            'client_id': '000000',
-            'client_secret': '999999',
-            'grant_type': 'refresh_token',
-          });
+      var res =
+          await dio.post<Map<String, dynamic>>("/api/user/refresh", data: {
+        "refresh_token": appdata.user.refreshToken,
+      }, queryParameters: {
+        'client_id': '000000',
+        'client_secret': '999999',
+        'grant_type': 'refresh_token',
+      });
       return Res(Account.fromJson(res.data!));
     } catch (e) {
       return Res.error(e.toString());
@@ -179,10 +178,8 @@ class Network {
   Future<Res<List<Memo>>> getMemosListByTag(int page, String tag) async {
     try {
       page--;
-      var res = await dio.get<List>("/api/post/taggedPosts", queryParameters: {
-        "page": page,
-        "tag": "#$tag"
-      });
+      var res = await dio.get<List>("/api/post/taggedPosts",
+          queryParameters: {"page": page, "tag": "#$tag"});
       return Res((res.data as List).map((e) => Memo.fromJson(e)).toList());
     } catch (e) {
       return Res.error(e.toString());
@@ -192,8 +189,8 @@ class Network {
   Future<Res<bool>> likeOrUnlike(int memoId, bool isLike) async {
     try {
       var res = await dio.post(isLike ? "/api/post/like" : "/api/post/unlike",
-          data: {"postId": memoId});
-      if(res.statusCode == 200) {
+          data: {"id": memoId});
+      if (res.statusCode == 200) {
         return const Res(true);
       } else {
         throw "Invalid Status Code ${res.statusCode}";
@@ -236,6 +233,51 @@ class Network {
           queryParameters: {"username": username ?? appdata.user.username});
       return Res(HeatMapData(
           Map.from(res.data!['map']), res.data!['memos'], res.data!['likes']));
+    } catch (e) {
+      return Res.error(e.toString());
+    }
+  }
+
+  Future<Res<List<Comment>>> getComments(int memoId, int page) async {
+    try {
+      page--;
+      var res = await dio.get<Map<String, dynamic>>("/api/comment/postComments",
+          queryParameters: {
+            "id": memoId,
+            "page": page,
+          });
+      return Res(
+          (res.data!["comments"] as List)
+              .map((e) => Comment.fromJson(e))
+              .toList(),
+          subData: res.data!["maxPage"] + 1);
+    } catch (e) {
+      return Res.error(e.toString());
+    }
+  }
+
+  Future<Res<bool>> sendComment(int memoId, String content) async {
+    try {
+      var res = await dio.post("/api/comment/create", data: {
+        "id": memoId,
+        "content": content,
+      });
+      return Res(res.statusCode == 200);
+    } catch (e) {
+      return Res.error(e.toString());
+    }
+  }
+
+  Future<Res<bool>> likeOrUnlikeComment(int id, bool isLike) async {
+    try {
+      var res = await dio.post(
+          isLike ? "/api/comment/like" : "/api/comment/unlike",
+          data: {"id": id});
+      if (res.statusCode == 200) {
+        return const Res(true);
+      } else {
+        throw "Invalid Status Code ${res.statusCode}";
+      }
     } catch (e) {
       return Res.error(e.toString());
     }

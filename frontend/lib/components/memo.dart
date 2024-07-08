@@ -13,6 +13,7 @@ import 'package:flutter_highlight/themes/a11y-light.dart';
 import 'package:flutter_highlight/themes/a11y-dark.dart';
 
 import '../network/network.dart';
+import '../pages/comments_page.dart';
 import 'button.dart';
 
 class MemoWidget extends StatefulWidget {
@@ -211,7 +212,9 @@ class _MemoWidgetState extends State<MemoWidget> {
     }
   }
 
-  void reply() {}
+  void reply() {
+    CommentsPage.show(widget.memo.id);
+  }
 
   void edit() async {
     var res =

@@ -247,3 +247,63 @@ class HeatMapData {
   const HeatMapData(
       this.dailyData, this.totalMemos, this.totalLikes);
 }
+
+/*
+{
+      "CommentID": 1,
+      "PostID": 1,
+      "User": {
+        "Username": "nyne",
+        "Nickname": "nyne",
+        "Bio": "",
+        "TotalLiked": 0,
+        "TotalComment": 2,
+        "TotalPosts": 1,
+        "TotalFiles": 0,
+        "TotalFollower": 0,
+        "TotalFollows": 0,
+        "RegisteredAt": "2024-07-08T11:38:48.0618698+08:00",
+        "AvatarUrl": ""
+      },
+      "CreatedAt": "2024-07-08T11:42:20.3796542+08:00",
+      "EditedAt": "2024-07-08T11:42:20.3796542+08:00",
+      "Content": "123",
+      "Liked": 0,
+      "IsLiked": false
+    }
+ */
+class Comment {
+  final int id;
+
+  final int memoId;
+
+  final User author;
+
+  final DateTime date;
+
+  final String content;
+
+  bool isLiked;
+
+  int likesCount;
+
+  Comment(
+      {required this.id,
+      required this.memoId,
+      required this.author,
+      required this.date,
+      required this.content,
+      required this.isLiked,
+      required this.likesCount});
+
+  factory Comment.fromJson(Map<String, dynamic> json) {
+    return Comment(
+        id: json['CommentID'],
+        memoId: json['PostID'],
+        author: User.fromJson(json['User']),
+        date: DateTime.parse(json['CreatedAt']),
+        content: json['Content'],
+        isLiked: json['IsLiked'],
+        likesCount: json['Liked']);
+  }
+}

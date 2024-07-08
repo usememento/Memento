@@ -114,7 +114,7 @@ func PostToView(post *model.Post, user *model.UserViewModel, liked bool) (*model
 	}, nil
 }
 
-func CommentToView(comment *model.Comment, user *model.UserViewModel) *model.CommentViewModel {
+func CommentToView(comment *model.Comment, user *model.UserViewModel, isLiked bool) *model.CommentViewModel {
 	return &model.CommentViewModel{
 		CommentID: comment.ID,
 		PostID:    comment.PostID,
@@ -123,6 +123,7 @@ func CommentToView(comment *model.Comment, user *model.UserViewModel) *model.Com
 		EditedAt:  comment.EditedAt,
 		Content:   comment.Content,
 		Liked:     comment.Liked,
+		IsLiked:   isLiked,
 	}
 }
 

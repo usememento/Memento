@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/button.dart';
 import 'package:frontend/components/expansion_panel.dart';
 import 'package:frontend/components/memo.dart';
+import 'package:frontend/components/user.dart';
 import 'package:frontend/foundation/app.dart';
+import 'package:frontend/pages/comments_page.dart';
 import 'package:frontend/utils/translation.dart';
 import 'package:markdown_widget/config/all.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
+import 'package:share_plus/share_plus.dart';
 
-import '../network/models.dart';
+import '../network/network.dart';
 
 class MemoDetailsPage extends StatefulWidget {
   const MemoDetailsPage({super.key});
@@ -80,66 +84,72 @@ class _MemoDetailsState extends State<_MemoDetails> {
             message: 'Outline'.tl,
             child: Button.icon(
               icon: const Icon(Icons.format_list_bulleted),
-              onPressed: () {
-                App.rootNavigatorKey!.currentState!.push(PageRouteBuilder(
-                    transitionDuration: const Duration(milliseconds: 200),
-                    opaque: false,
-                    fullscreenDialog: true,
-                    pageBuilder: (context, animation, secondaryAnimation) {
-                      return AnimatedBuilder(
-                        animation: CurvedAnimation(
-                            parent: animation, curve: Curves.ease),
-                        builder: (context, child) {
-                          var value = animation.value;
-                          return Stack(
-                            children: [
-                              Positioned.fill(
-                                  child: GestureDetector(
-                                onTap: () {
-                                  Navigator.pop(context);
-                                },
-                                child: Container(
-                                  color: Colors.black.withOpacity(0.4 * value),
-                                ),
-                              )),
-                              Positioned(
-                                right: -300 * (1 - value),
-                                top: 0,
-                                bottom: 0,
-                                child: Container(
-                                  height: double.infinity,
-                                  width: 300,
-                                  padding: EdgeInsets.only(
-                                    top: context.padding.top,
-                                    bottom: context.padding.bottom,
-                                    left: 8,
-                                    right: 8,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: context.colorScheme.surface,
-                                    border: Border(
-                                      left: BorderSide(
-                                        color:
-                                            context.colorScheme.outlineVariant,
-                                        width: 0.4,
-                                      ),
-                                    ),
-                                  ),
-                                  child: SingleChildScrollView(
-                                    child: buildOutline(),
-                                  ),
-                                ).withSurface(),
-                              )
-                            ],
-                          );
-                        },
-                      );
-                    }));
-              },
+              onPressed: showSidebar,
             ),
           )
       ],
     );
+  }
+
+  void showSidebar() {
+    App.rootNavigatorKey!.currentState!.push(PageRouteBuilder(
+        transitionDuration: const Duration(milliseconds: 200),
+        opaque: false,
+        fullscreenDialog: true,
+        pageBuilder: (context, animation, secondaryAnimation) {
+          return AnimatedBuilder(
+            animation: CurvedAnimation(parent: animation, curve: Curves.ease),
+            builder: (context, child) {
+              var value = animation.value;
+              return Stack(
+                children: [
+                  Positioned.fill(
+                      child: GestureDetector(
+                    onTap: () {
+                      Navigator.pop(context);
+                    },
+                    child: Container(
+                      color: Colors.black.withOpacity(0.4 * value),
+                    ),
+                  )),
+                  Positioned(
+                    right: -300 * (1 - value),
+                    top: 0,
+                    bottom: 0,
+                    child: Container(
+                      height: double.infinity,
+                      width: 300,
+                      padding: EdgeInsets.only(
+                        top: context.padding.top,
+                        bottom: context.padding.bottom,
+                        left: 8,
+                        right: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: context.colorScheme.surface,
+                        border: Border(
+                          left: BorderSide(
+                            color: context.colorScheme.outlineVariant,
+                            width: 0.4,
+                          ),
+                        ),
+                      ),
+                      child: SingleChildScrollView(
+                        child: Column(
+                          children: [
+                            const SizedBox(height: 8),
+                            buildSearchBar(),
+                            buildOutline()
+                          ],
+                        ),
+                      ),
+                    ).withSurface(),
+                  )
+                ],
+              );
+            },
+          );
+        }));
   }
 
   String? title;
@@ -149,10 +159,6 @@ class _MemoDetailsState extends State<_MemoDetails> {
   List<Toc>? toc;
 
   final controller = ItemScrollController();
-
-  Widget buildTrailing() {
-    return const SizedBox();
-  }
 
   bool isTag(String text) {
     return text.startsWith('#') &&
@@ -199,9 +205,10 @@ class _MemoDetailsState extends State<_MemoDetails> {
                           itemCount: markdownContent.length + 1,
                           itemScrollController: controller,
                           itemBuilder: (context, index) {
-                            if (index == markdownContent.length) {
-                              return buildTrailing();
+                            if (index == 0) {
+                              return buildActions();
                             }
+                            index--;
                             return markdownContent[index].paddingHorizontal(16);
                           },
                         ),
@@ -230,9 +237,8 @@ class _MemoDetailsState extends State<_MemoDetails> {
               child: SingleChildScrollView(
                 child: Column(
                   children: [
-                    const SizedBox(
-                      height: 8,
-                    ),
+                    const SizedBox(height: 8),
+                    buildSearchBar(),
                     buildOutline()
                   ],
                 ),
@@ -241,6 +247,171 @@ class _MemoDetailsState extends State<_MemoDetails> {
         ],
       );
     }).withSurface();
+  }
+
+  bool isLiking = false;
+
+  double calcButtonWidth(int number) {
+    int numberLength = number.toString().length;
+    return 54.0 + 14.0 * numberLength;
+  }
+
+  Widget buildActions() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            color: Theme.of(context).colorScheme.outlineVariant,
+            width: 0.4,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          InkWell(
+            onTap: () {
+              context.to('/user/${widget.memo.author!.username}');
+            },
+            borderRadius: BorderRadius.circular(4),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Avatar(url: widget.memo.author!.avatar, size: 24),
+                const SizedBox(width: 8),
+                Text(widget.memo.author!.nickname,
+                    style: const TextStyle(fontSize: 14)),
+              ],
+            ).paddingHorizontal(8).paddingVertical(4),
+          ),
+          const Spacer(),
+          Button.normal(
+            onPressed: like,
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            isLoading: isLiking,
+            height: 36,
+            width: 92,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (widget.memo.isLiked)
+                  const Icon(Icons.favorite, size: 18, color: Colors.red)
+                else
+                  const Icon(
+                    Icons.favorite_border,
+                    size: 18,
+                  ),
+                Expanded(
+                  child: Center(
+                    child: Text(
+                      widget.memo.likesCount.toString(),
+                      style: const TextStyle(fontSize: 14),
+                    ).paddingBottom(2),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Button.normal(
+            onPressed: () {
+              CommentsPage.show(widget.memo.id);
+            },
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            height: 36,
+            width: 92,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.chat_bubble_outline,
+                  size: 18,
+                ),
+                Expanded(
+                  child: Center(
+                    child: Text(
+                      widget.memo.repliesCount.toString(),
+                      style: const TextStyle(fontSize: 14),
+                    ).paddingBottom(2),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Button.normal(
+            onPressed: () {},
+            onPressedAt: (location) {
+              var baseUrl = App.isWeb ? Uri.base : appdata.settings['domain'];
+              var url = baseUrl + '/memo/' + widget.memo.id.toString();
+              showPopMenu(location, [
+                MenuEntry("Copy path", () {
+                  Clipboard.setData(ClipboardData(text: url));
+                }),
+                MenuEntry("Share", () {
+                  Share.share(url);
+                }),
+              ]);
+            },
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            height: 36,
+            width: 58,
+            child: const Icon(
+              Icons.share,
+              size: 18,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void like() async {
+    setState(() {
+      isLiking = true;
+    });
+    var res =
+        await Network().likeOrUnlike(widget.memo.id, !widget.memo.isLiked);
+    if (mounted) {
+      if (res.success) {
+        setState(() {
+          widget.memo.isLiked = !widget.memo.isLiked;
+          if (widget.memo.isLiked) {
+            widget.memo.likesCount++;
+          } else {
+            widget.memo.likesCount--;
+          }
+          isLiking = false;
+        });
+      } else {
+        context.showMessage(res.message);
+        setState(() {
+          isLiking = false;
+        });
+      }
+    }
+  }
+
+  Widget buildSearchBar() {
+    return Container(
+      height: 42,
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainer,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: TextField(
+        decoration: const InputDecoration(
+          hintText: "Search",
+          prefixIcon: Icon(Icons.search),
+          border: InputBorder.none,
+        ),
+        onSubmitted: (s) {
+          context.to("/search", {
+            "keyword": s,
+          });
+        },
+      ),
+    );
   }
 
   Widget buildOutline() {
@@ -278,23 +449,21 @@ class _MemoDetailsState extends State<_MemoDetails> {
             minTileHeight: 32.0,
             contentPadding: padding + EdgeInsets.only(left: node.level * 8.0),
             onTap: () {
-              to(node.index);
+              to(node.index + 1);
             },
-            trailing: node.children.isNotEmpty
-                ? Button.icon(
-                    size: 18.0,
-                    icon: Icon(
-                      node.isExpanded
-                          ? Icons.keyboard_arrow_down
-                          : Icons.keyboard_arrow_up,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        node.isExpanded = !node.isExpanded;
-                      });
-                    },
-                  )
-                : null,
+            trailing: Button.icon(
+              size: 18.0,
+              icon: Icon(
+                node.isExpanded
+                    ? Icons.keyboard_arrow_down
+                    : Icons.keyboard_arrow_up,
+              ),
+              onPressed: () {
+                setState(() {
+                  node.isExpanded = !node.isExpanded;
+                });
+              },
+            ),
           );
         },
         body: MyExpansionPanelList(
@@ -312,7 +481,7 @@ class _MemoDetailsState extends State<_MemoDetails> {
       materialGapSize: 0,
       expandedHeaderPadding: EdgeInsets.zero,
       children: [buildNode(_article!)],
-    );
+    ).paddingTop(4);
   }
 
   void to(int widgetIndex) {

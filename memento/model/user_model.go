@@ -25,6 +25,7 @@ type User struct {
 	Followers     []User    `gorm:"foreignKey:Username;references:Username"`
 	Likes         []Post    `gorm:"many2many:user_liked_posts;foreignKey:Username;;"`
 	Comments      []Comment `gorm:"foreignKey:Username;references:Username"`
+	LikedComments []Comment `gorm:"many2many:user_liked_comments;foreignKey:Username;"`
 }
 
 type UserViewModel struct {

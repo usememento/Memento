@@ -77,9 +77,11 @@ extension WidgetExtension on Widget {
   }
 
   Widget onTapAt(Function(Offset) onTap) {
-    return GestureDetector(onTapUp: (details) {
-      onTap(details.globalPosition);
-    }, child: this);
+    return GestureDetector(
+        onTapUp: (details) {
+          onTap(details.globalPosition);
+        },
+        child: this);
   }
 
   Widget expanded() {
@@ -105,10 +107,12 @@ class _Surface extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(color: color ?? context.colorScheme.surface, child: child,);
+    return Material(
+      color: color ?? context.colorScheme.surface,
+      child: child,
+    );
   }
 }
-
 
 extension ContextExt on BuildContext {
   void pop<T>([T? result]) {
@@ -119,7 +123,8 @@ extension ContextExt on BuildContext {
     return Navigator.of(this).pushNamed(path, arguments: params);
   }
 
-  Future<T?> toWidget<T>(WidgetBuilder builder, [Map<String, dynamic> params = const {}]) {
+  Future<T?> toWidget<T>(WidgetBuilder builder,
+      [Map<String, dynamic> params = const {}]) {
     return Navigator.of(this).push(AppPageRoute(builder: builder));
   }
 
@@ -146,7 +151,8 @@ extension ContextExt on BuildContext {
   }
 
   void showMessage(String message, {Widget? trailing, Widget? leading}) {
-    OverlayWidget.of(this).showMessage(message, trailing: trailing, leading: leading);
+    OverlayWidget.of(this)
+        .showMessage(message, trailing: trailing, leading: leading);
   }
 
   void showError(String message) {
@@ -156,4 +162,27 @@ extension ContextExt on BuildContext {
   dynamic param(String key) {
     return (ModalRoute.of(this)!.settings.arguments! as Map)[key];
   }
+}
+
+class MenuEntry {
+  MenuEntry(this.title, this.onTap);
+
+  final String title;
+
+  final Function() onTap;
+}
+
+Future<void> showPopMenu(Offset location, List<MenuEntry> items) {
+  return showMenu(
+      elevation: 3,
+      color: App.rootNavigatorKey!.currentContext!.colorScheme.surface,
+      context: App.rootNavigatorKey!.currentContext!,
+      position: RelativeRect.fromLTRB(location.dx, location.dy, location.dx, location.dy),
+      items: items
+          .map((e) => PopupMenuItem(
+                onTap: e.onTap,
+                height: 42,
+                child: Text(e.title),
+              ))
+          .toList());
 }

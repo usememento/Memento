@@ -23,4 +23,5 @@ type CommentViewModel struct {
 	EditedAt  time.Time
 	Content   string
 	Liked     int64
+	IsLiked   bool
 }

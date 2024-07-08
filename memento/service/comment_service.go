@@ -68,7 +68,7 @@ func HandleCommentCreate(c echo.Context) error {
 	if err != nil {
 		return utils.RespondError(c, "unknown query error")
 	}
-	return c.JSON(http.StatusOK, utils.CommentToView(&comment, utils.UserToView(&user)))
+	return c.JSON(http.StatusOK, utils.CommentToView(&comment, utils.UserToView(&user), false))
 }
 
 func HandleCommentEdit(c echo.Context) error {
@@ -148,10 +148,29 @@ func HandleCommentDelete(c echo.Context) error {
 
 func HandleCommentLike(c echo.Context) error {
 	commentId := c.FormValue("id")
+	username := c.Get("username")
+	var user model.User
+	memento.GetDbConnection().First(&user, "username=?", username)
+	var likedComments []model.Comment
+	memento.GetDbConnection().Model(&user).Association("LikedComments").Find(&likedComments)
+	id, err := strconv.Atoi(commentId)
+	if err != nil {
+		return utils.RespondError(c, "invalid comment id")
+	}
+	for _, comm := range likedComments {
+		if comm.ID == uint(id) {
+			return utils.RespondError(c, "already liked")
+		}
+	}
+
 	var comment model.Comment
 	memento.GetDbConnection().First(&comment, "id=?", commentId)
 	memento.GetDbConnection().Transaction(
 		func(tx *gorm.DB) error {
+			err := tx.Model(&user).Association("LikedComments").Append(&comment)
+			if err != nil {
+				return err
+			}
 			comment.Liked += 1
 			tx.Save(&comment)
 			return nil
@@ -188,6 +207,8 @@ func HandleGetPostComments(c echo.Context) error {
 	}
 	comments := make([]model.Comment, 0, memento.PageSize)
 	err = memento.GetDbConnection().Model(&post).Association("Comments").Find(&comments, memento.GetDbConnection().Order("created_at desc").Offset(page*memento.PageSize).Limit(memento.PageSize))
+	total := memento.GetDbConnection().Model(&post).Association("Comments").Count()
+	maxPage := total / memento.PageSize
 	if err != nil {
 		return utils.RespondError(c, "unknown query error")
 	}
@@ -195,7 +216,12 @@ func HandleGetPostComments(c echo.Context) error {
 	for _, comm := range comments {
 		var user model.User
 		memento.GetDbConnection().First(&user, "username=?", comm.Username)
-		result = append(result, *utils.CommentToView(&comm, utils.UserToView(&user)))
+		var likedComments []model.Comment
+		memento.GetDbConnection().Model(&user).Association("LikedComments").Find(&likedComments, "id=?", comm.ID)
+		result = append(result, *utils.CommentToView(&comm, utils.UserToView(&user), len(likedComments) > 0))
 	}
-	return c.JSON(http.StatusOK, result)
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"comments": result,
+		"maxPage":  maxPage,
+	})
 }

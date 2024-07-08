@@ -45,7 +45,8 @@ class Button extends StatefulWidget {
       this.isLoading = false,
       this.width,
       this.height,
-        this.padding,
+      this.padding,
+      this.onPressedAt,
       required this.onPressed});
 
   const Button.filled(
@@ -54,7 +55,8 @@ class Button extends StatefulWidget {
       required this.onPressed,
       this.width,
       this.height,
-        this.padding,
+      this.padding,
+      this.onPressedAt,
       this.isLoading = false})
       : type = ButtonType.filled;
 
@@ -64,7 +66,8 @@ class Button extends StatefulWidget {
       required this.onPressed,
       this.width,
       this.height,
-        this.padding,
+      this.padding,
+      this.onPressedAt,
       this.isLoading = false})
       : type = ButtonType.outlined;
 
@@ -74,7 +77,8 @@ class Button extends StatefulWidget {
       required this.onPressed,
       this.width,
       this.height,
-        this.padding,
+      this.padding,
+      this.onPressedAt,
       this.isLoading = false})
       : type = ButtonType.text;
 
@@ -84,7 +88,8 @@ class Button extends StatefulWidget {
       required this.onPressed,
       this.width,
       this.height,
-        this.padding,
+      this.padding,
+      this.onPressedAt,
       this.isLoading = false})
       : type = ButtonType.normal;
 
@@ -110,6 +115,8 @@ class Button extends StatefulWidget {
   final bool isLoading;
 
   final void Function() onPressed;
+
+  final void Function(Offset location)? onPressedAt;
 
   final double? width;
 
@@ -145,7 +152,10 @@ class _ButtonState extends State<Button> {
       height = height - 16;
     }
     Widget child = DefaultTextStyle(
-      style: TextStyle(color: textColor, fontSize: 16, ),
+      style: TextStyle(
+        color: textColor,
+        fontSize: 16,
+      ),
       child: isLoading
           ? CircularProgressIndicator(
               color: widget.type == ButtonType.filled
@@ -164,9 +174,15 @@ class _ButtonState extends State<Button> {
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
         onTap: isLoading ? null : widget.onPressed,
+        onTapUp: (details) {
+          if (widget.onPressedAt != null) {
+            widget.onPressedAt!(details.globalPosition);
+          }
+        },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 160),
-          padding: widget.padding ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          padding: widget.padding ??
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
           decoration: BoxDecoration(
             color: buttonColor,
             borderRadius: BorderRadius.circular(16),
@@ -242,17 +258,14 @@ class _IconButtonState extends State<_IconButton> {
         message: widget.tooltip ?? "",
         child: Container(
           decoration: BoxDecoration(
-            color: isHover
-                ? Theme.of(context).colorScheme.surfaceContainer
-                : null,
+            color:
+                isHover ? Theme.of(context).colorScheme.surfaceContainer : null,
             borderRadius: BorderRadius.circular(16),
           ),
           padding: const EdgeInsets.all(6),
           child: IconTheme(
             data: IconThemeData(
-              size: widget.size ?? 24,
-              color: context.colorScheme.primary
-            ),
+                size: widget.size ?? 24, color: context.colorScheme.primary),
             child: widget.icon,
           ),
         ),
