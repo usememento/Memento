@@ -15,7 +15,7 @@ var (
 			Name:     "Memento",
 			Version:  "0.1.0",
 			Port:     1323,
-			FilePath: "",
+			BasePath: "",
 		},
 	}
 )
@@ -36,7 +36,7 @@ type ServerConfig struct {
 	Name     string
 	Version  string
 	Port     uint16
-	FilePath string
+	BasePath string
 }
 
 type MementoConfig struct {

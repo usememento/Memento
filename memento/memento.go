@@ -5,7 +5,6 @@ import (
 	"Memento/memento/utils"
 	"errors"
 	"fmt"
-	echoserver "github.com/dasjott/oauth2-echo-server"
 	"github.com/go-oauth2/oauth2/v4"
 	"github.com/go-oauth2/oauth2/v4/server"
 	"github.com/labstack/echo/v4"
@@ -33,44 +32,59 @@ const (
 var JwtSecret = []byte("secret")
 var memento MementoServer
 
-func Init() *MementoServer {
+func Init() (*MementoServer, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
 		log.Errorf("Error getting home directory: %s\n", err.Error())
-		return nil
+		return nil, err
 	}
 	data, err := os.ReadFile(path.Join(home, ".memento", ConfigFileName))
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			memento.Config = utils.DefaultConfig
-			memento.Config.FilePath = path.Join(home, ".memento")
-			f, err := os.Create(path.Join(memento.Config.FilePath, ConfigFileName))
+			memento.Config.BasePath = path.Join(home, ".memento")
+			if err = os.MkdirAll(GetBasePath(), 0777); err != nil {
+				log.Errorf("Error creating base folder: %s\n", err.Error())
+				return nil, err
+			}
+			f, err := os.Create(path.Join(memento.Config.BasePath, ConfigFileName))
 			if err != nil {
 				log.Errorf("Error creating configuration file: %s\n", err.Error())
-				return nil
+				return nil, err
 			}
-			data, err := yaml.Marshal(utils.DefaultConfig)
+			data, err := yaml.Marshal(memento.Config)
 			if err != nil {
 				log.Errorf("Error marshalling configuration: %s\n", err.Error())
-				return nil
+				return nil, err
 			}
 			_, err = f.Write(data)
 			if err != nil {
 				log.Errorf("Error writing configuration to file: %s\n", err.Error())
-				return nil
+				return nil, err
 			}
 		} else {
 			log.Errorf("Error opening configuration file: %s\n", err.Error())
-			return nil
+			return nil, err
 		}
 	} else {
 		err = yaml.Unmarshal(data, &memento.Config)
 		if err != nil {
 			log.Errorf("Error unmarshalling yaml file: %s\n", err.Error())
-			return nil
+			return nil, err
 		}
 	}
-
+	if err = os.MkdirAll(GetUploadPath(), 0777); err != nil {
+		log.Errorf("Error creating upload file folder: %s\n", err.Error())
+		return nil, err
+	}
+	if err = os.MkdirAll(GetPostPath(), 0777); err != nil {
+		log.Errorf("Error creating post folder: %s\n", err.Error())
+		return nil, err
+	}
+	if err = os.MkdirAll(GetAvatarPath(), 0777); err != nil {
+		log.Errorf("Error creating avatar folder: %s\n", err.Error())
+		return nil, err
+	}
 	memento.DbConn, err = gorm.Open(sqlite.Open(path.Join(GetBasePath(), GetConfig().DbConfig.Database)), &gorm.Config{
 		TranslateError:                           true,
 		DisableForeignKeyConstraintWhenMigrating: true,
@@ -78,7 +92,7 @@ func Init() *MementoServer {
 	})
 	if err != nil {
 		log.Errorf("Error establishing database connection: %s\n", err.Error())
-		return nil
+		return nil, err
 	}
 	memento.DbConn.AutoMigrate(&model.Tag{})
 	memento.DbConn.AutoMigrate(&model.File{})
@@ -86,22 +100,22 @@ func Init() *MementoServer {
 	memento.DbConn.AutoMigrate(&model.Post{})
 	memento.DbConn.AutoMigrate(&model.User{})
 	//memento.DbConn.AutoMigrate(&model.PostTag{})
-	return &memento
+	return &memento, nil
 }
 func GetBasePath() string {
-	return memento.Config.FilePath
+	return memento.Config.BasePath
 }
 
 func GetAvatarPath() string {
-	return path.Join(memento.Config.FilePath, "avatar")
+	return path.Join(memento.Config.BasePath, "avatar")
 }
 
 func GetPostPath() string {
-	return path.Join(memento.Config.FilePath, "post")
+	return path.Join(memento.Config.BasePath, "post")
 }
 
 func GetUploadPath() string {
-	return path.Join(memento.Config.FilePath, "upload")
+	return path.Join(memento.Config.BasePath, "upload")
 }
 
 func GetConfig() *utils.MementoConfig {
@@ -120,17 +134,9 @@ func Unlock() {
 }
 
 // TokenValidator middleware
-func TokenValidator(cfg *echoserver.Config, eServer *server.Server) echo.MiddlewareFunc {
-	tokenKey := cfg.TokenKey
-	if tokenKey == "" {
-		tokenKey = echoserver.DefaultConfig.TokenKey
-	}
-
+func TokenValidator(eServer *server.Server) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			if cfg.Skipper != nil && cfg.Skipper(c) {
-				return next(c)
-			}
 			ti, err := eServer.ValidationBearerToken(c.Request())
 			if err != nil {
 				return c.JSON(http.StatusUnauthorized, map[string]string{
@@ -138,7 +144,7 @@ func TokenValidator(cfg *echoserver.Config, eServer *server.Server) echo.Middlew
 				})
 			}
 			fmt.Printf("token validator: %s\n", ti.GetUserID())
-			c.Set(tokenKey, ti)
+			c.Set("token", ti)
 			c.Set("username", ti.GetUserID())
 			return next(c)
 		}

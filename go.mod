@@ -3,7 +3,6 @@ module Memento
 go 1.20
 
 require (
-	github.com/dasjott/oauth2-echo-server v0.0.0-20240131145329-b1f19bd8f004 // indirect
 	github.com/go-oauth2/oauth2/v4 v4.5.1 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/golang-jwt/jwt/v5 v5.0.0 // indirect

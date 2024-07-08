@@ -4,7 +4,6 @@ import (
 	"Memento/memento"
 	"Memento/memento/service"
 	"fmt"
-	echoserver "github.com/dasjott/oauth2-echo-server"
 	"github.com/go-oauth2/oauth2/v4"
 	"github.com/go-oauth2/oauth2/v4/manage"
 	"github.com/go-oauth2/oauth2/v4/models"
@@ -12,17 +11,23 @@ import (
 	"github.com/go-oauth2/oauth2/v4/store"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/labstack/gommon/log"
+	"path"
 )
 
 var AuthServer *server.Server
 
 func main() {
-	mServer := memento.Init()
+	mServer, err := memento.Init()
+	if err != nil {
+		log.Errorf("Error initializing memento server: %s\n", err.Error())
+		return
+	}
 	fmt.Println(mServer.Config.ServerConfig)
 	manager := manage.NewDefaultManager()
 
 	// token store
-	manager.MustTokenStorage(store.NewFileTokenStore("data.db"))
+	manager.MustTokenStorage(store.NewFileTokenStore(path.Join(memento.GetBasePath(), "token.db")))
 
 	// client store
 	clientStore := store.NewClientStore()
@@ -52,7 +57,7 @@ func main() {
 
 	api := e.Group("/api")
 	{
-		api.Use(memento.TokenValidator(&echoserver.DefaultConfig, AuthServer))
+		api.Use(memento.TokenValidator(AuthServer))
 		postApi := api.Group("/post")
 		{
 			postApi.GET("/all", service.HandleGetAllPosts)
