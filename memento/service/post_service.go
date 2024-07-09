@@ -211,7 +211,7 @@ func HandlePostEdit(c echo.Context) error {
 	defer contentBody.Close()
 	contentFilepath := post.ContentUrl
 
-	content, err := os.OpenFile(contentFilepath, os.O_CREATE|os.O_RDWR, 0777)
+	content, err := os.OpenFile(contentFilepath, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0777)
 	if err != nil {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "os file open error")
