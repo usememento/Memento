@@ -84,7 +84,7 @@ func main() {
 		}
 		fileApi := api.Group("/file")
 		{
-			fileApi.GET("/download", service.HandleGetFile)
+			fileApi.GET("/download/:name", service.HandleGetFile)
 			fileApi.POST("/upload", service.HandleFileUpload)
 			fileApi.DELETE("/delete", service.HandleFileDelete)
 		}

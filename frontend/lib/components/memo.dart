@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
@@ -79,10 +80,14 @@ class _MemoWidgetState extends State<MemoWidget> {
                         const SizedBox(height: 8),
                         Container(
                           constraints: const BoxConstraints(maxHeight: 400),
-                          child: SingleChildScrollView(
-                            physics: const NeverScrollableScrollPhysics(),
-                            child: MemoContent(
-                              content: content,
+                          child: ScrollConfiguration(
+                            behavior: const ScrollBehavior()
+                                .copyWith(scrollbars: false),
+                            child: SingleChildScrollView(
+                              physics: const NeverScrollableScrollPhysics(),
+                              child: MemoContent(
+                                content: content,
+                              ),
                             ),
                           ),
                         ),
@@ -283,6 +288,80 @@ class LatexSyntax extends m.InlineSyntax {
   }
 }
 
+class HtmlImageSyntax extends m.InlineSyntax {
+  HtmlImageSyntax() : super(r'<img\s[^>]*>', startCharacter: '<'.codeUnits.first);
+
+  @override
+  bool onMatch(m.InlineParser parser, Match match) {
+    var img = match.input.substring(match.start, match.end);
+    img = img.replaceFirst("<img", '');
+    img = img.substring(0, img.length - 1);
+    img = img.trim();
+    var split = img.split(' ');
+    var attributes = <String, String>{};
+    for (var i = 0; i < split.length; i++) {
+      var kv = split[i].split('=');
+      if (kv.length == 2) {
+        var key = kv[0];
+        var value = kv[1].replaceAll('"', '').replaceAll("'", '');
+        if(key == 'width' || key == 'height') {
+          if(!value.isNum)  continue;
+        }
+        attributes[key] = value;
+      }
+    }
+    m.Element el = m.Element.text('img', img);
+    el.attributes['src'] = attributes['src'] ?? '';
+    if(attributes['width'] != null) {
+      el.attributes['width'] = attributes['width']!;
+    }
+    if (attributes['height'] != null) {
+      el.attributes['height'] = attributes['height']!;
+    }
+    parser.addNode(el);
+    return true;
+  }
+}
+
+class HtmlBlockImageSyntax extends m.BlockSyntax {
+  HtmlBlockImageSyntax();
+
+  @override
+  m.Node? parse(m.BlockParser parser) {
+    var img = parser.current.content;
+    img = img.replaceFirst("<img", '');
+    img = img.substring(0, img.length - 1);
+    img = img.trim();
+    parser.advance();
+    var split = img.split(' ');
+    var attributes = <String, String>{};
+    for (var i = 0; i < split.length; i++) {
+      var kv = split[i].split('=');
+      if (kv.length == 2) {
+        var key = kv[0];
+        var value = kv[1].replaceAll('"', '').replaceAll("'", '');
+        if(key == 'width' || key == 'height') {
+          if(!value.isNum)  continue;
+        }
+        attributes[key] = value;
+      }
+    }
+    var element = m.Element.text('img', img);
+    element.attributes['src'] = attributes['src'] ?? '';
+    if(attributes['width'] != null) {
+      element.attributes['width'] = attributes['width']!;
+    }
+    if (attributes['height'] != null) {
+      element.attributes['height'] = attributes['height']!;
+    }
+    return element;
+  }
+
+  @override
+  RegExp get pattern => RegExp(r'<img\s[^>]*>');
+
+}
+
 class LatexNode extends SpanNode {
   final Map<String, String> attributes;
   final String textContent;
@@ -392,6 +471,22 @@ MarkdownConfig getMemoMarkdownConfig(BuildContext context) {
       sideColor: context.colorScheme.outline,
       textColor: context.colorScheme.outline,
     ),
+    ImgConfig(builder: (link, attributes) {
+      return CachedNetworkImage(
+        imageUrl: link,
+        filterQuality: FilterQuality.medium,
+        width: attributes['width'] == null
+            ? null
+            : double.tryParse(attributes['width']!),
+        height: attributes['height'] == null
+            ? null
+            : double.tryParse(attributes['height']!),
+        errorWidget: (context, url, error) {
+          return const Icon(Icons.broken_image,
+              color: Colors.redAccent, size: 16);
+        },
+      );
+    })
   ]);
 }
 
@@ -403,7 +498,8 @@ MarkdownGenerator getMemoMarkdownGenerator() {
           LatexNode(e.attributes, e.textContent, config));
   return MarkdownGenerator(
     generators: [latexGenerator],
-    inlineSyntaxList: [LatexSyntax()],
+    inlineSyntaxList: [LatexSyntax(), HtmlImageSyntax()],
+    blockSyntaxList: [HtmlBlockImageSyntax()],
   );
 }
 

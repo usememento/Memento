@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"strings"
 	"sync"
 )
 
@@ -133,12 +134,27 @@ func Unlock() {
 	memento.lock.Unlock()
 }
 
+func isPublicPath(path string) bool {
+	publicPaths := [...]string{"/api/post/get", "/api/file/download", "/api/comment/postComments"}
+	for _, p := range publicPaths {
+		if strings.HasPrefix(path, p) {
+			return true
+		}
+	}
+	return false
+}
+
 // TokenValidator middleware
 func TokenValidator(eServer *server.Server) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			ti, err := eServer.ValidationBearerToken(c.Request())
 			if err != nil {
+				path := c.Request().URL.Path
+				if isPublicPath(path) {
+					c.Set("username", nil)
+					return next(c)
+				}
 				return c.JSON(http.StatusUnauthorized, map[string]string{
 					"message": "invalid token",
 				})

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -281,6 +282,32 @@ class Network {
     } catch (e) {
       return Res.error(e.toString());
     }
+  }
+
+  Stream<Object> uploadFile(List<int> data, String fileName, CancelToken cancelToken) {
+    var controller = StreamController<Object>();
+    () async {
+      try {
+        var res = await dio.post<Map>("/api/file/upload", data: FormData.fromMap({
+          "file": MultipartFile.fromBytes(data, filename: fileName),
+        }), cancelToken: cancelToken, onSendProgress: (current, total) {
+          controller.add(current / total);
+        });
+
+        if (res.statusCode != 200) {
+          controller.addError("Invalid Status Code ${res.statusCode}");
+        } else {
+          controller.add(res.data!['message'] as String);
+        }
+      }
+      catch(e) {
+        controller.addError(e);
+      }
+      finally {
+        controller.close();
+      }
+    }();
+    return controller.stream;
   }
 }
 

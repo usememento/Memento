@@ -61,7 +61,7 @@ func HandleFileUpload(c echo.Context) error {
 		func(tx *gorm.DB) error {
 			file := model.File{
 				Username:   user.Username,
-				Filename:   filename,
+				Filename:   file.Filename,
 				ContentUrl: filepath,
 			}
 			err := tx.Model(&user).Association("Files").Append(&file)
@@ -75,7 +75,7 @@ func HandleFileUpload(c echo.Context) error {
 	if err != nil {
 		return utils.RespondError(c, "unknown transaction error")
 	}
-	return utils.RespondOk(c, filepath)
+	return utils.RespondOk(c, filename)
 }
 
 func HandleFileDelete(c echo.Context) error {
@@ -120,6 +120,15 @@ func HandleFileDelete(c echo.Context) error {
 }
 
 func HandleGetFile(c echo.Context) error {
-	url := c.QueryParam("url")
-	return c.File(url)
+	fileName := c.Param("name")
+	var file model.File
+	err := memento.GetDbConnection().First(&file, "content_url=?", path.Join(memento.GetUploadPath(), fileName)).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return utils.RespondError(c, "file not exists")
+		}
+		log.Errorf(err.Error())
+		return utils.RespondError(c, "unknown query error")
+	}
+	return c.Inline(path.Join(memento.GetUploadPath(), fileName), file.Filename)
 }

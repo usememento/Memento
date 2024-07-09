@@ -6,6 +6,7 @@ import 'package:frontend/components/states.dart';
 import 'package:frontend/foundation/app.dart';
 import 'package:frontend/network/network.dart';
 import 'package:frontend/utils/translation.dart';
+import 'package:frontend/utils/upload.dart';
 
 import '../components/heat_map.dart';
 import 'memo_edit_page.dart';
@@ -181,7 +182,7 @@ class _WritingAreaState extends State<WritingArea> {
                   icon: const Icon(Icons.image_outlined),
                   size: 18,
                   tooltip: "Upload image".tl,
-                  onPressed: () {}),
+                  onPressed: () => uploadImage(controller)),
               Button.icon(
                   icon: const Icon(Icons.fullscreen),
                   size: 18,
@@ -226,8 +227,9 @@ class _WritingAreaState extends State<WritingArea> {
   }
 
   void fullScreen() async {
-    await App.rootNavigatorKey?.currentState?.push(PageRouteBuilder(
-      pageBuilder: (context, animation, secondaryAnimation) {
+    await App.rootNavigatorKey?.currentState?.push(AppPageRoute(
+      isRootRoute: true,
+      builder: (context) {
         return WritingPage(
             content: content,
             isPublic: isPublic,
@@ -236,17 +238,6 @@ class _WritingAreaState extends State<WritingArea> {
               controller.text = value;
               this.isPublic = isPublic;
             });
-      },
-      transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        return FadeTransition(
-          opacity: Tween<double>(begin: 0, end: 1.0)
-              .animate(CurvedAnimation(parent: animation, curve: Curves.ease)),
-          child: FadeTransition(
-            opacity: Tween<double>(begin: 1.0, end: 0).animate(CurvedAnimation(
-                parent: secondaryAnimation, curve: Curves.ease)),
-            child: child,
-          ),
-        );
       },
     ));
     setState(() {});
@@ -350,7 +341,7 @@ class _WritingPageState extends State<WritingPage> {
                 icon: const Icon(Icons.image_outlined),
                 size: 18,
                 tooltip: "Upload image".tl,
-                onPressed: () {}),
+                onPressed: () => uploadImage(controller)),
             Button.icon(
                 icon: const Icon(Icons.info_outline),
                 size: 18,
