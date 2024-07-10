@@ -309,6 +309,65 @@ class Network {
     }();
     return controller.stream;
   }
+
+  Future<Res<User>> getUserDetails(String userName) async {
+    try {
+      var res = await dio.get<Map<String, dynamic>>("/api/user/get",
+          queryParameters: {
+            "username": userName,
+          });
+      return Res(User.fromJson(res.data!));
+    }
+    catch(e) {
+      return Res.error(e.toString());
+    }
+  }
+
+  Future<Res<bool>> followOrUnfollow(String userName, bool isFollow) async {
+    try {
+      var res = await dio.post(isFollow ? "/api/user/follow" : "/api/user/unfollow",
+          data: {
+            "followee": userName,
+          });
+      if (res.statusCode == 200) {
+        return const Res(true);
+      } else {
+        throw "Invalid Status Code ${res.statusCode}";
+      }
+    } catch (e) {
+      return Res.error(e.toString());
+    }
+  }
+
+  Future<Res<List<User>>> getFollowers(String userName, int page) async {
+    try {
+      page--;
+      var res = await dio.get<List>("/api/user/follower",
+          queryParameters: {
+            "username": userName,
+            "page": page,
+          });
+      return Res((res.data!).map((e) => User.fromJson(e)).toList());
+    }
+    catch(e) {
+      return Res.error(e.toString());
+    }
+  }
+
+  Future<Res<List<User>>> getFollowing(String userName, int page) async {
+    try {
+      page--;
+      var res = await dio.get<List>("/api/user/following",
+          queryParameters: {
+            "username": userName,
+            "page": page,
+          });
+      return Res((res.data!).map((e) => User.fromJson(e)).toList());
+    }
+    catch(e) {
+      return Res.error(e.toString());
+    }
+  }
 }
 
 void setDebugProxy() {

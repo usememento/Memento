@@ -55,7 +55,7 @@ func HandleUserCreateWrapper(c echo.Context, s *server.Server) error {
 	}
 	return c.JSON(http.StatusOK, echo.Map{
 		"token": s.GetTokenData(ti),
-		"user":  utils.UserToView(&user),
+		"user":  utils.UserToView(&user, false),
 	})
 }
 func HandleUserLoginWrapper(c echo.Context, s *server.Server) error {
@@ -85,7 +85,7 @@ func HandleUserLoginWrapper(c echo.Context, s *server.Server) error {
 	}
 	return c.JSON(http.StatusOK, echo.Map{
 		"token": s.GetTokenData(ti),
-		"user":  utils.UserToView(&user),
+		"user":  utils.UserToView(&user, false),
 	})
 }
 func HandleUserRefreshToken(c echo.Context, s *server.Server) error {
@@ -101,7 +101,7 @@ func HandleUserRefreshToken(c echo.Context, s *server.Server) error {
 	memento.GetDbConnection().First(&user, "username=?", ti.GetUserID())
 	return c.JSON(http.StatusOK, echo.Map{
 		"token": s.GetTokenData(ti),
-		"user":  *utils.UserToView(&user),
+		"user":  *utils.UserToView(&user, false),
 	})
 }
 func HandleUserDelete(c echo.Context) error {
@@ -190,6 +190,27 @@ func HandleUserEdit(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
+func checkIsFollowed(selfUsername string, username string) bool {
+	if selfUsername == "" || selfUsername == username {
+		return false
+	}
+	var user model.User
+	err := memento.GetDbConnection().First(&user, "username=?", selfUsername).Error
+	if err != nil {
+		log.Errorf(err.Error())
+		return false
+	}
+	var follows []model.User
+	err = memento.GetDbConnection().Model(&user).Association("Follows").Find(&follows, "username=?", username)
+	if err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			log.Errorf(err.Error())
+		}
+		return false
+	}
+	return len(follows) > 0
+}
+
 func HandleGetUser(c echo.Context) error {
 	username := c.QueryParam("username")
 	var user model.User
@@ -201,7 +222,17 @@ func HandleGetUser(c echo.Context) error {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown query error")
 	}
-	return c.JSON(http.StatusOK, utils.UserToView(&user))
+	uName := c.Get("username")
+	var currentUser model.User
+	err = memento.GetDbConnection().First(&currentUser, "username=?", uName).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return utils.RespondError(c, "username not exists")
+		}
+		log.Errorf(err.Error())
+		return utils.RespondError(c, "unknown query error")
+	}
+	return c.JSON(http.StatusOK, utils.UserToView(&user, checkIsFollowed(currentUser.Username, user.Username)))
 }
 
 func PasswordAuthorizationHandler(ctx context.Context, clientID, username, password string) (userID string, err error) {
@@ -311,10 +342,6 @@ func HandleUserFollow(c echo.Context) error {
 			if err != nil {
 				return err
 			}
-			err = tx.Model(&followee).Association("Followers").Append(&user)
-			if err != nil {
-				return err
-			}
 			followee.TotalFollower += 1
 			user.TotalFollows += 1
 			tx.Save(&user)
@@ -356,10 +383,6 @@ func HandleUserUnfollow(c echo.Context) error {
 			if err != nil {
 				return err
 			}
-			err = tx.Model(&followee).Association("Followers").Delete(&user)
-			if err != nil {
-				return err
-			}
 			followee.TotalFollower -= 1
 			user.TotalFollows -= 1
 			tx.Save(&user)
@@ -381,10 +404,15 @@ func HandlerGetUserFollower(c echo.Context) error {
 		return utils.RespondError(c, "invalid page")
 	}
 	followers := make([]model.User, 0, memento.PageSize)
-	memento.GetDbConnection().Model(&user).Association("Followers").Find(&followers, memento.GetDbConnection().Offset(page*memento.PageSize).Limit(memento.PageSize))
+	err = memento.GetDbConnection().Joins("JOIN user_follows ON user_follows.user_id = users.id").Limit(20).Offset(page*20).Where("user_follows.follow_id = ?", user.ID).Find(&followers).Error
+	if err != nil {
+		log.Errorf(err.Error())
+		return utils.RespondError(c, "unknown query error")
+	}
 	result := make([]model.UserViewModel, 0, memento.PageSize)
+	currentUsername := c.Get("username").(string)
 	for _, f := range followers {
-		result = append(result, *utils.UserToView(&f))
+		result = append(result, *utils.UserToView(&f, checkIsFollowed(currentUsername, f.Username)))
 	}
 	return c.JSON(http.StatusOK, result)
 }
@@ -401,7 +429,7 @@ func HandlerGetUserFollowing(c echo.Context) error {
 	memento.GetDbConnection().Model(&user).Association("Follows").Find(&followers, memento.GetDbConnection().Offset(page*memento.PageSize).Limit(memento.PageSize))
 	result := make([]model.UserViewModel, 0, memento.PageSize)
 	for _, f := range followers {
-		result = append(result, *utils.UserToView(&f))
+		result = append(result, *utils.UserToView(&f, true))
 	}
 	return c.JSON(http.StatusOK, result)
 }

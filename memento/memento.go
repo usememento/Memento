@@ -152,7 +152,7 @@ func TokenValidator(eServer *server.Server) echo.MiddlewareFunc {
 			if err != nil {
 				path := c.Request().URL.Path
 				if isPublicPath(path) {
-					c.Set("username", nil)
+					c.Set("username", "")
 					return next(c)
 				}
 				return c.JSON(http.StatusUnauthorized, map[string]string{

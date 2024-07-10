@@ -113,7 +113,7 @@ func HandlePostCreate(c echo.Context) error {
 	var likePosts []model.Post
 	memento.GetDbConnection().Model(&user).Association("likes").Find(&likePosts, "id=?", post.ID)
 	//log.Info(likePosts[0].ID)
-	pv, err := utils.PostToView(&post, utils.UserToView(&user), len(likePosts) > 0)
+	pv, err := utils.PostToView(&post, utils.UserToView(&user, checkIsFollowed(c.Get("username").(string), user.Username)), len(likePosts) > 0)
 	if err != nil {
 		return utils.RespondError(c, "os open file error")
 	}
@@ -272,7 +272,7 @@ func HandleGetPost(c echo.Context) error {
 	memento.GetDbConnection().First(&user, "username=?", post.Username)
 	var likePosts []model.Post
 	memento.GetDbConnection().Model(&user).Association("Likes").Find(&likePosts, "id=?", post.ID)
-	pv, err := utils.PostToView(&post, utils.UserToView(&user), len(likePosts) > 0)
+	pv, err := utils.PostToView(&post, utils.UserToView(&user, checkIsFollowed(c.Get("username").(string), user.Username)), len(likePosts) > 0)
 	if err != nil {
 		return utils.RespondError(c, "os open file error")
 	}
@@ -305,7 +305,7 @@ func HandleGetUserPosts(c echo.Context) error {
 	for _, post := range posts {
 		var likePosts []model.Post
 		memento.GetDbConnection().Model(&user).Association("Likes").Find(&likePosts, "id=?", post.ID)
-		pv, err := utils.PostToView(&post, utils.UserToView(&user), len(likePosts) > 0)
+		pv, err := utils.PostToView(&post, utils.UserToView(&user, checkIsFollowed(c.Get("username").(string), user.Username)), len(likePosts) > 0)
 		if err != nil {
 			log.Errorf(err.Error())
 			continue
@@ -455,7 +455,7 @@ func HandleGetTaggedPost(c echo.Context) error {
 		memento.GetDbConnection().First(&user, "username=?", p.Username)
 		var likePosts []model.Post
 		memento.GetDbConnection().Model(&user).Association("likes").Find(&likePosts, "id=?", p.ID)
-		pv, err := utils.PostToView(&p, utils.UserToView(&user), len(likePosts) > 0)
+		pv, err := utils.PostToView(&p, utils.UserToView(&user, checkIsFollowed(c.Get("username").(string), user.Username)), len(likePosts) > 0)
 		if err != nil {
 			log.Errorf(err.Error())
 			continue
@@ -478,7 +478,7 @@ func HandleGetAllPosts(c echo.Context) error {
 		memento.GetDbConnection().First(&user, "username=?", p.Username)
 		var likePosts []model.Post
 		memento.GetDbConnection().Model(&user).Association("likes").Find(&likePosts, "id=?", p.ID)
-		pv, err := utils.PostToView(&p, utils.UserToView(&user), len(likePosts) > 0)
+		pv, err := utils.PostToView(&p, utils.UserToView(&user, checkIsFollowed(c.Get("username").(string), user.Username)), len(likePosts) > 0)
 		if err != nil {
 			log.Errorf(err.Error())
 			continue

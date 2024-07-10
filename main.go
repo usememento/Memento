@@ -79,8 +79,8 @@ func main() {
 			userApi.GET("/heatmap", service.HandleUserHeatMap)
 			userApi.POST("/follow", service.HandleUserFollow)
 			userApi.POST("/unfollow", service.HandleUserUnfollow)
-			userApi.GET("/myFollower", service.HandlerGetUserFollower)
-			userApi.GET("/myFollowing", service.HandlerGetUserFollowing)
+			userApi.GET("/follower", service.HandlerGetUserFollower)
+			userApi.GET("/following", service.HandlerGetUserFollowing)
 		}
 		fileApi := api.Group("/file")
 		{

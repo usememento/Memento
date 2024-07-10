@@ -68,7 +68,7 @@ func HandleCommentCreate(c echo.Context) error {
 	if err != nil {
 		return utils.RespondError(c, "unknown query error")
 	}
-	return c.JSON(http.StatusOK, utils.CommentToView(&comment, utils.UserToView(&user), false))
+	return c.JSON(http.StatusOK, utils.CommentToView(&comment, utils.UserToView(&user, false), false))
 }
 
 func HandleCommentEdit(c echo.Context) error {
@@ -218,7 +218,7 @@ func HandleGetPostComments(c echo.Context) error {
 		memento.GetDbConnection().First(&user, "username=?", comm.Username)
 		var likedComments []model.Comment
 		memento.GetDbConnection().Model(&user).Association("LikedComments").Find(&likedComments, "id=?", comm.ID)
-		result = append(result, *utils.CommentToView(&comm, utils.UserToView(&user), len(likedComments) > 0))
+		result = append(result, *utils.CommentToView(&comm, utils.UserToView(&user, checkIsFollowed(c.Get("username").(string), user.Username)), len(likedComments) > 0))
 	}
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		"comments": result,

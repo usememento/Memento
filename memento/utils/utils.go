@@ -127,7 +127,7 @@ func CommentToView(comment *model.Comment, user *model.UserViewModel, isLiked bo
 	}
 }
 
-func UserToView(user *model.User) *model.UserViewModel {
+func UserToView(user *model.User, isFollowed bool) *model.UserViewModel {
 	return &model.UserViewModel{
 		Username:      user.Username,
 		Nickname:      user.Nickname,
@@ -140,5 +140,6 @@ func UserToView(user *model.User) *model.UserViewModel {
 		TotalFollower: user.TotalFollower,
 		TotalPosts:    user.TotalPosts,
 		AvatarUrl:     user.AvatarUrl,
+		IsFollowed:    isFollowed,
 	}
 }

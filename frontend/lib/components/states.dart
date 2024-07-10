@@ -63,18 +63,20 @@ abstract class LoadingState<T extends StatefulWidget, S extends Object> extends 
   @mustCallSuper
   void initState() {
     isLoading = true;
-    loadData().then((value) {
-      if(value.success) {
-        setState(() {
-          isLoading = false;
-          data = value.data;
-        });
-      } else {
-        setState(() {
-          isLoading = false;
-          error = value.errorMessage!;
-        });
-      }
+    Future.microtask(() {
+      loadData().then((value) {
+        if(value.success) {
+          setState(() {
+            isLoading = false;
+            data = value.data;
+          });
+        } else {
+          setState(() {
+            isLoading = false;
+            error = value.errorMessage!;
+          });
+        }
+      });
     });
     super.initState();
   }
@@ -151,20 +153,22 @@ abstract class MultiPageLoadingState<T extends StatefulWidget, S extends Object>
   }
 
   void firstLoad() {
-    loadData(_page).then((value) {
-      if(!mounted)  return;
-      if(value.success) {
-        _page++;
-        setState(() {
-          _isFirstLoading = false;
-          _data = value.data;
-        });
-      } else {
-        setState(() {
-          _isFirstLoading = false;
-          _error = value.errorMessage!;
-        });
-      }
+    Future.microtask(() {
+      loadData(_page).then((value) {
+        if(!mounted)  return;
+        if(value.success) {
+          _page++;
+          setState(() {
+            _isFirstLoading = false;
+            _data = value.data;
+          });
+        } else {
+          setState(() {
+            _isFirstLoading = false;
+            _error = value.errorMessage!;
+          });
+        }
+      });
     });
   }
 

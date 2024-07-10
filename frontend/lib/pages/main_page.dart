@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/components/navigation_bar.dart';
 import 'package:frontend/pages/page_404.dart';
 import 'package:frontend/pages/tagged_memos_list_page.dart';
+import 'package:frontend/pages/user_page.dart';
 import 'package:frontend/utils/translation.dart';
 
 import '../components/button.dart';
@@ -24,6 +25,9 @@ class _MainPageState extends State<MainPage> {
     '/explore': (context) => const ExplorePage(),
     '/memo/:id': (context) => const MemoDetailsPage(),
     '/tag/:tag': (context) => const TaggedMemosListPage(),
+    '/user/:username': (context) => const UserInfoPage(),
+    '/user/:username/followers': (context) => UserListPage.followers(),
+    '/user/:username/following': (context) => UserListPage.following(),
   };
 
   static const mainPageRoutes = [
@@ -35,6 +39,12 @@ class _MainPageState extends State<MainPage> {
   ];
 
   var observer = NaviObserver();
+
+  @override
+  void initState() {
+    App.navigatorKey = GlobalKey();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {

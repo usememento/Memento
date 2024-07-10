@@ -46,6 +46,7 @@ class Button extends StatefulWidget {
       this.width,
       this.height,
       this.padding,
+      this.color,
       this.onPressedAt,
       required this.onPressed});
 
@@ -56,6 +57,7 @@ class Button extends StatefulWidget {
       this.width,
       this.height,
       this.padding,
+      this.color,
       this.onPressedAt,
       this.isLoading = false})
       : type = ButtonType.filled;
@@ -67,6 +69,7 @@ class Button extends StatefulWidget {
       this.width,
       this.height,
       this.padding,
+      this.color,
       this.onPressedAt,
       this.isLoading = false})
       : type = ButtonType.outlined;
@@ -78,6 +81,7 @@ class Button extends StatefulWidget {
       this.width,
       this.height,
       this.padding,
+      this.color,
       this.onPressedAt,
       this.isLoading = false})
       : type = ButtonType.text;
@@ -89,6 +93,7 @@ class Button extends StatefulWidget {
       this.width,
       this.height,
       this.padding,
+      this.color,
       this.onPressedAt,
       this.isLoading = false})
       : type = ButtonType.normal;
@@ -124,6 +129,8 @@ class Button extends StatefulWidget {
 
   final EdgeInsets? padding;
 
+  final Color? color;
+
   @override
   State<Button> createState() => _ButtonState();
 }
@@ -143,13 +150,15 @@ class _ButtonState extends State<Button> {
 
   @override
   Widget build(BuildContext context) {
+    var padding = widget.padding
+        ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 6);
     var width = widget.width;
     if (width != null) {
-      width = width - 32;
+      width = width - padding.horizontal;
     }
     var height = widget.height;
     if (height != null) {
-      height = height - 16;
+      height = height - padding.vertical;
     }
     Widget child = DefaultTextStyle(
       style: TextStyle(
@@ -175,20 +184,21 @@ class _ButtonState extends State<Button> {
       child: GestureDetector(
         onTap: isLoading ? null : widget.onPressed,
         onTapUp: (details) {
-          if (widget.onPressedAt != null) {
+          if (widget.onPressedAt != null && !isLoading) {
             widget.onPressedAt!(details.globalPosition);
           }
         },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 160),
-          padding: widget.padding ??
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          padding: padding,
           decoration: BoxDecoration(
             color: buttonColor,
             borderRadius: BorderRadius.circular(16),
             border: widget.type == ButtonType.outlined
                 ? Border.all(
-                    color: Theme.of(context).colorScheme.outlineVariant)
+                    color: widget.color ??
+                        Theme.of(context).colorScheme.outlineVariant,
+                    width: 0.6)
                 : null,
           ),
           child: SizedBox(
@@ -203,7 +213,7 @@ class _ButtonState extends State<Button> {
 
   Color get buttonColor {
     if (widget.type == ButtonType.filled) {
-      var color = context.colorScheme.primary;
+      var color = widget.color ?? context.colorScheme.primary;
       if (isHover) {
         return color.withOpacity(0.9);
       } else {
@@ -217,6 +227,9 @@ class _ButtonState extends State<Button> {
   }
 
   Color get textColor {
+    if (widget.type == ButtonType.outlined) {
+      return widget.color ?? context.colorScheme.onSurface;
+    }
     return widget.type == ButtonType.filled
         ? context.colorScheme.onPrimary
         : (widget.type == ButtonType.text

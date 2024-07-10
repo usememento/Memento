@@ -22,7 +22,7 @@ class MemoDetailsPage extends StatefulWidget {
 }
 
 class _MemoDetailsPageState extends State<MemoDetailsPage> {
-  late final String id;
+  late String id;
 
   Memo? memo;
 

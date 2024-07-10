@@ -95,6 +95,9 @@ class _LoginPageState extends State<LoginPage> {
         border: const OutlineInputBorder(),
         prefixIcon: Icon(icon),
       ),
+      onSubmitted: (_) {
+        login();
+      },
     ).paddingVertical(8);
   }
 
@@ -202,6 +205,9 @@ class _RegisterPageState extends State<RegisterPage> {
       onChanged: onChanged,
       controller: controller,
       obscureText: hintText == "Password".tl,
+      onSubmitted: (_) {
+        register();
+      },
       decoration: InputDecoration(
         labelText: hintText,
         border: const OutlineInputBorder(),

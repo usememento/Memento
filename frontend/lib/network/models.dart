@@ -114,11 +114,13 @@ class User {
 
   final int totalFiles;
 
-  final int totalFollower;
+  int totalFollower;
 
   final int totalFollows;
 
-  const User(
+  bool isFollowed;
+
+  User(
       {required this.username,
       required this.nickname,
       required this.avatar,
@@ -129,22 +131,24 @@ class User {
       required this.totalPosts,
       required this.totalFiles,
       required this.totalFollower,
-      required this.totalFollows});
+      required this.totalFollows,
+      required this.isFollowed});
 
   /*
-  {
-      "Username": "nyne",
-      "Nickname": "",
-      "Bio": "",
-      "TotalLiked": 0,
-      "TotalComment": 0,
-      "TotalPosts": 1,
-      "TotalFiles": 0,
-      "TotalFollower": 0,
-      "TotalFollows": 0,
-      "RegisteredAt": "2024-07-06T20:46:27.8787585+08:00",
-      "AvatarUrl": ""
-    }
+{
+  "Username": "nyne",
+  "Nickname": "nyne",
+  "Bio": "",
+  "TotalLiked": 0,
+  "TotalComment": 2,
+  "TotalPosts": 3,
+  "TotalFiles": 15,
+  "TotalFollower": 0,
+  "TotalFollows": 0,
+  "RegisteredAt": "2024-07-08T11:38:48.0618698+08:00",
+  "AvatarUrl": "",
+  "IsFollowed": false
+}
    */
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
@@ -158,7 +162,8 @@ class User {
         totalPosts: json['TotalPosts'],
         totalFiles: json['TotalFiles'],
         totalFollower: json['TotalFollower'],
-        totalFollows: json['TotalFollows']);
+        totalFollows: json['TotalFollows'],
+        isFollowed: json['IsFollowed']);
   }
 }
 
