@@ -12,8 +12,13 @@ class PaneItemEntry {
 
   IconData activeIcon;
 
+  String routeName;
+
   PaneItemEntry(
-      {required this.label, required this.icon, required this.activeIcon});
+      {required this.label,
+      required this.icon,
+      required this.activeIcon,
+      required this.routeName});
 }
 
 class PaneActionEntry {
@@ -23,8 +28,13 @@ class PaneActionEntry {
 
   VoidCallback onTap;
 
+  String? routeName;
+
   PaneActionEntry(
-      {required this.label, required this.icon, required this.onTap});
+      {required this.label,
+      required this.icon,
+      required this.onTap,
+      this.routeName});
 }
 
 class NaviPaneLeading {
@@ -96,7 +106,7 @@ class _NaviPaneState extends State<NaviPane>
       _kBottomBarHeight + MediaQuery.of(context).padding.bottom;
 
   void onNavigatorStateChange() {
-    onRebuild(context);
+    Future.microtask(() => setState(() {}));
   }
 
   @override
@@ -114,7 +124,7 @@ class _NaviPaneState extends State<NaviPane>
 
   @override
   void didUpdateWidget(covariant NaviPane oldWidget) {
-    if(!isInitial) {
+    if (!isInitial) {
       controller.value = targetFromContext(context);
       isInitial = true;
     }
@@ -334,7 +344,8 @@ class _NaviPaneState extends State<NaviPane>
                   ...List<Widget>.generate(
                       widget.paneItems.length,
                       (index) => _SideNaviWidget(
-                            enabled: currentPage == index,
+                            enabled: widget.observer.currentRoute ==
+                                widget.paneItems[index].routeName,
                             entry: widget.paneItems[index],
                             showTitle: value == 3,
                             onTap: () {
@@ -348,6 +359,8 @@ class _NaviPaneState extends State<NaviPane>
                   ...List<Widget>.generate(
                       widget.paneActions.length,
                       (index) => _PaneActionWidget(
+                            isActive: widget.observer.currentRoute ==
+                                widget.paneActions[index].routeName,
                             entry: widget.paneActions[index],
                             showTitle: value == 3,
                             key: ValueKey(index + widget.paneItems.length),
@@ -413,7 +426,7 @@ class _SideNaviWidgetState extends State<_SideNaviWidget> {
                     : isHovering
                         ? colorScheme.surfaceContainerHigh
                         : null,
-                borderRadius: BorderRadius.circular(8)),
+                borderRadius: BorderRadius.circular(4)),
             child: widget.showTitle
                 ? Row(
                     children: [
@@ -434,11 +447,16 @@ class _SideNaviWidgetState extends State<_SideNaviWidget> {
 
 class _PaneActionWidget extends StatefulWidget {
   const _PaneActionWidget(
-      {required this.entry, required this.showTitle, super.key});
+      {required this.entry,
+      required this.showTitle,
+      required this.isActive,
+      super.key});
 
   final PaneActionEntry entry;
 
   final bool showTitle;
+
+  final bool isActive;
 
   @override
   State<_PaneActionWidget> createState() => _PaneActionWidgetState();
@@ -457,7 +475,7 @@ class _PaneActionWidgetState extends State<_PaneActionWidget> {
       onExit: (details) => setState(() => isHovering = false),
       child: GestureDetector(
         behavior: HitTestBehavior.translucent,
-        onTap: widget.entry.onTap,
+        onTap: widget.isActive ? null : widget.entry.onTap,
         child: AnimatedContainer(
             duration: const Duration(milliseconds: 180),
             margin: const EdgeInsets.symmetric(vertical: 4),
@@ -465,8 +483,12 @@ class _PaneActionWidgetState extends State<_PaneActionWidget> {
             width: double.infinity,
             height: 42,
             decoration: BoxDecoration(
-                color: isHovering ? colorScheme.surfaceContainerHigh : null,
-                borderRadius: BorderRadius.circular(8)),
+                color: widget.isActive
+                    ? colorScheme.primaryContainer
+                    : isHovering
+                        ? colorScheme.surfaceContainerHigh
+                        : null,
+                borderRadius: BorderRadius.circular(4)),
             child: widget.showTitle
                 ? Row(
                     children: [
@@ -612,6 +634,8 @@ class NaviObserver extends NavigatorObserver implements Listenable {
   var routes = Queue<Route>();
 
   int get pageCount => routes.length;
+
+  String? get currentRoute => routes.lastOrNull?.settings.name;
 
   @override
   void didPop(Route route, Route? previousRoute) {

@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/components/appbar.dart';
-import 'package:frontend/components/button.dart';
 import 'package:frontend/components/comments.dart';
 import 'package:frontend/components/states.dart';
-import 'package:frontend/components/user.dart';
 import 'package:frontend/foundation/app.dart';
 import 'package:frontend/network/network.dart';
 import 'package:frontend/utils/translation.dart';

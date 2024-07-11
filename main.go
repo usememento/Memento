@@ -81,6 +81,7 @@ func main() {
 			userApi.POST("/unfollow", service.HandleUserUnfollow)
 			userApi.GET("/follower", service.HandlerGetUserFollower)
 			userApi.GET("/following", service.HandlerGetUserFollowing)
+			userApi.GET("/avatar/:name", service.HandleGetAvatar)
 		}
 		fileApi := api.Group("/file")
 		{

@@ -8,6 +8,7 @@ import 'package:frontend/network/network.dart';
 import 'package:frontend/utils/translation.dart';
 
 import '../components/memo.dart';
+import '../components/tab.dart';
 
 class UserInfoPage extends StatefulWidget {
   const UserInfoPage({super.key});
@@ -94,7 +95,7 @@ class _UserInfoPageState extends LoadingState<UserInfoPage, User> {
                                   ))
                     ],
                   ),
-                  Text(data.bio),
+                  Text(data.bio).paddingVertical(8),
                   Row(
                     children: [
                       MouseRegion(
@@ -150,7 +151,7 @@ class _UserInfoPageState extends LoadingState<UserInfoPage, User> {
               delegate: SliverPersistentTopDelegate(
                   height: 42,
                   builder: (context) {
-                    return _TabBar(
+                    return IndependentTabBar(
                       tabs: [
                         Tab(
                           text: "Memos".tl,
@@ -250,43 +251,6 @@ class _UserListPageState extends MultiPageLoadingState<UserListPage, User> {
   @override
   Future<Res<List<User>>> loadData(int page) {
     return widget.loader(context.param('username'), page);
-  }
-}
-
-class _TabBar extends StatefulWidget {
-  const _TabBar({required this.tabs, required this.onTabChange});
-
-  final void Function(int i) onTabChange;
-
-  final List<Widget> tabs;
-
-  @override
-  State<_TabBar> createState() => _TabBarState();
-}
-
-class _TabBarState extends State<_TabBar> with SingleTickerProviderStateMixin {
-  late TabController controller;
-
-  @override
-  void initState() {
-    controller = TabController(length: widget.tabs.length, vsync: this);
-    controller.addListener(() {
-      widget.onTabChange(controller.index);
-    });
-    super.initState();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return TabBar(
-      tabs: widget.tabs,
-      controller: controller,
-      isScrollable: true,
-      splashBorderRadius: BorderRadius.circular(8),
-      tabAlignment: TabAlignment.start,
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      labelPadding: const EdgeInsets.symmetric(horizontal: 24),
-    ).withSurface();
   }
 }
 

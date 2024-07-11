@@ -135,7 +135,7 @@ func Unlock() {
 }
 
 func isPublicPath(path string) bool {
-	publicPaths := [...]string{"/api/post/get", "/api/file/download", "/api/comment/postComments"}
+	publicPaths := [...]string{"/api/post/get", "/api/file/download", "/api/comment/postComments", "/api/user/avatar"}
 	for _, p := range publicPaths {
 		if strings.HasPrefix(path, p) {
 			return true

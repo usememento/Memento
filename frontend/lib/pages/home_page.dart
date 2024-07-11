@@ -42,7 +42,7 @@ class _HomePageState extends State<HomePage> {
           ),
           if (context.width >= 600)
             Container(
-              width: (constrains.maxWidth - 324).clamp(0, 286),
+              width: (constrains.maxWidth - 332).clamp(0, 286),
               height: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 16) +
                   EdgeInsets.only(

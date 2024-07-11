@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/components/navigation_bar.dart';
 import 'package:frontend/pages/page_404.dart';
+import 'package:frontend/pages/settings_page.dart';
 import 'package:frontend/pages/tagged_memos_list_page.dart';
 import 'package:frontend/pages/user_page.dart';
 import 'package:frontend/utils/translation.dart';
@@ -16,13 +17,14 @@ class MainPage extends StatefulWidget {
   const MainPage({super.key});
 
   @override
-  State<MainPage> createState() => _MainPageState();
+  State<MainPage> createState() => MainPageState();
 }
 
-class _MainPageState extends State<MainPage> {
+class MainPageState extends State<MainPage> {
   static Map<String, Widget Function(BuildContext context)> routes = {
     '/': (context) => const HomePage(),
     '/explore': (context) => const ExplorePage(),
+    '/settings': (context) => const SettingsPage(),
     '/memo/:id': (context) => const MemoDetailsPage(),
     '/tag/:tag': (context) => const TaggedMemosListPage(),
     '/user/:username': (context) => const UserInfoPage(),
@@ -56,33 +58,43 @@ class _MainPageState extends State<MainPage> {
             icon: Icons.home_outlined,
             activeIcon: Icons.home_filled,
             label: "Home",
+            routeName: '/',
           ),
           PaneItemEntry(
             icon: Icons.explore_outlined,
             activeIcon: Icons.explore,
             label: "Explore",
+            routeName: '/explore',
           ),
           PaneItemEntry(
             icon: Icons.folder_outlined,
             activeIcon: Icons.folder,
             label: "Archives",
+            routeName: '/archives',
           ),
           PaneItemEntry(
             icon: Icons.my_library_books_outlined,
             activeIcon: Icons.my_library_books,
             label: "Resources",
+            routeName: '/resources',
           ),
           PaneItemEntry(
             icon: Icons.notifications_outlined,
             activeIcon: Icons.notifications,
             label: "Notifications",
+            routeName: '/notifications',
           ),
         ],
         paneActions: [
           if (context.width <= 600)
             PaneActionEntry(label: "Search", icon: Icons.search, onTap: () {}),
           PaneActionEntry(
-              label: "Settings", icon: Icons.settings_outlined, onTap: () {}),
+              routeName: '/settings',
+              label: "Settings",
+              icon: Icons.settings_outlined,
+              onTap: () {
+                App.navigatorState!.pushNamed('/settings');
+              }),
         ],
         onPageChange: (index) {
           App.navigatorState!.pushNamedAndRemoveUntil(
@@ -104,12 +116,14 @@ class _MainPageState extends State<MainPage> {
                 context: context,
                 elevation: 3,
                 color: context.colorScheme.surface,
-                position: RelativeRect.fromLTRB(location.dx, location.dy, location.dx, location.dy),
+                position: RelativeRect.fromLTRB(
+                    location.dx, location.dy, location.dx, location.dy),
                 items: [
                   PopupMenuItem(
                     height: 42,
                     onTap: () {
-                      App.navigatorState!.pushNamed('/user/${appdata.user.username}');
+                      App.navigatorState!
+                          .pushNamed('/user/${appdata.user.username}');
                     },
                     child: Text("Profile".tl),
                   ),
@@ -121,8 +135,7 @@ class _MainPageState extends State<MainPage> {
                       App.rootNavigatorKey!.currentContext!.to('/login');
                     },
                   ),
-                ]
-            );
+                ]);
           }),
           large: HoverBox(
             borderRadius: BorderRadius.circular(8),
@@ -143,12 +156,14 @@ class _MainPageState extends State<MainPage> {
                 context: context,
                 elevation: 3,
                 color: context.colorScheme.surface,
-                position: RelativeRect.fromLTRB(location.dx, location.dy, location.dx, location.dy),
+                position: RelativeRect.fromLTRB(
+                    location.dx, location.dy, location.dx, location.dy),
                 items: [
                   PopupMenuItem(
                     height: 42,
                     onTap: () {
-                      App.navigatorState!.pushNamed('/user/${appdata.user.username}');
+                      App.navigatorState!
+                          .pushNamed('/user/${appdata.user.username}');
                     },
                     child: Text("Profile".tl),
                   ),
@@ -160,8 +175,7 @@ class _MainPageState extends State<MainPage> {
                       App.rootNavigatorKey!.currentContext!.to('/login');
                     },
                   ),
-                ]
-            );
+                ]);
           }),
         ),
         pageBuilder: (index) {
@@ -183,7 +197,7 @@ class _MainPageState extends State<MainPage> {
                   if (routeSegments.length == settingsSegments.length) {
                     var match = true;
                     for (var i = 0; i < routeSegments.length; i++) {
-                      if (routeSegments[i] == settingsSegments[i]){
+                      if (routeSegments[i] == settingsSegments[i]) {
                         continue;
                       }
                       if (routeSegments[i].startsWith(':')) {
@@ -201,7 +215,7 @@ class _MainPageState extends State<MainPage> {
                   }
                 }
               }
-              if(settings.arguments is Map<String, dynamic>){
+              if (settings.arguments is Map<String, dynamic>) {
                 params.addAll(settings.arguments as Map<String, dynamic>);
               }
               return AppPageRoute(

@@ -25,6 +25,25 @@ class Account {
       required this.totalLikes,
       required this.refreshToken});
 
+  Account copyWith(
+      {String? avatar,
+      String? nickname,
+      String? bio,
+      int? totalFollows,
+      int? totalLikes,
+      String? token,
+      String? refreshToken}) {
+    return Account(
+        avatar: avatar ?? this.avatar,
+        nickname: nickname ?? this.nickname,
+        bio: bio ?? this.bio,
+        totalFollows: totalFollows ?? this.totalFollows,
+        totalLikes: totalLikes ?? this.totalLikes,
+        token: token ?? this.token,
+        refreshToken: refreshToken ?? this.refreshToken,
+        username: username);
+  }
+
 /*
 {
   "token": {
@@ -47,7 +66,7 @@ class Account {
  */
   factory Account.fromJson(Map<String, dynamic> json) {
     return Account(
-        avatar: json['user']['AvatarUrl'],
+        avatar: json['user']['Avatar'],
         bio: json['user']['Bio'],
         nickname: json['user']['Nickname'],
         username: json['user']['Username'],
@@ -80,7 +99,7 @@ class Account {
   Map<String, dynamic> toJson() {
     return {
       'user': {
-        'AvatarUrl': avatar,
+        'Avatar': avatar,
         'Bio': bio,
         'Nickname': nickname,
         'Username': username,
@@ -154,7 +173,7 @@ class User {
     return User(
         username: json['Username'],
         nickname: json['Nickname'],
-        avatar: json['AvatarUrl'],
+        avatar: json['Avatar'],
         bio: json['Bio'],
         createdAt: DateTime.parse(json['RegisteredAt']),
         totalLiked: json['TotalLiked'],
@@ -249,8 +268,7 @@ class HeatMapData {
   int get totalDays => dailyData.length;
   final int totalLikes;
 
-  const HeatMapData(
-      this.dailyData, this.totalMemos, this.totalLikes);
+  const HeatMapData(this.dailyData, this.totalMemos, this.totalLikes);
 }
 
 /*

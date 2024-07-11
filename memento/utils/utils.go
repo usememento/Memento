@@ -128,6 +128,18 @@ func CommentToView(comment *model.Comment, user *model.UserViewModel, isLiked bo
 }
 
 func UserToView(user *model.User, isFollowed bool) *model.UserViewModel {
+	avatarPath := user.AvatarUrl
+	avatar := ""
+	if avatarPath == "" {
+		avatar = ""
+	} else {
+		for i := len(avatarPath) - 1; i >= 0; i-- {
+			if avatarPath[i] == '/' || avatarPath[i] == '\\' {
+				avatar = avatarPath[i+1:]
+				break
+			}
+		}
+	}
 	return &model.UserViewModel{
 		Username:      user.Username,
 		Nickname:      user.Nickname,
@@ -139,7 +151,7 @@ func UserToView(user *model.User, isFollowed bool) *model.UserViewModel {
 		TotalFollows:  user.TotalFollows,
 		TotalFollower: user.TotalFollower,
 		TotalPosts:    user.TotalPosts,
-		AvatarUrl:     user.AvatarUrl,
+		Avatar:        avatar,
 		IsFollowed:    isFollowed,
 	}
 }

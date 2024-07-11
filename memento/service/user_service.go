@@ -179,7 +179,9 @@ func HandleUserEdit(c echo.Context) error {
 		}
 		if user.AvatarUrl != "" {
 			err := os.Remove(user.AvatarUrl)
-			log.Errorf(err.Error())
+			if err != nil {
+				log.Errorf(err.Error())
+			}
 		}
 		user.AvatarUrl = filepath
 	}
@@ -187,7 +189,7 @@ func HandleUserEdit(c echo.Context) error {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown save error")
 	}
-	return c.NoContent(http.StatusOK)
+	return c.JSON(http.StatusOK, utils.UserToView(&user, false))
 }
 
 func checkIsFollowed(selfUsername string, username string) bool {
@@ -432,4 +434,9 @@ func HandlerGetUserFollowing(c echo.Context) error {
 		result = append(result, *utils.UserToView(&f, true))
 	}
 	return c.JSON(http.StatusOK, result)
+}
+
+func HandleGetAvatar(c echo.Context) error {
+	name := c.Param("name")
+	return c.File(path.Join(memento.GetAvatarPath(), name))
 }

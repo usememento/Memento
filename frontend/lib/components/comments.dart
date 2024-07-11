@@ -3,7 +3,6 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:frontend/components/user.dart';
 import 'package:frontend/foundation/app.dart';
-import 'package:frontend/network/models.dart';
 import 'package:frontend/utils/ext.dart';
 
 import '../network/network.dart';

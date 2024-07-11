@@ -41,7 +41,7 @@ class _WindowBorderState extends State<WindowBorder> {
                     height: double.infinity,
                     width: 16,
                   ),
-                ),
+                ).fixHeight(double.infinity),
               if (App.isMacOS)
                 const SizedBox(
                   width: 52,
@@ -54,11 +54,11 @@ class _WindowBorderState extends State<WindowBorder> {
                       fontSize: 13,
                     ),
                   ).toAlign(Alignment.centerLeft).paddingLeft(16),
-                ),
+                ).fixHeight(double.infinity),
               ),
               if (!App.isMacOS) const WindowButtons()
             ],
-          ),
+          ).fixHeight(_kTitleBarHeight),
         ),
       ],
     );

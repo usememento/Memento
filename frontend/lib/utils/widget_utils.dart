@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:frontend/components/overlay.dart';
 import 'package:frontend/foundation/app.dart';
 

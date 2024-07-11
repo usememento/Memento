@@ -15,10 +15,13 @@ class Avatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    ImageProvider image = App.isWeb ? NetworkImage(url) : CachedNetworkImageProvider(url);
-    if(url.isEmpty) {
-      image = const AssetImage('assets/user.png');
+    var url = this.url;
+    if(url != "") {
+      url = appdata.settings['domain'] + '/api/user/avatar/' + url;
     }
+    ImageProvider image =
+        App.isWeb ? NetworkImage(url) : CachedNetworkImageProvider(url);
+    var defaultAvatar = 'assets/user.png';
     return Container(
       width: size,
       height: size,
@@ -31,6 +34,10 @@ class Avatar extends StatelessWidget {
         height: double.infinity,
         fit: BoxFit.cover,
         image: image,
+        filterQuality: FilterQuality.medium,
+        errorBuilder: (context, error, stackTrace) {
+          return Image.asset(defaultAvatar, fit: BoxFit.cover);
+        },
       ),
     );
   }
@@ -51,46 +58,65 @@ class _UserCardState extends State<UserCard> {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () {
-        context.to('/user/${widget.user.username}');
-      },
-      child: SizedBox(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Avatar(url: widget.user.avatar, size: 38,),
-            const SizedBox(width: 12,),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(widget.user.nickname, style: ts.bold.s16,),
-                      const Spacer(),
-                      if (widget.user.username != appdata.user.username)
-                        Button.outlined(
-                            width: widget.user.isFollowed ? 84 : 72,
-                            height: 24,
-                            padding: EdgeInsets.zero,
-                            isLoading: isFollowing,
-                            onPressed: follow,
-                            color: widget.user.isFollowed ? Colors.red : null,
-                            child: widget.user.isFollowed
-                                ? Text("Unfollow".tl, style: ts.s14,)
-                                : Text("Follow".tl, style: ts.s14,))
-                    ],
-                  ),
-                  Text("@${widget.user.username}", style: ts.s12,),
-                  if(widget.user.bio.isNotEmpty)
-                    Text(widget.user.bio, maxLines: 3,),
-                ],
+        onTap: () {
+          context.to('/user/${widget.user.username}');
+        },
+        child: SizedBox(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Avatar(
+                url: widget.user.avatar,
+                size: 38,
               ),
-            ),
-          ],
-        ).paddingHorizontal(16).paddingVertical(8),
-      )
-    );
+              const SizedBox(
+                width: 12,
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          widget.user.nickname,
+                          style: ts.bold.s16,
+                        ),
+                        const Spacer(),
+                        if (widget.user.username != appdata.user.username)
+                          Button.outlined(
+                              width: widget.user.isFollowed ? 84 : 72,
+                              height: 24,
+                              padding: EdgeInsets.zero,
+                              isLoading: isFollowing,
+                              onPressed: follow,
+                              color: widget.user.isFollowed ? Colors.red : null,
+                              child: widget.user.isFollowed
+                                  ? Text(
+                                      "Unfollow".tl,
+                                      style: ts.s14,
+                                    )
+                                  : Text(
+                                      "Follow".tl,
+                                      style: ts.s14,
+                                    ))
+                      ],
+                    ),
+                    Text(
+                      "@${widget.user.username}",
+                      style: ts.s12,
+                    ),
+                    if (widget.user.bio.isNotEmpty)
+                      Text(
+                        widget.user.bio,
+                        maxLines: 3,
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ).paddingHorizontal(16).paddingVertical(8),
+        ));
   }
 
   void follow() async {
@@ -115,4 +141,3 @@ class _UserCardState extends State<UserCard> {
     }
   }
 }
-

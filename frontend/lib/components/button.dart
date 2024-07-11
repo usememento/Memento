@@ -103,12 +103,14 @@ class Button extends StatefulWidget {
       required Widget icon,
       required VoidCallback onPressed,
       double? size,
+      Color? color,
       String? tooltip}) {
     return _IconButton(
       key: key,
       icon: icon,
       onPressed: onPressed,
       size: size,
+      color: color,
       tooltip: tooltip,
     );
   }
@@ -150,8 +152,8 @@ class _ButtonState extends State<Button> {
 
   @override
   Widget build(BuildContext context) {
-    var padding = widget.padding
-        ?? const EdgeInsets.symmetric(horizontal: 16, vertical: 6);
+    var padding = widget.padding ??
+        const EdgeInsets.symmetric(horizontal: 16, vertical: 6);
     var width = widget.width;
     if (width != null) {
       width = width - padding.horizontal;
@@ -244,6 +246,7 @@ class _IconButton extends StatefulWidget {
       required this.icon,
       required this.onPressed,
       this.size,
+      this.color,
       this.tooltip});
 
   final Widget icon;
@@ -253,6 +256,8 @@ class _IconButton extends StatefulWidget {
   final double? size;
 
   final String? tooltip;
+
+  final Color? color;
 
   @override
   State<_IconButton> createState() => _IconButtonState();
@@ -278,7 +283,8 @@ class _IconButtonState extends State<_IconButton> {
           padding: const EdgeInsets.all(6),
           child: IconTheme(
             data: IconThemeData(
-                size: widget.size ?? 24, color: context.colorScheme.primary),
+                size: widget.size ?? 24,
+                color: widget.color ?? context.colorScheme.primary),
             child: widget.icon,
           ),
         ),

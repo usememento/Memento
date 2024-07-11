@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 
@@ -284,13 +285,16 @@ class Network {
     }
   }
 
-  Stream<Object> uploadFile(List<int> data, String fileName, CancelToken cancelToken) {
+  Stream<Object> uploadFile(
+      List<int> data, String fileName, CancelToken cancelToken) {
     var controller = StreamController<Object>();
     () async {
       try {
-        var res = await dio.post<Map>("/api/file/upload", data: FormData.fromMap({
-          "file": MultipartFile.fromBytes(data, filename: fileName),
-        }), cancelToken: cancelToken, onSendProgress: (current, total) {
+        var res = await dio.post<Map>("/api/file/upload",
+            data: FormData.fromMap({
+              "file": MultipartFile.fromBytes(data, filename: fileName),
+            }),
+            cancelToken: cancelToken, onSendProgress: (current, total) {
           controller.add(current / total);
         });
 
@@ -299,11 +303,9 @@ class Network {
         } else {
           controller.add(res.data!['message'] as String);
         }
-      }
-      catch(e) {
+      } catch (e) {
         controller.addError(e);
-      }
-      finally {
+      } finally {
         controller.close();
       }
     }();
@@ -312,23 +314,22 @@ class Network {
 
   Future<Res<User>> getUserDetails(String userName) async {
     try {
-      var res = await dio.get<Map<String, dynamic>>("/api/user/get",
-          queryParameters: {
-            "username": userName,
-          });
+      var res = await dio
+          .get<Map<String, dynamic>>("/api/user/get", queryParameters: {
+        "username": userName,
+      });
       return Res(User.fromJson(res.data!));
-    }
-    catch(e) {
+    } catch (e) {
       return Res.error(e.toString());
     }
   }
 
   Future<Res<bool>> followOrUnfollow(String userName, bool isFollow) async {
     try {
-      var res = await dio.post(isFollow ? "/api/user/follow" : "/api/user/unfollow",
-          data: {
-            "followee": userName,
-          });
+      var res = await dio
+          .post(isFollow ? "/api/user/follow" : "/api/user/unfollow", data: {
+        "followee": userName,
+      });
       if (res.statusCode == 200) {
         return const Res(true);
       } else {
@@ -342,14 +343,12 @@ class Network {
   Future<Res<List<User>>> getFollowers(String userName, int page) async {
     try {
       page--;
-      var res = await dio.get<List>("/api/user/follower",
-          queryParameters: {
-            "username": userName,
-            "page": page,
-          });
+      var res = await dio.get<List>("/api/user/follower", queryParameters: {
+        "username": userName,
+        "page": page,
+      });
       return Res((res.data!).map((e) => User.fromJson(e)).toList());
-    }
-    catch(e) {
+    } catch (e) {
       return Res.error(e.toString());
     }
   }
@@ -357,15 +356,57 @@ class Network {
   Future<Res<List<User>>> getFollowing(String userName, int page) async {
     try {
       page--;
-      var res = await dio.get<List>("/api/user/following",
-          queryParameters: {
-            "username": userName,
-            "page": page,
-          });
+      var res = await dio.get<List>("/api/user/following", queryParameters: {
+        "username": userName,
+        "page": page,
+      });
       return Res((res.data!).map((e) => User.fromJson(e)).toList());
-    }
-    catch(e) {
+    } catch (e) {
       return Res.error(e.toString());
+    }
+  }
+
+  Future<Res<User>> editProfile(
+      {String? nickname,
+      String? bio,
+      Uint8List? avatar,
+      String? avatarFileName}) async {
+    try {
+      var res = await dio.post<Map<String, dynamic>>("/api/user/edit",
+          data: FormData.fromMap({
+            if (nickname != null) "nickname": nickname,
+            if (bio != null) "bio": bio,
+            if (avatar != null)
+              "avatar":
+                  MultipartFile.fromBytes(avatar, filename: avatarFileName),
+          }));
+      return Res(User.fromJson(res.data!));
+    } catch (e) {
+      return Res.error(e.toString());
+    }
+  }
+
+  Future<Res<bool>> changePassword(
+      {required String password,
+      required String newPassword,
+      required String confirmPassword}) {
+    if (newPassword != confirmPassword) {
+      return Future.value(const Res.error("Password not match"));
+    }
+
+    try {
+      return dio.post("/api/user/changePwd", data: {
+        "oldPassword": password,
+        "newPassword": newPassword,
+      }).then((res) {
+        if (res.statusCode == 200) {
+          return const Res(true);
+        } else {
+          throw "Invalid Status Code ${res.statusCode}";
+        }
+      });
+    } catch (e) {
+      return Future.value(Res.error(e.toString()));
     }
   }
 }
