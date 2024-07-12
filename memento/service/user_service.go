@@ -162,6 +162,10 @@ func HandleUserEdit(c echo.Context) error {
 			return utils.RespondError(c, "form file open error")
 		}
 		defer file.Close()
+		size := avatar.Size
+		if size > 1024*1024 {
+			return utils.RespondError(c, "Avatar too large")
+		}
 		ext := path.Ext(avatar.Filename)
 		filename := utils.Md5string(strconv.FormatInt(time.Now().UnixMilli(), 10)) + ext
 		// Destination

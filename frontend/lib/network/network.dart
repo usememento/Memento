@@ -4,6 +4,9 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/scheduler.dart';
+import 'package:frontend/utils/image.dart';
 
 import '../foundation/appdata.dart';
 import 'res.dart';
@@ -367,18 +370,20 @@ class Network {
   }
 
   Future<Res<User>> editProfile(
-      {String? nickname,
-      String? bio,
-      Uint8List? avatar,
-      String? avatarFileName}) async {
+      {String? nickname, String? bio, Uint8List? avatar}) async {
     try {
+      String? ext;
+      if (avatar != null && avatar.length > 1024 * 1024) {
+        (avatar, ext) =
+            await compute((message) => resizeImage(avatar!, 256), null);
+      }
       var res = await dio.post<Map<String, dynamic>>("/api/user/edit",
           data: FormData.fromMap({
             if (nickname != null) "nickname": nickname,
             if (bio != null) "bio": bio,
             if (avatar != null)
               "avatar":
-                  MultipartFile.fromBytes(avatar, filename: avatarFileName),
+                  MultipartFile.fromBytes(avatar, filename: "avatar.$ext"),
           }));
       return Res(User.fromJson(res.data!));
     } catch (e) {

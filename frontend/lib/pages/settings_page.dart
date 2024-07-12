@@ -190,7 +190,6 @@ class _AccountSettingsState extends State<_AccountSettings> {
         ListTile(
           onTap: () async {
             Uint8List? avatar;
-            String? avatarFileName;
             bool isLoading = false;
 
             await pushDialog(
@@ -216,7 +215,6 @@ class _AccountSettingsState extends State<_AccountSettings> {
                                 acceptedTypeGroups: <XTypeGroup>[typeGroup]);
                             if (file != null) {
                               avatar = await file.readAsBytes();
-                              avatarFileName = file.name;
                               setState(() {});
                             }
                           },
@@ -253,8 +251,7 @@ class _AccountSettingsState extends State<_AccountSettings> {
                                   App.rootNavigatorKey!.currentContext!;
                               if (avatar != null) {
                                 var res = await Network().editProfile(
-                                    avatar: avatar!,
-                                    avatarFileName: avatarFileName);
+                                    avatar: avatar!);
                                 if (context.mounted) {
                                   if (res.error) {
                                     setState(() {
