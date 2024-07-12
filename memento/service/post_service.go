@@ -471,8 +471,8 @@ func HandleGetAllPosts(c echo.Context) error {
 		return utils.RespondError(c, "invalid page")
 	}
 	posts := make([]model.Post, 0, memento.PageSize)
-	memento.GetDbConnection().Order("created_at desc").Offset(page * memento.PageSize).Limit(memento.PageSize).Find(&posts)
-	var result []model.PostViewModel
+	memento.GetDbConnection().Order("created_at desc").Offset(page*memento.PageSize).Limit(memento.PageSize).Find(&posts, "is_private=?", false)
+	result := make([]model.PostViewModel, 0, memento.PageSize)
 	for _, p := range posts {
 		var user model.User
 		memento.GetDbConnection().First(&user, "username=?", p.Username)
