@@ -67,7 +67,7 @@ class DialogContent extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 16),
-              if (body != null) body!,
+              if (body != null) body!.paddingHorizontal(8),
               const SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
