@@ -330,3 +330,17 @@ class Comment {
         likesCount: json['Liked']);
   }
 }
+
+class UserComment {
+  final Comment comment;
+
+  final Memo memo;
+
+  UserComment({required this.comment, required this.memo});
+
+  factory UserComment.fromJson(Map<String, dynamic> json) {
+    return UserComment(
+        comment: Comment.fromJson(json['Comment']),
+        memo: Memo.fromJson(json['Post']));
+  }
+}

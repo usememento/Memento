@@ -368,10 +368,13 @@ class Network {
   }
 
   Future<Res<User>> editProfile(
-      {String? nickname, String? bio, Uint8List? avatar, String? avatarFileName}) async {
+      {String? nickname,
+      String? bio,
+      Uint8List? avatar,
+      String? avatarFileName}) async {
     try {
       String? ext;
-      if(avatarFileName != null) {
+      if (avatarFileName != null) {
         ext = avatarFileName.split('.').last;
       }
       if (avatar != null && avatar.length > 1024 * 1024) {
@@ -424,6 +427,25 @@ class Network {
       } else {
         throw "Invalid Status Code ${res.statusCode}";
       }
+    } catch (e) {
+      return Res.error(e.toString());
+    }
+  }
+
+  Future<Res<List<UserComment>>> getUserComment(
+      String username, int page) async {
+    try {
+      page--;
+      var res =
+          await dio.get<Map>("/api/comment/userComments", queryParameters: {
+        "username": username,
+        "page": page,
+      });
+      return Res(
+          (res.data!["comments"] as List)
+              .map((e) => UserComment.fromJson(e))
+              .toList(),
+          subData: res.data!["maxPage"] + 1);
     } catch (e) {
       return Res.error(e.toString());
     }

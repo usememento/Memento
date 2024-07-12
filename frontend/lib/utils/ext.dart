@@ -83,6 +83,17 @@ extension StringExt on String{
   bool get isURL => _isURL();
 
   bool get isNum => double.tryParse(this) != null;
+
+  String limitLine(int line){
+    if(line <= 0){
+      return "";
+    }
+    var lines = split("\n");
+    if(lines.length <= line){
+      return this;
+    }
+    return lines.sublist(0, line).join("\n");
+  }
 }
 
 extension TimeExt on DateTime {

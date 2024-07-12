@@ -5,6 +5,7 @@ import 'package:frontend/components/states.dart';
 import 'package:frontend/components/user.dart';
 import 'package:frontend/foundation/app.dart';
 import 'package:frontend/network/network.dart';
+import 'package:frontend/utils/ext.dart';
 import 'package:frontend/utils/translation.dart';
 
 import '../components/memo.dart';
@@ -45,11 +46,11 @@ class _UserInfoPageState extends LoadingState<UserInfoPage, User> {
         },
         child: CustomScrollView(
           slivers: [
-            SliverAppbar(title: AnimatedOpacity(
-              duration: const Duration(milliseconds: 200),
-              opacity: showTitle ? 1 : 0,
-              child: Text(data.nickname)
-            )),
+            SliverAppbar(
+                title: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 200),
+                    opacity: showTitle ? 1 : 0,
+                    child: Text(data.nickname))),
             SliverToBoxAdapter(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -170,8 +171,10 @@ class _UserInfoPageState extends LoadingState<UserInfoPage, User> {
   }
 
   Widget buildPage() {
-    if(page == 0) {
+    if (page == 0) {
       return _UserMemosList(username: data!.username);
+    } else if (page == 1) {
+      return _UserCommentsList(username: data!.username);
     }
     return const SliverToBoxAdapter();
   }
@@ -286,15 +289,142 @@ class _UserMemosListState extends MultiPageLoadingState<_UserMemosList, Memo> {
   Widget buildContent(BuildContext context, List<Memo> data) {
     return SliverList(
         delegate: SliverChildBuilderDelegate(
-              (context, index) {
-            return MemoWidget(memo: data[index], showUser: false);
-          },
-          childCount: data.length,
-        ));
+      (context, index) {
+        return MemoWidget(memo: data[index], showUser: false);
+      },
+      childCount: data.length,
+    ));
   }
 
   @override
   Future<Res<List<Memo>>> loadData(int page) {
     return Network().getMemosList(page, widget.username);
+  }
+}
+
+class _UserCommentsList extends StatefulWidget {
+  const _UserCommentsList({required this.username});
+
+  final String username;
+
+  @override
+  State<_UserCommentsList> createState() => _UserCommentsListState();
+}
+
+class _UserCommentsListState
+    extends MultiPageLoadingState<_UserCommentsList, UserComment> {
+  @override
+  Widget buildLoading(BuildContext context) {
+    return SliverToBoxAdapter(
+      child: Center(
+        child: const CircularProgressIndicator(
+          strokeWidth: 2,
+        ).fixWidth(18).fixHeight(18),
+      ).fixHeight(64),
+    );
+  }
+
+  @override
+  Widget buildError(BuildContext context, String error) {
+    return SliverToBoxAdapter(
+      child: super.buildError(context, error),
+    );
+  }
+
+  @override
+  Widget buildContent(BuildContext context, List<UserComment> data) {
+    return SliverList(
+        delegate: SliverChildBuilderDelegate(
+      (context, index) {
+        return _UserCommentWidget(comment: data[index]);
+      },
+      childCount: data.length,
+    ));
+  }
+
+  @override
+  Future<Res<List<UserComment>>> loadData(int page) {
+    return Network().getUserComment(widget.username, page);
+  }
+}
+
+class _UserCommentWidget extends StatelessWidget {
+  const _UserCommentWidget({required this.comment});
+
+  final UserComment comment;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+          border: Border(
+              bottom: BorderSide(
+                  color: context.colorScheme.outlineVariant, width: 0.4))),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(comment.comment.content),
+          const SizedBox(
+            height: 8,
+          ),
+          InkWell(
+            onTap: () {
+              context.to('/memo/${comment.memo.id}', {
+                'memo': comment.memo,
+              });
+            },
+            child: Container(
+              padding: const EdgeInsets.only(top: 8, left: 8, bottom: 8),
+              decoration: BoxDecoration(
+                  border: Border(
+                      left: BorderSide(
+                          color: context.colorScheme.primary, width: 2))),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Avatar(
+                        url: comment.memo.author!.avatar,
+                        size: 24,
+                      ),
+                      const SizedBox(
+                        width: 8,
+                      ),
+                      Text(comment.memo.author!.nickname),
+                    ],
+                  ),
+                  Container(
+                    constraints: const BoxConstraints(maxHeight: 400),
+                    width: double.infinity,
+                    child: ScrollConfiguration(
+                      behavior: const ScrollBehavior()
+                          .copyWith(scrollbars: false),
+                      child: SingleChildScrollView(
+                        physics: const NeverScrollableScrollPhysics(),
+                        child: MemoContent(
+                            content: comment.memo.content.limitLine(5)),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ).paddingLeft(8),
+          const SizedBox(
+            height: 8,
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Text(
+                comment.comment.date.toCompareString(),
+                style: ts.s12.withColor(context.colorScheme.outline),
+              ),
+            ],
+          )
+        ],
+      ),
+    );
   }
 }

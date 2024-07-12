@@ -97,6 +97,7 @@ func main() {
 			commentApi.POST("/like", service.HandleCommentLike)
 			commentApi.POST("/unlike", service.HandleCommentCancelLike)
 			commentApi.GET("/postComments", service.HandleGetPostComments)
+			commentApi.GET("/userComments", service.HandleGetUserComments)
 		}
 		searchApi := api.Group("/search")
 		{

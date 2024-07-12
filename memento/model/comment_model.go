@@ -25,3 +25,8 @@ type CommentViewModel struct {
 	Liked     int64
 	IsLiked   bool
 }
+
+type CommentWithPost struct {
+	Comment CommentViewModel
+	Post    PostViewModel
+}

@@ -168,6 +168,7 @@ func HandlePostDelete(c echo.Context) error {
 			}
 			user.TotalPosts -= 1
 			tx.Save(&user)
+			tx.Delete(model.Comment{}, "post_id=?", post.ID)
 			return nil
 		})
 	if err != nil {

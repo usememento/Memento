@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:frontend/components/overlay.dart';
 import 'package:frontend/foundation/app.dart';
@@ -191,6 +193,8 @@ TextStyle get ts => const TextStyle();
 
 extension StyledText on TextStyle {
   TextStyle get bold => copyWith(fontWeight: FontWeight.bold);
+
+  TextStyle get light => copyWith(fontWeight: FontWeight.w300);
 
   TextStyle get italic => copyWith(fontStyle: FontStyle.italic);
 
