@@ -1,11 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:frontend/utils/image.dart';
 
 import '../foundation/appdata.dart';
@@ -370,9 +368,12 @@ class Network {
   }
 
   Future<Res<User>> editProfile(
-      {String? nickname, String? bio, Uint8List? avatar}) async {
+      {String? nickname, String? bio, Uint8List? avatar, String? avatarFileName}) async {
     try {
       String? ext;
+      if(avatarFileName != null) {
+        ext = avatarFileName.split('.').last;
+      }
       if (avatar != null && avatar.length > 1024 * 1024) {
         (avatar, ext) =
             await compute((message) => resizeImage(avatar!, 256), null);

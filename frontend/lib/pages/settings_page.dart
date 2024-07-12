@@ -191,6 +191,7 @@ class _AccountSettingsState extends State<_AccountSettings> {
           onTap: () async {
             Uint8List? avatar;
             bool isLoading = false;
+            String? avatarFileName;
 
             await pushDialog(
               context: App.rootNavigatorKey!.currentContext!,
@@ -215,6 +216,7 @@ class _AccountSettingsState extends State<_AccountSettings> {
                                 acceptedTypeGroups: <XTypeGroup>[typeGroup]);
                             if (file != null) {
                               avatar = await file.readAsBytes();
+                              avatarFileName = file.name;
                               setState(() {});
                             }
                           },
@@ -251,6 +253,7 @@ class _AccountSettingsState extends State<_AccountSettings> {
                                   App.rootNavigatorKey!.currentContext!;
                               if (avatar != null) {
                                 var res = await Network().editProfile(
+                                    avatarFileName: avatarFileName,
                                     avatar: avatar!);
                                 if (context.mounted) {
                                   if (res.error) {
@@ -425,7 +428,9 @@ class _AccountSettingsState extends State<_AccountSettings> {
                           border: const OutlineInputBorder(),
                         ),
                       ),
-                      const SizedBox(height: 8,),
+                      const SizedBox(
+                        height: 8,
+                      ),
                       TextField(
                         onChanged: (value) {
                           newPassword = value;
@@ -436,7 +441,9 @@ class _AccountSettingsState extends State<_AccountSettings> {
                           border: const OutlineInputBorder(),
                         ),
                       ),
-                      const SizedBox(height: 8,),
+                      const SizedBox(
+                        height: 8,
+                      ),
                       TextField(
                         onChanged: (value) {
                           confirmPassword = value;
