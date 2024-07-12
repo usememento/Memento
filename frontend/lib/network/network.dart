@@ -450,6 +450,19 @@ class Network {
       return Res.error(e.toString());
     }
   }
+
+  Future<Res<List<Memo>>> search(String keyword, int page) async {
+    try {
+      page--;
+      var res = await dio.get<List>("/api/search/post", queryParameters: {
+        "keyword": keyword,
+        "page": page,
+      });
+      return Res((res.data as List).map((e) => Memo.fromJson(e)).toList());
+    } catch (e) {
+      return Res.error(e.toString());
+    }
+  }
 }
 
 void setDebugProxy() {

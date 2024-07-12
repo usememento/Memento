@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/components/navigation_bar.dart';
 import 'package:frontend/pages/page_404.dart';
+import 'package:frontend/pages/search_page.dart';
 import 'package:frontend/pages/settings_page.dart';
 import 'package:frontend/pages/tagged_memos_list_page.dart';
 import 'package:frontend/pages/user_page.dart';
@@ -25,6 +26,7 @@ class MainPageState extends State<MainPage> {
     '/': (context) => const HomePage(),
     '/explore': (context) => const ExplorePage(),
     '/settings': (context) => const SettingsPage(),
+    '/search': (context) => const SearchPage(),
     '/memo/:id': (context) => const MemoDetailsPage(),
     '/tag/:tag': (context) => const TaggedMemosListPage(),
     '/user/:username': (context) => const UserInfoPage(),
@@ -87,7 +89,9 @@ class MainPageState extends State<MainPage> {
         ],
         paneActions: [
           if (context.width <= 600)
-            PaneActionEntry(label: "Search", icon: Icons.search, onTap: () {}),
+            PaneActionEntry(label: "Search", icon: Icons.search, onTap: () {
+              App.navigatorState!.pushNamed('/search');
+            }),
           PaneActionEntry(
               routeName: '/settings',
               label: "Settings",

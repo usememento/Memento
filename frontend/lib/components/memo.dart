@@ -112,7 +112,7 @@ class _MemoWidgetState extends State<MemoWidget> {
                       style: ts.withColor(context.colorScheme.secondary),
                     ),
                   ],
-                ).paddingLeft(8).paddingBottom(8),
+                ).paddingLeft(widget.showUser ? 42 : 8).paddingBottom(8),
               Row(
                 children: [
                   if (widget.memo.author != null && widget.showUser)
@@ -242,12 +242,11 @@ class _MemoWidgetState extends State<MemoWidget> {
           onTap: edit,
           child: Text("Edit".tl),
         ),
-        if(widget.memo.author!.username == appdata.user.username)
-          PopupMenuItem(
-            height: 42,
-            onTap: delete,
-            child: Text("Delete".tl),
-          ),
+        PopupMenuItem(
+          height: 42,
+          onTap: delete,
+          child: Text("Delete".tl),
+        ),
       ],
     );
   }

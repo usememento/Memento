@@ -1,6 +1,8 @@
 module Memento
 
-go 1.20
+go 1.21
+
+toolchain go1.22.3
 
 require (
 	github.com/RoaringBitmap/roaring v1.9.3 // indirect
