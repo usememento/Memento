@@ -98,6 +98,11 @@ func main() {
 			commentApi.POST("/unlike", service.HandleCommentCancelLike)
 			commentApi.GET("/postComments", service.HandleGetPostComments)
 		}
+		searchApi := api.Group("/search")
+		{
+			searchApi.GET("/user", service.HandleUserSearch)
+			searchApi.GET("/post", service.HandlePostSearch)
+		}
 	}
 	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", mServer.Config.ServerConfig.Port)))
 }

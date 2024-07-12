@@ -117,6 +117,11 @@ func HandlePostCreate(c echo.Context) error {
 	if err != nil {
 		return utils.RespondError(c, "os open file error")
 	}
+	err = memento.IndexPost(&post)
+	if err != nil {
+		log.Errorf(err.Error())
+		return utils.RespondInternalError(c, "index failed")
+	}
 	return c.JSON(http.StatusOK, *pv)
 }
 func HandlePostDelete(c echo.Context) error {

@@ -4,6 +4,8 @@ import (
 	"Memento/memento/model"
 	"Memento/memento/utils"
 	"errors"
+	"fmt"
+	"github.com/blevesearch/bleve/v2"
 	"github.com/go-oauth2/oauth2/v4"
 	"github.com/go-oauth2/oauth2/v4/server"
 	"github.com/labstack/echo/v4"
@@ -14,14 +16,17 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"strconv"
 	"strings"
 	"sync"
 )
 
 type MementoServer struct {
-	DbConn *gorm.DB
-	Config utils.MementoConfig
-	lock   sync.Locker
+	DbConn    *gorm.DB
+	Config    utils.MementoConfig
+	lock      sync.Locker
+	UserIndex bleve.Index
+	PostIndex bleve.Index
 }
 
 const (
@@ -100,6 +105,24 @@ func Init() (*MementoServer, error) {
 	memento.DbConn.AutoMigrate(&model.Post{})
 	memento.DbConn.AutoMigrate(&model.User{})
 	//memento.DbConn.AutoMigrate(&model.PostTag{})
+	memento.PostIndex, err = bleve.Open(path.Join(GetBasePath(), "post_index.bleve"))
+	if err != nil {
+		mapping := bleve.NewIndexMapping()
+		memento.PostIndex, err = bleve.New(path.Join(GetBasePath(), "post_index.bleve"), mapping)
+		if err != nil {
+			log.Errorf("Error creating post index: %s\n", err.Error())
+			return nil, err
+		}
+	}
+	memento.UserIndex, err = bleve.Open(path.Join(GetBasePath(), "user_index.bleve"))
+	if err != nil {
+		mapping := bleve.NewIndexMapping()
+		memento.PostIndex, err = bleve.New(path.Join(GetBasePath(), "user_index.bleve"), mapping)
+		if err != nil {
+			log.Errorf("Error creating user index: %s\n", err.Error())
+			return nil, err
+		}
+	}
 	return &memento, nil
 }
 func GetBasePath() string {
@@ -132,7 +155,35 @@ func Lock() {
 func Unlock() {
 	memento.lock.Unlock()
 }
-
+func IndexPost(post *model.Post) error {
+	content, err := os.ReadFile(post.ContentUrl)
+	if err != nil {
+		return err
+	}
+	fmt.Println("indexing: ", string(content))
+	return memento.PostIndex.Index(post.Username+strconv.Itoa(int(post.ID)), struct {
+		ID      uint
+		Content string
+	}{
+		ID:      post.ID,
+		Content: string(content),
+	})
+}
+func IndexUser(user *model.User) error {
+	return memento.PostIndex.Index(user.Username, *user)
+}
+func SearchPost(content string) (*bleve.SearchResult, error) {
+	query := bleve.NewMatchQuery(content)
+	query.SetField("Content")
+	searchRequest := bleve.NewSearchRequest(query)
+	searchRequest.Fields = append(searchRequest.Fields, "ID")
+	searchResult, err := memento.PostIndex.Search(searchRequest)
+	if err != nil {
+		log.Fatal(err)
+		return nil, err
+	}
+	return searchResult, nil
+}
 func isPublicPath(path string) bool {
 	publicPaths := [...]string{"/api/post/get", "/api/file/download", "/api/comment/postComments", "/api/user/avatar"}
 	for _, p := range publicPaths {
