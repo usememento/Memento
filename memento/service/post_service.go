@@ -129,7 +129,10 @@ func HandlePostDelete(c echo.Context) error {
 	if username == "" {
 		return utils.RespondUnauthorized(c)
 	}
-	id := c.FormValue("id")
+	id := c.Param("id")
+	if id == "" {
+		return utils.RespondError(c, "invalid post id")
+	}
 	var post model.Post
 	if err := memento.GetDbConnection().First(&post, "id=?", id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

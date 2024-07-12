@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
+import 'package:frontend/components/dialog.dart';
 import 'package:frontend/components/user.dart';
 import 'package:frontend/foundation/app.dart';
 import 'package:frontend/pages/memo_edit_page.dart';
@@ -97,6 +98,21 @@ class _MemoWidgetState extends State<MemoWidget> {
                   )
                 ],
               ),
+              if (!widget.memo.isPublic)
+                Row(
+                  children: [
+                    Icon(
+                      Icons.lock,
+                      size: 18,
+                      color: context.colorScheme.secondary,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      "Private".tl,
+                      style: ts.withColor(context.colorScheme.secondary),
+                    ),
+                  ],
+                ).paddingLeft(8).paddingBottom(8),
               Row(
                 children: [
                   if (widget.memo.author != null && widget.showUser)
@@ -106,7 +122,7 @@ class _MemoWidgetState extends State<MemoWidget> {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     isLoading: isLiking,
-                    height: 36,
+                    height: 32,
                     width: calcButtonWidth(widget.memo.likesCount),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -124,6 +140,7 @@ class _MemoWidgetState extends State<MemoWidget> {
                           widget.memo.likesCount.toString(),
                           style: const TextStyle(fontSize: 14),
                         ).paddingBottom(2),
+                        const Spacer(),
                       ],
                     ),
                   ),
@@ -132,7 +149,7 @@ class _MemoWidgetState extends State<MemoWidget> {
                     onPressed: reply,
                     padding:
                         const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    height: 36,
+                    height: 32,
                     width: calcButtonWidth(widget.memo.repliesCount),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -146,32 +163,17 @@ class _MemoWidgetState extends State<MemoWidget> {
                           widget.memo.repliesCount.toString(),
                           style: const TextStyle(fontSize: 14),
                         ).paddingBottom(2),
+                        const Spacer(),
                       ],
                     ),
                   ),
                   if (widget.memo.author == null ||
                       widget.memo.author!.username == appdata.user.username)
-                    Button.normal(
-                      onPressed: edit,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
-                      height: 36,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.edit_outlined,
-                            size: 18,
-                          ),
-                          const SizedBox(
-                            width: 8,
-                          ),
-                          Text(
-                            "Edit".tl,
-                            style: const TextStyle(fontSize: 14),
-                          ).paddingBottom(2),
-                        ],
-                      ),
+                    Button.icon(
+                      key: moreActionsKey,
+                      onPressed: moreActions,
+                      icon: const Icon(Icons.more_horiz),
+                      color: context.colorScheme.onSurface,
                     ).paddingLeft(16),
                   const Spacer(),
                   Text(
@@ -221,6 +223,35 @@ class _MemoWidgetState extends State<MemoWidget> {
     CommentsPage.show(widget.memo.id);
   }
 
+  var moreActionsKey = GlobalKey();
+
+  void moreActions() async {
+    var renderBox =
+        moreActionsKey.currentContext?.findRenderObject() as RenderBox?;
+    if (renderBox == null) return;
+    var offset = renderBox.localToGlobal(Offset.zero);
+    showMenu(
+      elevation: 3,
+      color: context.colorScheme.surface,
+      context: App.rootNavigatorKey!.currentContext!,
+      position:
+          RelativeRect.fromLTRB(offset.dx, offset.dy, offset.dx, offset.dy),
+      items: [
+        PopupMenuItem(
+          height: 42,
+          onTap: edit,
+          child: Text("Edit".tl),
+        ),
+        if(widget.memo.author!.username == appdata.user.username)
+          PopupMenuItem(
+            height: 42,
+            onTap: delete,
+            child: Text("Delete".tl),
+          ),
+      ],
+    );
+  }
+
   void edit() async {
     var res =
         await context.toWidget((context) => MemoEditPage(memo: widget.memo));
@@ -231,6 +262,54 @@ class _MemoWidgetState extends State<MemoWidget> {
         setState(() {});
       }
     }
+  }
+
+  void delete() {
+    Future.microtask(() async {
+      pushDialog(
+          context: App.rootNavigatorKey!.currentContext!,
+          builder: (context) {
+            bool isLoading = false;
+            return StatefulBuilder(builder: (context, setState) {
+              return DialogContent(
+                title: "Delete Memo".tl,
+                body: Text("Are you sure you want to delete this memo?".tl),
+                actions: [
+                  Button.text(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: Text("Cancel".tl),
+                  ),
+                  Button.text(
+                    color: Colors.red,
+                    onPressed: () async {
+                      setState(() {
+                        isLoading = true;
+                      });
+                      var res = await Network().deleteMemo(widget.memo.id);
+                      if (context.mounted) {
+                        if (res.success) {
+                          context.pop();
+                          App.navigatorKey!.currentContext!
+                              .showMessage("Deleted".tl);
+                        } else {
+                          App.navigatorKey!.currentContext!
+                              .showMessage(res.errorMessage!);
+                          setState(() {
+                            isLoading = false;
+                          });
+                        }
+                      }
+                    },
+                    isLoading: isLoading,
+                    child: Text("Delete".tl),
+                  ),
+                ],
+              );
+            });
+          });
+    });
   }
 }
 
@@ -289,7 +368,8 @@ class LatexSyntax extends m.InlineSyntax {
 }
 
 class HtmlImageSyntax extends m.InlineSyntax {
-  HtmlImageSyntax() : super(r'<img\s[^>]*>', startCharacter: '<'.codeUnits.first);
+  HtmlImageSyntax()
+      : super(r'<img\s[^>]*>', startCharacter: '<'.codeUnits.first);
 
   @override
   bool onMatch(m.InlineParser parser, Match match) {
@@ -304,15 +384,15 @@ class HtmlImageSyntax extends m.InlineSyntax {
       if (kv.length == 2) {
         var key = kv[0];
         var value = kv[1].replaceAll('"', '').replaceAll("'", '');
-        if(key == 'width' || key == 'height') {
-          if(!value.isNum)  continue;
+        if (key == 'width' || key == 'height') {
+          if (!value.isNum) continue;
         }
         attributes[key] = value;
       }
     }
     m.Element el = m.Element.text('img', img);
     el.attributes['src'] = attributes['src'] ?? '';
-    if(attributes['width'] != null) {
+    if (attributes['width'] != null) {
       el.attributes['width'] = attributes['width']!;
     }
     if (attributes['height'] != null) {
@@ -340,15 +420,15 @@ class HtmlBlockImageSyntax extends m.BlockSyntax {
       if (kv.length == 2) {
         var key = kv[0];
         var value = kv[1].replaceAll('"', '').replaceAll("'", '');
-        if(key == 'width' || key == 'height') {
-          if(!value.isNum)  continue;
+        if (key == 'width' || key == 'height') {
+          if (!value.isNum) continue;
         }
         attributes[key] = value;
       }
     }
     var element = m.Element.text('img', img);
     element.attributes['src'] = attributes['src'] ?? '';
-    if(attributes['width'] != null) {
+    if (attributes['width'] != null) {
       element.attributes['width'] = attributes['width']!;
     }
     if (attributes['height'] != null) {
@@ -359,7 +439,6 @@ class HtmlBlockImageSyntax extends m.BlockSyntax {
 
   @override
   RegExp get pattern => RegExp(r'<img\s[^>]*>');
-
 }
 
 class LatexNode extends SpanNode {

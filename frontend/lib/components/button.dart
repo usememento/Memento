@@ -235,7 +235,7 @@ class _ButtonState extends State<Button> {
     return widget.type == ButtonType.filled
         ? context.colorScheme.onPrimary
         : (widget.type == ButtonType.text
-            ? context.colorScheme.primary
+            ? widget.color ?? context.colorScheme.primary
             : context.colorScheme.onSurface);
   }
 }

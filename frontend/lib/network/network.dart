@@ -415,6 +415,19 @@ class Network {
       return Future.value(Res.error(e.toString()));
     }
   }
+
+  Future<Res<bool>> deleteMemo(int id) async {
+    try {
+      var res = await dio.delete("/api/post/delete/$id");
+      if (res.statusCode == 200) {
+        return const Res(true);
+      } else {
+        throw "Invalid Status Code ${res.statusCode}";
+      }
+    } catch (e) {
+      return Res.error(e.toString());
+    }
+  }
 }
 
 void setDebugProxy() {

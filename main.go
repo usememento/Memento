@@ -65,7 +65,7 @@ func main() {
 			postApi.GET("/userPosts", service.HandleGetUserPosts)
 			postApi.POST("/create", service.HandlePostCreate)
 			postApi.POST("/edit", service.HandlePostEdit)
-			postApi.DELETE("/delete", service.HandlePostDelete)
+			postApi.DELETE("/delete/:id", service.HandlePostDelete)
 			postApi.POST("/like", service.HandlePostLike)
 			postApi.POST("/unlike", service.HandlePostCancelLike)
 			postApi.GET("/taggedPosts", service.HandleGetTaggedPost)
