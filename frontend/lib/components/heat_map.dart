@@ -5,7 +5,9 @@ import 'package:frontend/network/network.dart';
 import 'package:frontend/utils/translation.dart';
 
 class HeatMapWithLoadingState extends StatefulWidget {
-  const HeatMapWithLoadingState({super.key});
+  const HeatMapWithLoadingState({super.key, this.username});
+
+  final String? username;
 
   @override
   State<HeatMapWithLoadingState> createState() => _HeatMapWithLoadingStateState();
@@ -19,7 +21,7 @@ class _HeatMapWithLoadingStateState extends LoadingState<HeatMapWithLoadingState
 
   @override
   Future<Res<HeatMapData>> loadData() {
-    return Network().getHeatMapData();
+    return Network().getHeatMapData(widget.username);
   }
 }
 

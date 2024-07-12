@@ -44,35 +44,47 @@ class _ExplorePageState extends State<ExplorePage> {
                   ),
                 ),
               ),
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    const SizedBox(
-                      height: 8,
+              child: Column(
+                children: [
+                  const SizedBox(
+                    height: 8,
+                  ),
+                  Container(
+                    height: 42,
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surfaceContainer,
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    Container(
-                      height: 42,
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surfaceContainer,
-                        borderRadius: BorderRadius.circular(8),
+                    child: TextField(
+                      decoration: const InputDecoration(
+                        hintText: "Search",
+                        prefixIcon: Icon(Icons.search),
+                        border: InputBorder.none,
                       ),
-                      child: TextField(
-                        decoration: const InputDecoration(
-                          hintText: "Search",
-                          prefixIcon: Icon(Icons.search),
-                          border: InputBorder.none,
-                        ),
-                        onSubmitted: (s) {
-                          context.to("/search", {
-                            "keyword": s,
-                          });
-                        },
-                      ),
+                      onSubmitted: (s) {
+                        context.to("/search", {
+                          "keyword": s,
+                        });
+                      },
                     ),
-                  ],
-                ),
+                  ),
+                  Container(
+                    margin: const EdgeInsets.symmetric(vertical: 16),
+                    decoration: BoxDecoration(
+                        border: Border(
+                            bottom: BorderSide(
+                                color: context.colorScheme.outlineVariant,
+                                width: 0.6
+                            )
+                        )
+                    ),
+                  ),
+                  const Expanded(
+                    child: _TagsList(),
+                  )
+                ],
               ),
             )
         ],
@@ -122,5 +134,42 @@ class _ExplorePageMemosListState
   @override
   Future<Res<List<Memo>>> loadData(int page) {
     return Network().getAllMemosList(page);
+  }
+}
+
+class _TagsList extends StatefulWidget {
+  const _TagsList();
+
+  @override
+  State<_TagsList> createState() => _TagsListState();
+}
+
+class _TagsListState extends LoadingState<_TagsList, List<String>> {
+  @override
+  Widget buildContent(BuildContext context, List<String> data) {
+    return ListView.builder(
+      padding: EdgeInsets.zero,
+      itemCount: data.length,
+      itemBuilder: (context, index) {
+        var tag = data[index];
+        return ListTile(
+          minTileHeight: 32,
+          title: Text(
+            tag,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: ts.withColor(context.colorScheme.primary),
+          ),
+          onTap: () {
+            context.to("/tag/$tag");
+          },
+        );
+      },
+    );
+  }
+
+  @override
+  Future<Res<List<String>>> loadData() {
+    return Network().getTags("all");
   }
 }

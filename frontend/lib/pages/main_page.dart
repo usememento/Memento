@@ -69,22 +69,10 @@ class MainPageState extends State<MainPage> {
             routeName: '/explore',
           ),
           PaneItemEntry(
-            icon: Icons.folder_outlined,
-            activeIcon: Icons.folder,
-            label: "Archives",
-            routeName: '/archives',
-          ),
-          PaneItemEntry(
             icon: Icons.my_library_books_outlined,
             activeIcon: Icons.my_library_books,
             label: "Resources",
             routeName: '/resources',
-          ),
-          PaneItemEntry(
-            icon: Icons.notifications_outlined,
-            activeIcon: Icons.notifications,
-            label: "Notifications",
-            routeName: '/notifications',
           ),
         ],
         paneActions: [

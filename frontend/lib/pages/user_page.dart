@@ -400,8 +400,8 @@ class _UserCommentWidget extends StatelessWidget {
                     constraints: const BoxConstraints(maxHeight: 400),
                     width: double.infinity,
                     child: ScrollConfiguration(
-                      behavior: const ScrollBehavior()
-                          .copyWith(scrollbars: false),
+                      behavior:
+                          const ScrollBehavior().copyWith(scrollbars: false),
                       child: SingleChildScrollView(
                         physics: const NeverScrollableScrollPhysics(),
                         child: MemoContent(
@@ -440,7 +440,8 @@ class _UserLikedMemosList extends StatefulWidget {
   State<_UserLikedMemosList> createState() => _UserLikedMemosListState();
 }
 
-class _UserLikedMemosListState extends MultiPageLoadingState<_UserLikedMemosList, Memo> {
+class _UserLikedMemosListState
+    extends MultiPageLoadingState<_UserLikedMemosList, Memo> {
   @override
   Widget buildLoading(BuildContext context) {
     return SliverToBoxAdapter(
@@ -463,11 +464,11 @@ class _UserLikedMemosListState extends MultiPageLoadingState<_UserLikedMemosList
   Widget buildContent(BuildContext context, List<Memo> data) {
     return SliverList(
         delegate: SliverChildBuilderDelegate(
-              (context, index) {
-            return MemoWidget(memo: data[index]);
-          },
-          childCount: data.length,
-        ));
+      (context, index) {
+        return MemoWidget(memo: data[index]);
+      },
+      childCount: data.length,
+    ));
   }
 
   @override
@@ -475,4 +476,3 @@ class _UserLikedMemosListState extends MultiPageLoadingState<_UserLikedMemosList
     return Network().getUserLikedMemos(widget.username, page);
   }
 }
-

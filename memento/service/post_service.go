@@ -14,6 +14,7 @@ import (
 	"os"
 	"path"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -93,14 +94,23 @@ func HandlePostCreate(c echo.Context) error {
 						return utils.RespondError(c, "unknown insertion error")
 					}
 				}
+				err = tx.Model(&user).Association("Tags").Append(&tag)
+				if err != nil {
+					log.Errorf(err.Error())
+					return err
+				}
 				tx.Model(&tag).Association("Posts").Append(&post)
 			}
-			tx.Model(&post).Association("Tags").Append(contentTags)
+			err = tx.Model(&post).Association("Tags").Append(contentTags)
 			if err != nil {
 				log.Errorf(err.Error())
 				return err
 			}
-			tx.Model(&user).Association("Posts").Append(&post)
+			err = tx.Model(&user).Association("Posts").Append(&post)
+			if err != nil {
+				log.Errorf(err.Error())
+				return err
+			}
 			user.TotalPosts += 1
 			tx.Save(&user)
 			tx.Save(&post)
@@ -443,6 +453,9 @@ func HandlePostCancelLike(c echo.Context) error {
 
 func HandleGetTaggedPost(c echo.Context) error {
 	t := c.QueryParam("tag")
+	if !strings.HasPrefix(t, "#") {
+		t = "#" + t
+	}
 	page, err := strconv.Atoi(c.QueryParam("page"))
 	if err != nil {
 		return utils.RespondError(c, "invalid page")
@@ -451,7 +464,7 @@ func HandleGetTaggedPost(c echo.Context) error {
 	err = memento.GetDbConnection().First(&tag, "name=?", t).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return utils.RespondError(c, "post not exists")
+			return utils.RespondError(c, "tag not exists")
 		}
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown query error")
@@ -549,4 +562,34 @@ func HandleGetLikedPosts(c echo.Context) error {
 		result = append(result, *pv)
 	}
 	return c.JSON(http.StatusOK, result)
+}
+
+func HandleGetTags(c echo.Context) error {
+	var tags []model.Tag
+	t := c.QueryParam("type")
+	if t == "all" {
+		err := memento.GetDbConnection().Find(&tags).Error
+		if err != nil {
+			return utils.RespondError(c, "unknown query error")
+		}
+	} else {
+		username := c.Get("username")
+		if username == "" {
+			return utils.RespondUnauthorized(c)
+		}
+		var user model.User
+		err := memento.GetDbConnection().First(&user, "username=?", username).Error
+		if err != nil {
+			return utils.RespondError(c, "username not exists")
+		}
+		err = memento.GetDbConnection().Model(&user).Association("Tags").Find(&tags)
+		if err != nil {
+			return utils.RespondError(c, "unknown query error")
+		}
+	}
+	tagsList := make([]string, len(tags))
+	for i, t := range tags {
+		tagsList[i] = t.Name
+	}
+	return c.JSON(http.StatusOK, tagsList)
 }

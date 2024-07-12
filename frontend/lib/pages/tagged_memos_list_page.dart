@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/states.dart';
 import 'package:frontend/foundation/app.dart';
 import 'package:frontend/network/network.dart';
@@ -18,6 +19,9 @@ class _TaggedMemosListPageState extends State<TaggedMemosListPage> {
   @override
   void didChangeDependencies() {
     tag = context.param("tag");
+    if(tag.startsWith("#")) {
+      tag = tag.substring(1);
+    }
     super.didChangeDependencies();
   }
 
@@ -29,8 +33,7 @@ class _TaggedMemosListPageState extends State<TaggedMemosListPage> {
           Expanded(
             child: CustomScrollView(
               slivers: [
-                SliverPadding(
-                    padding: EdgeInsets.only(top: context.padding.top)),
+                SliverAppbar(title: Text("#$tag")),
                 TaggedMemosList(tag: tag),
               ],
             ),

@@ -31,12 +31,16 @@ class _HomePageState extends State<HomePage> {
               slivers: [
                 SliverPadding(
                     padding: EdgeInsets.only(top: context.padding.top)),
-                WritingArea(onPost: () {
-                  setState(() {
-                    _memosListKey++;
-                  });
-                },),
-                _HomePageMemosList(key: ValueKey(_memosListKey),),
+                WritingArea(
+                  onPost: () {
+                    setState(() {
+                      _memosListKey++;
+                    });
+                  },
+                ),
+                _HomePageMemosList(
+                  key: ValueKey(_memosListKey),
+                ),
               ],
             ),
           ),
@@ -57,39 +61,51 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
               ),
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    const SizedBox(
-                      height: 8,
+              child: Column(
+                children: [
+                  const SizedBox(
+                    height: 8,
+                  ),
+                  Container(
+                    height: 42,
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surfaceContainer,
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    Container(
-                      height: 42,
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surfaceContainer,
-                        borderRadius: BorderRadius.circular(8),
+                    child: TextField(
+                      decoration: const InputDecoration(
+                        hintText: "Search",
+                        prefixIcon: Icon(Icons.search),
+                        border: InputBorder.none,
                       ),
-                      child: TextField(
-                        decoration: const InputDecoration(
-                          hintText: "Search",
-                          prefixIcon: Icon(Icons.search),
-                          border: InputBorder.none,
-                        ),
-                        onSubmitted: (s) {
-                          context.to("/search", {
-                            "keyword": s,
-                          });
-                        },
-                      ),
+                      onSubmitted: (s) {
+                        context.to("/search", {
+                          "keyword": s,
+                        });
+                      },
                     ),
-                    const SizedBox(
-                      height: 16,
+                  ),
+                  const SizedBox(
+                    height: 16,
+                  ),
+                  const HeatMapWithLoadingState(),
+                  Container(
+                    margin: const EdgeInsets.symmetric(vertical: 16),
+                    decoration: BoxDecoration(
+                      border: Border(
+                        bottom: BorderSide(
+                          color: context.colorScheme.outlineVariant,
+                          width: 0.6
+                        )
+                      )
                     ),
-                    const HeatMapWithLoadingState()
-                  ],
-                ),
+                  ),
+                  Expanded(
+                    child: _TagsList(key: ValueKey(_memosListKey)),
+                  )
+                ],
               ),
             )
         ],
@@ -112,7 +128,7 @@ class _WritingAreaState extends State<WritingArea> {
 
   var controller = MemoEditingController();
 
-  bool isPublic = false;
+  bool isPublic = true;
 
   @override
   Widget build(BuildContext context) {
@@ -211,7 +227,7 @@ class _WritingAreaState extends State<WritingArea> {
     }
     var res = await Network().postMemo(content, isPublic);
     if (mounted) {
-      if(res.error) {
+      if (res.error) {
         context.showMessage(res.errorMessage!);
       } else {
         controller.clear();
@@ -361,13 +377,13 @@ class _WritingPageState extends State<WritingPage> {
     ).withSurface();
   }
 
-  void post() async{
+  void post() async {
     if (controller.text.isEmpty) {
       return;
     }
     var res = await Network().postMemo(controller.text, isPublic);
     if (mounted) {
-      if(res.error) {
+      if (res.error) {
         context.showMessage(res.errorMessage!);
       } else {
         controller.clear();
@@ -420,5 +436,42 @@ class _HomePageMemosListState
   @override
   Future<Res<List<Memo>>> loadData(int page) {
     return Network().getMemosList(page);
+  }
+}
+
+class _TagsList extends StatefulWidget {
+  const _TagsList({super.key});
+
+  @override
+  State<_TagsList> createState() => _TagsListState();
+}
+
+class _TagsListState extends LoadingState<_TagsList, List<String>> {
+  @override
+  Widget buildContent(BuildContext context, List<String> data) {
+    return ListView.builder(
+      padding: EdgeInsets.zero,
+      itemCount: data.length,
+      itemBuilder: (context, index) {
+        var tag = data[index];
+        return ListTile(
+          minTileHeight: 32,
+          title: Text(
+            tag,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: ts.withColor(context.colorScheme.primary),
+          ),
+          onTap: () {
+            context.to("/tag/$tag");
+          },
+        );
+      },
+    );
+  }
+
+  @override
+  Future<Res<List<String>>> loadData() {
+    return Network().getTags("user");
   }
 }

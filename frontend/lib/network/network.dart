@@ -476,6 +476,18 @@ class Network {
       return Res.error(e.toString());
     }
   }
+
+  /// type: "all" or "user"
+  Future<Res<List<String>>> getTags(String type) async {
+    try {
+      var res = await dio.get<List>("/api/post/tags", queryParameters: {
+        "type": type,
+      });
+      return Res((res.data as List).map((e) => e.toString()).toList());
+    } catch (e) {
+      return Res.error(e.toString());
+    }
+  }
 }
 
 void setDebugProxy() {
