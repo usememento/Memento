@@ -56,7 +56,7 @@ class _MemoWidgetState extends State<MemoWidget> {
           ),
         ),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          padding: const EdgeInsets.all(16),
           child: Column(
             children: [
               Row(

@@ -475,6 +475,14 @@ func HandleGetTaggedPost(c echo.Context) error {
 }
 
 func HandleGetAllPosts(c echo.Context) error {
+	username := c.Get("username")
+	var currentUser model.User
+	if username != "" {
+		err := memento.GetDbConnection().First(&currentUser, "username=?", username).Error
+		if err != nil {
+			return utils.RespondError(c, "username not exists")
+		}
+	}
 	page, err := strconv.Atoi(c.QueryParam("page"))
 	if err != nil {
 		return utils.RespondError(c, "invalid page")
@@ -485,9 +493,55 @@ func HandleGetAllPosts(c echo.Context) error {
 	for _, p := range posts {
 		var user model.User
 		memento.GetDbConnection().First(&user, "username=?", p.Username)
-		var likePosts []model.Post
-		memento.GetDbConnection().Model(&user).Association("likes").Find(&likePosts, "id=?", p.ID)
-		pv, err := utils.PostToView(&p, utils.UserToView(&user, checkIsFollowed(c.Get("username").(string), user.Username)), len(likePosts) > 0)
+		isLiked := false
+		if username != "" {
+			var likePosts []model.Post
+			err = memento.GetDbConnection().Model(&currentUser).Association("Likes").Find(&likePosts, "id=?", p.ID)
+			if err != nil {
+				log.Errorf(err.Error())
+			}
+			isLiked = len(likePosts) > 0
+		}
+		pv, err := utils.PostToView(&p, utils.UserToView(&user, checkIsFollowed(c.Get("username").(string), user.Username)), isLiked)
+		if err != nil {
+			log.Errorf(err.Error())
+			continue
+		}
+		result = append(result, *pv)
+	}
+	return c.JSON(http.StatusOK, result)
+}
+
+func HandleGetLikedPosts(c echo.Context) error {
+	currentUserName := c.Get("username")
+	username := c.QueryParam("username")
+	var currentUser model.User
+	err := memento.GetDbConnection().First(&currentUser, "username=?", currentUserName).Error
+	if err != nil {
+		return utils.RespondError(c, "username not exists")
+	}
+	page, err := strconv.Atoi(c.QueryParam("page"))
+	if err != nil {
+		return utils.RespondError(c, "invalid page")
+	}
+	var user model.User
+	err = memento.GetDbConnection().First(&user, "username=?", username).Error
+	if err != nil {
+		return utils.RespondError(c, "username not exists")
+	}
+	posts := make([]model.Post, 0, memento.PageSize)
+	memento.GetDbConnection().Model(&user).Order("created_at desc").Offset(page*memento.PageSize).Limit(memento.PageSize).Association("Likes").Find(&posts, "is_private=? or username=?", false, currentUserName)
+	result := make([]model.PostViewModel, 0, memento.PageSize)
+	for _, p := range posts {
+		var author model.User
+		memento.GetDbConnection().First(&author, "username=?", p.Username)
+		isLiked := currentUserName == username
+		if !isLiked {
+			var likePosts []model.Post
+			memento.GetDbConnection().Model(&currentUser).Association("likes").Find(&likePosts, "id=?", p.ID)
+			isLiked = len(likePosts) > 0
+		}
+		pv, err := utils.PostToView(&p, utils.UserToView(&author, checkIsFollowed(c.Get("username").(string), author.Username)), isLiked)
 		if err != nil {
 			log.Errorf(err.Error())
 			continue

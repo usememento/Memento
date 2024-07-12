@@ -69,6 +69,7 @@ func main() {
 			postApi.POST("/like", service.HandlePostLike)
 			postApi.POST("/unlike", service.HandlePostCancelLike)
 			postApi.GET("/taggedPosts", service.HandleGetTaggedPost)
+			postApi.GET("/likedPosts", service.HandleGetLikedPosts)
 		}
 		userApi := api.Group("/user")
 		{

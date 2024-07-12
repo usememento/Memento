@@ -175,6 +175,8 @@ class _UserInfoPageState extends LoadingState<UserInfoPage, User> {
       return _UserMemosList(username: data!.username);
     } else if (page == 1) {
       return _UserCommentsList(username: data!.username);
+    } else if (page == 2) {
+      return _UserLikedMemosList(username: data!.username);
     }
     return const SliverToBoxAdapter();
   }
@@ -237,7 +239,7 @@ class _UserListPageState extends MultiPageLoadingState<UserListPage, User> {
   Widget? buildFrame(BuildContext context, Widget child) {
     return Column(
       children: [Appbar(title: widget.title), Expanded(child: child)],
-    );
+    ).withSurface();
   }
 
   @override
@@ -428,3 +430,49 @@ class _UserCommentWidget extends StatelessWidget {
     );
   }
 }
+
+class _UserLikedMemosList extends StatefulWidget {
+  const _UserLikedMemosList({required this.username});
+
+  final String username;
+
+  @override
+  State<_UserLikedMemosList> createState() => _UserLikedMemosListState();
+}
+
+class _UserLikedMemosListState extends MultiPageLoadingState<_UserLikedMemosList, Memo> {
+  @override
+  Widget buildLoading(BuildContext context) {
+    return SliverToBoxAdapter(
+      child: Center(
+        child: const CircularProgressIndicator(
+          strokeWidth: 2,
+        ).fixWidth(18).fixHeight(18),
+      ).fixHeight(64),
+    );
+  }
+
+  @override
+  Widget buildError(BuildContext context, String error) {
+    return SliverToBoxAdapter(
+      child: super.buildError(context, error),
+    );
+  }
+
+  @override
+  Widget buildContent(BuildContext context, List<Memo> data) {
+    return SliverList(
+        delegate: SliverChildBuilderDelegate(
+              (context, index) {
+            return MemoWidget(memo: data[index]);
+          },
+          childCount: data.length,
+        ));
+  }
+
+  @override
+  Future<Res<List<Memo>>> loadData(int page) {
+    return Network().getUserLikedMemos(widget.username, page);
+  }
+}
+

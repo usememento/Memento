@@ -463,6 +463,19 @@ class Network {
       return Res.error(e.toString());
     }
   }
+
+  Future<Res<List<Memo>>> getUserLikedMemos(String username, int page) async {
+    try {
+      page--;
+      var res = await dio.get<List>("/api/post/likedPosts", queryParameters: {
+        "username": username,
+        "page": page,
+      });
+      return Res((res.data as List).map((e) => Memo.fromJson(e)).toList());
+    } catch (e) {
+      return Res.error(e.toString());
+    }
+  }
 }
 
 void setDebugProxy() {
