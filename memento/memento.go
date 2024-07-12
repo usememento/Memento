@@ -4,7 +4,6 @@ import (
 	"Memento/memento/model"
 	"Memento/memento/utils"
 	"errors"
-	"fmt"
 	"github.com/go-oauth2/oauth2/v4"
 	"github.com/go-oauth2/oauth2/v4/server"
 	"github.com/labstack/echo/v4"
@@ -159,7 +158,7 @@ func TokenValidator(eServer *server.Server) echo.MiddlewareFunc {
 					"message": "invalid token",
 				})
 			}
-			fmt.Printf("token validator: %s\n", ti.GetUserID())
+			//fmt.Printf("token validator: %s\n", ti.GetUserID())
 			c.Set("token", ti)
 			c.Set("username", ti.GetUserID())
 			return next(c)
