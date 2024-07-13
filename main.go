@@ -4,6 +4,8 @@ import (
 	"Memento/memento"
 	"Memento/memento/service"
 	"fmt"
+	"path"
+
 	"github.com/go-oauth2/oauth2/v4"
 	"github.com/go-oauth2/oauth2/v4/manage"
 	"github.com/go-oauth2/oauth2/v4/models"
@@ -12,7 +14,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
-	"path"
 )
 
 var AuthServer *server.Server
@@ -87,9 +88,10 @@ func main() {
 		}
 		fileApi := api.Group("/file")
 		{
-			fileApi.GET("/download/:name", service.HandleGetFile)
+			fileApi.GET("/download/:id", service.HandleGetFile)
 			fileApi.POST("/upload", service.HandleFileUpload)
-			fileApi.DELETE("/delete", service.HandleFileDelete)
+			fileApi.DELETE("/delete/:id", service.HandleFileDelete)
+			fileApi.GET("/all", service.HandleGetResourcesList)
 		}
 		commentApi := api.Group("/comment")
 		{

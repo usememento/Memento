@@ -7,17 +7,20 @@ import 'package:frontend/utils/translation.dart';
 
 import '../network/network.dart';
 
-void uploadImage(TextEditingController controller) async {
-  const XTypeGroup typeGroup = XTypeGroup(
-    label: 'images',
-    extensions: <String>['jpg', 'png', 'jpeg', 'gif', 'webp'],
-  );
+Future<ServerFile?> uploadFile(
+    [TextEditingController? controller, XTypeGroup? xTypeGroup]) async {
+  var typeGroup = xTypeGroup ??
+      const XTypeGroup(
+        label: 'images',
+        extensions: <String>['jpg', 'png', 'jpeg', 'gif', 'webp'],
+      );
   final XFile? file =
       await openFile(acceptedTypeGroups: <XTypeGroup>[typeGroup]);
+  ServerFile? serverFile;
   if (file != null) {
     var data = await file.readAsBytes();
     var cancelToken = CancelToken();
-    App.rootNavigatorKey!.currentState!.push(PageRouteBuilder(
+    await App.rootNavigatorKey!.currentState!.push(PageRouteBuilder(
       opaque: false,
       fullscreenDialog: true,
       barrierColor: Colors.black.withOpacity(0.2),
@@ -37,7 +40,10 @@ void uploadImage(TextEditingController controller) async {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("Uploading".tl, style: const TextStyle(fontSize: 18),),
+                    Text(
+                      "Uploading".tl,
+                      style: const TextStyle(fontSize: 18),
+                    ),
                     const SizedBox(
                       height: 18,
                     ),
@@ -58,19 +64,26 @@ void uploadImage(TextEditingController controller) async {
                           }
                           if (snapshot.data is String) {
                             Future.microtask(() {
-                              context.pop();
+                              if (context.mounted) {
+                                context.pop();
+                              }
                               var baseUrl = App.isWeb
                                   ? Uri.base
                                   : appdata.settings["domain"];
-                              controller.text +=
+                              controller?.text +=
                                   "![image]($baseUrl/api/file/download/${snapshot.data})";
+                              serverFile = ServerFile(
+                                  id: int.parse(snapshot.data as String),
+                                  name: file.name,
+                                  time: DateTime.now());
                             });
-                            return const LinearProgressIndicator(
-                                value: 1);
+                            return const LinearProgressIndicator(value: 1);
                           }
                           return const LinearProgressIndicator();
                         }),
-                    const SizedBox(height: 16,),
+                    const SizedBox(
+                      height: 16,
+                    ),
                     Row(
                       children: [
                         const Spacer(),
@@ -91,4 +104,6 @@ void uploadImage(TextEditingController controller) async {
       },
     ));
   }
+
+  return serverFile;
 }

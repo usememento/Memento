@@ -344,3 +344,20 @@ class UserComment {
         memo: Memo.fromJson(json['Post']));
   }
 }
+
+class ServerFile {
+  final int id;
+
+  final String name;
+
+  final DateTime time;
+
+  const ServerFile({required this.id, required this.name, required this.time});
+
+  factory ServerFile.fromJson(Map<String, dynamic> json) {
+    return ServerFile(
+        id: json["ID"],
+        name: json["Filename"],
+        time: DateTime.parse(json['Time']));
+  }
+}

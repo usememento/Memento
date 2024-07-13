@@ -6,14 +6,16 @@ import (
 	"Memento/memento/utils"
 	"errors"
 	"fmt"
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/gommon/log"
-	"gorm.io/gorm"
 	"io"
 	"net/http"
 	"os"
 	"path"
+	"strconv"
 	"time"
+
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/gommon/log"
+	"gorm.io/gorm"
 )
 
 func HandleFileUpload(c echo.Context) error {
@@ -57,14 +59,14 @@ func HandleFileUpload(c echo.Context) error {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "data copy error")
 	}
+	file0 := model.File{
+		Username:   user.Username,
+		Filename:   file.Filename,
+		ContentUrl: filepath,
+	}
 	err = memento.GetDbConnection().Transaction(
 		func(tx *gorm.DB) error {
-			file := model.File{
-				Username:   user.Username,
-				Filename:   file.Filename,
-				ContentUrl: filepath,
-			}
-			err := tx.Model(&user).Association("Files").Append(&file)
+			err := tx.Model(&user).Association("Files").Append(&file0)
 			if err != nil {
 				return err
 			}
@@ -73,9 +75,13 @@ func HandleFileUpload(c echo.Context) error {
 			return nil
 		})
 	if err != nil {
-		return utils.RespondError(c, "unknown transaction error")
+		log.Errorf(err.Error())
+		return utils.RespondError(c, "unknown error")
 	}
-	return utils.RespondOk(c, filename)
+	return c.JSON(200, echo.Map{
+		"Filename": file.Filename,
+		"ID":       file0.ID,
+	})
 }
 
 func HandleFileDelete(c echo.Context) error {
@@ -83,7 +89,7 @@ func HandleFileDelete(c echo.Context) error {
 	if username == "" {
 		return utils.RespondError(c, "invalid token")
 	}
-	filepath := c.FormValue("url")
+	id := c.Param("id")
 	var user model.User
 	err := memento.GetDbConnection().First(&user, "username=?", username).Error
 	if err != nil {
@@ -94,7 +100,7 @@ func HandleFileDelete(c echo.Context) error {
 		return utils.RespondError(c, "unknown query error")
 	}
 	var file model.File
-	err = memento.GetDbConnection().First(&file, "content_url=?", filepath).Error
+	err = memento.GetDbConnection().First(&file, "id=?", id).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return utils.RespondError(c, "url not exists")
@@ -120,9 +126,9 @@ func HandleFileDelete(c echo.Context) error {
 }
 
 func HandleGetFile(c echo.Context) error {
-	fileName := c.Param("name")
+	id := c.Param("id")
 	var file model.File
-	err := memento.GetDbConnection().First(&file, "content_url=?", path.Join(memento.GetUploadPath(), fileName)).Error
+	err := memento.GetDbConnection().First(&file, "id=?", id).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return utils.RespondError(c, "file not exists")
@@ -130,5 +136,45 @@ func HandleGetFile(c echo.Context) error {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown query error")
 	}
-	return c.Inline(path.Join(memento.GetUploadPath(), fileName), file.Filename)
+	return c.Inline(file.ContentUrl, file.Filename)
+}
+
+func HandleGetResourcesList(c echo.Context) error {
+	username := c.Get("username")
+	pageStr := c.QueryParam("page")
+	page, err := strconv.Atoi(pageStr)
+	if err != nil {
+		utils.RespondError(c, "Invalid page")
+	}
+	var user model.User
+	err = memento.GetDbConnection().First(&user, "username=?", username).Error
+	if err != nil {
+		return utils.RespondError(c, "User not found")
+	}
+	var files []model.File
+	err = memento.GetDbConnection().Order("created_at DESC").Offset(page*memento.PageSize).Limit(memento.PageSize).Find(&files, "username=?", username).Error
+	if err != nil {
+		log.Errorf(err.Error())
+		return utils.RespondError(c, "Failed to find files")
+	}
+	var total int64
+	err = memento.GetDbConnection().Table("files").Select("username=?", username).Count(&total).Error
+	if err != nil {
+		log.Errorf(err.Error())
+		return utils.RespondError(c, "Failed to find files")
+	}
+	result := make([]model.FileViewModel, len(files))
+
+	for index, file := range files {
+		result[index] = model.FileViewModel{
+			ID:       file.ID,
+			Filename: file.Filename,
+			Time:     file.CreatedAt,
+		}
+	}
+
+	return c.JSON(200, echo.Map{
+		"files":   result,
+		"maxPage": total / memento.PageSize,
+	})
 }

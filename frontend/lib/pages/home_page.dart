@@ -94,13 +94,10 @@ class _HomePageState extends State<HomePage> {
                   Container(
                     margin: const EdgeInsets.symmetric(vertical: 16),
                     decoration: BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(
-                          color: context.colorScheme.outlineVariant,
-                          width: 0.6
-                        )
-                      )
-                    ),
+                        border: Border(
+                            bottom: BorderSide(
+                                color: context.colorScheme.outlineVariant,
+                                width: 0.6))),
                   ),
                   Expanded(
                     child: _TagsList(key: ValueKey(_memosListKey)),
@@ -198,7 +195,7 @@ class _WritingAreaState extends State<WritingArea> {
                   icon: const Icon(Icons.image_outlined),
                   size: 18,
                   tooltip: "Upload image".tl,
-                  onPressed: () => uploadImage(controller)),
+                  onPressed: () => uploadFile(controller)),
               Button.icon(
                   icon: const Icon(Icons.fullscreen),
                   size: 18,
@@ -357,7 +354,7 @@ class _WritingPageState extends State<WritingPage> {
                 icon: const Icon(Icons.image_outlined),
                 size: 18,
                 tooltip: "Upload image".tl,
-                onPressed: () => uploadImage(controller)),
+                onPressed: () => uploadFile(controller)),
             Button.icon(
                 icon: const Icon(Icons.info_outline),
                 size: 18,

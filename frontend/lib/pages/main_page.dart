@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/components/navigation_bar.dart';
 import 'package:frontend/pages/page_404.dart';
+import 'package:frontend/pages/resource_page.dart';
 import 'package:frontend/pages/search_page.dart';
 import 'package:frontend/pages/settings_page.dart';
 import 'package:frontend/pages/tagged_memos_list_page.dart';
@@ -25,6 +26,7 @@ class MainPageState extends State<MainPage> {
   static Map<String, Widget Function(BuildContext context)> routes = {
     '/': (context) => const HomePage(),
     '/explore': (context) => const ExplorePage(),
+    '/resources': (context) => const ResourcePage(),
     '/settings': (context) => const SettingsPage(),
     '/search': (context) => const SearchPage(),
     '/memo/:id': (context) => const MemoDetailsPage(),
@@ -37,9 +39,7 @@ class MainPageState extends State<MainPage> {
   static const mainPageRoutes = [
     '/',
     '/explore',
-    '/archives',
     '/resources',
-    '/notifications',
   ];
 
   var observer = NaviObserver();

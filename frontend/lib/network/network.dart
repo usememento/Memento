@@ -16,7 +16,7 @@ export 'res.dart';
 class AppInterceptor extends Interceptor {
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-    setDebugProxy();
+    // setDebugProxy();
     var token = appdata.userOrNull?.token;
     if (token != null && token.isNotEmpty) {
       options.headers["Authorization"] = "Bearer $token";
@@ -286,6 +286,7 @@ class Network {
     }
   }
 
+  /// yield [double] as progress if uploading, [String] as file ID if finished
   Stream<Object> uploadFile(
       List<int> data, String fileName, CancelToken cancelToken) {
     var controller = StreamController<Object>();
@@ -302,7 +303,7 @@ class Network {
         if (res.statusCode != 200) {
           controller.addError("Invalid Status Code ${res.statusCode}");
         } else {
-          controller.add(res.data!['message'] as String);
+          controller.add(res.data!['ID'].toString());
         }
       } catch (e) {
         controller.addError(e);
@@ -484,6 +485,33 @@ class Network {
         "type": type,
       });
       return Res((res.data as List).map((e) => e.toString()).toList());
+    } catch (e) {
+      return Res.error(e.toString());
+    }
+  }
+
+  Future<Res<List<ServerFile>>> getFileList(int page) async {
+    try {
+      page--;
+      var res =
+          await dio.get<Map>("/api/file/all", queryParameters: {"page": page});
+      return Res(
+          ((res.data!["files"] as List)
+              .map((e) => ServerFile.fromJson(e))
+              .toList()),
+          subData: res.data!["maxPage"]);
+    } catch (e) {
+      return Res.error(e.toString());
+    }
+  }
+
+  Future<Res<bool>> deleteFile(String id) async {
+    try {
+      var res = await dio.delete("/api/file/delete/$id");
+      if (res.statusCode != 200) {
+        return const Res.error("Invalid Response");
+      }
+      return const Res(true);
     } catch (e) {
       return Res.error(e.toString());
     }

@@ -173,10 +173,10 @@ class FlyoutContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return IntrinsicWidth(
       child: Material(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(8),
         type: MaterialType.card,
         elevation: 1,
-        surfaceTintColor: Theme.of(context).colorScheme.surfaceTint,
+        color: context.colorScheme.surface,
         child: Container(
           constraints: const BoxConstraints(
             minWidth: minFlyoutWidth,

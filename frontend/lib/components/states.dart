@@ -4,7 +4,8 @@ import 'package:frontend/foundation/app.dart';
 import '../network/res.dart';
 import 'button.dart';
 
-abstract class LoadingState<T extends StatefulWidget, S extends Object> extends State<T>{
+abstract class LoadingState<T extends StatefulWidget, S extends Object>
+    extends State<T> {
   bool isLoading = false;
 
   S? data;
@@ -18,8 +19,10 @@ abstract class LoadingState<T extends StatefulWidget, S extends Object> extends 
   Widget? buildFrame(BuildContext context, Widget child) => null;
 
   Widget buildLoading() {
-    return const Center(
-      child: CircularProgressIndicator(),
+    return Center(
+      child: const CircularProgressIndicator(
+        strokeWidth: 2,
+      ).fixWidth(32).fixHeight(32),
     );
   }
 
@@ -29,7 +32,7 @@ abstract class LoadingState<T extends StatefulWidget, S extends Object> extends 
       error = null;
     });
     loadData().then((value) {
-      if(value.success) {
+      if (value.success) {
         setState(() {
           isLoading = false;
           data = value.data;
@@ -48,7 +51,10 @@ abstract class LoadingState<T extends StatefulWidget, S extends Object> extends 
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(error!, maxLines: 3,),
+          Text(
+            error!,
+            maxLines: 3,
+          ),
           const SizedBox(height: 12),
           Button.text(
             onPressed: retry,
@@ -65,7 +71,7 @@ abstract class LoadingState<T extends StatefulWidget, S extends Object> extends 
     isLoading = true;
     Future.microtask(() {
       loadData().then((value) {
-        if(value.success) {
+        if (value.success) {
           setState(() {
             isLoading = false;
             data = value.data;
@@ -85,9 +91,9 @@ abstract class LoadingState<T extends StatefulWidget, S extends Object> extends 
   Widget build(BuildContext context) {
     Widget child;
 
-    if(isLoading){
+    if (isLoading) {
       child = buildLoading();
-    } else if (error != null){
+    } else if (error != null) {
       child = buildError();
     } else {
       child = buildContent(context, data!);
@@ -97,12 +103,13 @@ abstract class LoadingState<T extends StatefulWidget, S extends Object> extends 
   }
 }
 
-abstract class MultiPageLoadingState<T extends StatefulWidget, S extends Object> extends State<T>{
+abstract class MultiPageLoadingState<T extends StatefulWidget, S extends Object>
+    extends State<T> {
   bool _isFirstLoading = true;
 
   bool _isLoading = false;
 
-  List<S>? _data;
+  List<S>? data;
 
   String? _error;
 
@@ -119,24 +126,26 @@ abstract class MultiPageLoadingState<T extends StatefulWidget, S extends Object>
   bool get isFirstLoading => _isFirstLoading;
 
   void nextPage() {
-    if(_isLoading) return;
+    if (_isLoading) return;
     _isLoading = true;
     loadData(_page).then((value) {
       _isLoading = false;
-      if(value.success) {
-        _page++;
-        setState(() {
-          _data!.addAll(value.data);
-        });
-      } else {
-        var message = value.errorMessage ?? "Network Error";
-        if(message == "No more data") {
-          return;
+      if(mounted) {
+        if (value.success) {
+          _page++;
+          setState(() {
+            data!.addAll(value.data);
+          });
+        } else {
+          var message = value.errorMessage ?? "Network Error";
+          if (message == "No more data") {
+            return;
+          }
+          if (message.length > 20) {
+            message = "${message.substring(0, 20)}...";
+          }
+          context.showMessage(message);
         }
-        if(message.length > 20) {
-          message = "${message.substring(0, 20)}...";
-        }
-        context.showMessage(message);
       }
     });
   }
@@ -145,7 +154,7 @@ abstract class MultiPageLoadingState<T extends StatefulWidget, S extends Object>
     setState(() {
       _isFirstLoading = true;
       _isLoading = false;
-      _data = null;
+      data = null;
       _error = null;
       _page = 1;
     });
@@ -155,12 +164,12 @@ abstract class MultiPageLoadingState<T extends StatefulWidget, S extends Object>
   void firstLoad() {
     Future.microtask(() {
       loadData(_page).then((value) {
-        if(!mounted)  return;
-        if(value.success) {
+        if (!mounted) return;
+        if (value.success) {
           _page++;
           setState(() {
             _isFirstLoading = false;
-            _data = value.data;
+            data = value.data;
           });
         } else {
           setState(() {
@@ -179,8 +188,10 @@ abstract class MultiPageLoadingState<T extends StatefulWidget, S extends Object>
   }
 
   Widget buildLoading(BuildContext context) {
-    return const Center(
-      child: CircularProgressIndicator(),
+    return Center(
+      child: const CircularProgressIndicator(
+        strokeWidth: 2,
+      ).fixWidth(32).fixHeight(32),
     );
   }
 
@@ -206,12 +217,12 @@ abstract class MultiPageLoadingState<T extends StatefulWidget, S extends Object>
   Widget build(BuildContext context) {
     Widget child;
 
-    if(_isFirstLoading){
+    if (_isFirstLoading) {
       child = buildLoading(context);
-    } else if (_error != null){
+    } else if (_error != null) {
       child = buildError(context, _error!);
     } else {
-      child = buildContent(context, _data!);
+      child = buildContent(context, data!);
     }
 
     return buildFrame(context, child) ?? child;

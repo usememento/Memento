@@ -312,14 +312,13 @@ func HandleGetUserPosts(c echo.Context) error {
 	}
 	posts := make([]model.Post, 0, memento.PageSize)
 	if userself == username {
-		memento.GetDbConnection().Where("username=?", username).Order("created_at desc").Offset(page * memento.PageSize).Limit(memento.PageSize).Find(&posts)
+		err = memento.GetDbConnection().Where("username=?", username).Order("created_at desc").Offset(page * memento.PageSize).Limit(memento.PageSize).Find(&posts).Error
 	} else {
-		memento.GetDbConnection().Where("username=? and is_private=?", username, false).Order("created_at desc").Offset(page * memento.PageSize).Limit(memento.PageSize).Find(&posts)
+		err = memento.GetDbConnection().Where("username=? and is_private=?", username, false).Order("created_at desc").Offset(page * memento.PageSize).Limit(memento.PageSize).Find(&posts).Error
 	}
 	if err != nil {
 		return utils.RespondError(c, "unknown query error")
 	}
-	log.Info(posts)
 	result := make([]model.PostViewModel, 0, memento.PageSize)
 	for _, post := range posts {
 		var likePosts []model.Post
