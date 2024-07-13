@@ -247,6 +247,9 @@ class _UserListPageState extends MultiPageLoadingState<UserListPage, User> {
     return ListView.builder(
       padding: EdgeInsets.zero,
       itemBuilder: (context, index) {
+        if(index == data.length - 1) {
+          nextPage();
+        }
         return UserCard(user: data[index]);
       },
       itemCount: data.length,
@@ -292,6 +295,9 @@ class _UserMemosListState extends MultiPageLoadingState<_UserMemosList, Memo> {
     return SliverList(
         delegate: SliverChildBuilderDelegate(
       (context, index) {
+        if(index == data.length - 1) {
+          nextPage();
+        }
         return MemoWidget(memo: data[index], showUser: false);
       },
       childCount: data.length,
@@ -338,6 +344,9 @@ class _UserCommentsListState
     return SliverList(
         delegate: SliverChildBuilderDelegate(
       (context, index) {
+        if(index == data.length - 1) {
+          nextPage();
+        }
         return _UserCommentWidget(comment: data[index]);
       },
       childCount: data.length,
@@ -465,6 +474,9 @@ class _UserLikedMemosListState
     return SliverList(
         delegate: SliverChildBuilderDelegate(
       (context, index) {
+        if(index == data.length - 1) {
+          nextPage();
+        }
         return MemoWidget(memo: data[index]);
       },
       childCount: data.length,

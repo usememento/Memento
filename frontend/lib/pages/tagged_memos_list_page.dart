@@ -19,7 +19,7 @@ class _TaggedMemosListPageState extends State<TaggedMemosListPage> {
   @override
   void didChangeDependencies() {
     tag = context.param("tag");
-    if(tag.startsWith("#")) {
+    if (tag.startsWith("#")) {
       tag = tag.substring(1);
     }
     super.didChangeDependencies();
@@ -92,7 +92,6 @@ class _TaggedMemosListPageState extends State<TaggedMemosListPage> {
   }
 }
 
-
 class TaggedMemosList extends StatefulWidget {
   const TaggedMemosList({super.key, required this.tag});
 
@@ -102,7 +101,8 @@ class TaggedMemosList extends StatefulWidget {
   State<TaggedMemosList> createState() => _TaggedMemosListState();
 }
 
-class _TaggedMemosListState extends MultiPageLoadingState<TaggedMemosList, Memo> {
+class _TaggedMemosListState
+    extends MultiPageLoadingState<TaggedMemosList, Memo> {
   @override
   Widget buildLoading(BuildContext context) {
     return SliverToBoxAdapter(
@@ -125,11 +125,16 @@ class _TaggedMemosListState extends MultiPageLoadingState<TaggedMemosList, Memo>
   Widget buildContent(BuildContext context, List<Memo> data) {
     return SliverList(
         delegate: SliverChildBuilderDelegate(
-              (context, index) {
-            return MemoWidget(memo: data[index],);
-          },
-          childCount: data.length,
-        ));
+      (context, index) {
+        if (index == data.length - 1) {
+          nextPage();
+        }
+        return MemoWidget(
+          memo: data[index],
+        );
+      },
+      childCount: data.length,
+    ));
   }
 
   @override

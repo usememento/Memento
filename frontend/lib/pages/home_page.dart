@@ -438,6 +438,9 @@ class _HomePageMemosListState
     return SliverList(
         delegate: SliverChildBuilderDelegate(
       (context, index) {
+        if(index == data.length - 1) {
+          nextPage();
+        }
         return MemoWidget(memo: data[index], showUser: false);
       },
       childCount: data.length,

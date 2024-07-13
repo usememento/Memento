@@ -322,6 +322,9 @@ class __FileListState extends MultiPageLoadingState<_FileList, ServerFile> {
     return SliverList(
         delegate: SliverChildBuilderDelegate(
       (context, index) {
+        if(index == widgets.length - 1) {
+          nextPage();
+        }
         return widgets[index];
       },
       childCount: widgets.length,

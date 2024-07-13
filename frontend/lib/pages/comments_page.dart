@@ -134,6 +134,9 @@ class _CommentsListState extends MultiPageLoadingState<_CommentsList, Comment> {
       itemCount: data.length,
       padding: EdgeInsets.zero,
       itemBuilder: (context, index) {
+        if(index == data.length - 1) {
+          nextPage();
+        }
         final comment = data[index];
         return CommentWidget(comment: comment);
       },

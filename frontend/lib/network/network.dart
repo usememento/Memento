@@ -64,10 +64,11 @@ class AppInterceptor extends Interceptor {
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) async {
     if (response.statusCode == 401) {
-      if(!appdata.isLogin) {
+      if (!appdata.isLogin) {
         handler.reject(DioException(
             error: "Not Login",
-            requestOptions: response.requestOptions, response: response));
+            requestOptions: response.requestOptions,
+            response: response));
         return;
       }
       if (isWaitingRefreshingToken) {
@@ -95,7 +96,8 @@ class AppInterceptor extends Interceptor {
       } else {
         handler.reject(DioException(
             error: "Refresh Token Failed",
-            requestOptions: response.requestOptions, response: response));
+            requestOptions: response.requestOptions,
+            response: response));
       }
     } else {
       handler.next(response);
@@ -179,11 +181,13 @@ class Network {
   Future<Res<List<Memo>>> getMemosList(int page, [String? username]) async {
     try {
       page--;
-      var res = await dio.get<List>("/api/post/userPosts", queryParameters: {
+      var res = await dio.get<Map>("/api/post/userPosts", queryParameters: {
         "page": page,
         "username": username ?? appdata.user.username
       });
-      return Res((res.data as List).map((e) => Memo.fromJson(e)).toList());
+      return Res(
+          (res.data!["posts"] as List).map((e) => Memo.fromJson(e)).toList(),
+          subData: res.data!['maxPage'] + 1);
     } catch (e) {
       return Res.error(e.toString());
     }
@@ -192,10 +196,12 @@ class Network {
   Future<Res<List<Memo>>> getAllMemosList(int page) async {
     try {
       page--;
-      var res = await dio.get<List>("/api/post/all", queryParameters: {
+      var res = await dio.get<Map>("/api/post/all", queryParameters: {
         "page": page,
       });
-      return Res((res.data as List).map((e) => Memo.fromJson(e)).toList());
+      return Res(
+          (res.data!["posts"] as List).map((e) => Memo.fromJson(e)).toList(),
+          subData: res.data!['maxPage'] + 1);
     } catch (e) {
       return Res.error(e.toString());
     }
@@ -204,16 +210,18 @@ class Network {
   Future<Res<List<Memo>>> getMemosListByTag(int page, String tag) async {
     try {
       page--;
-      var res = await dio.get<List>("/api/post/taggedPosts",
+      var res = await dio.get<Map>("/api/post/taggedPosts",
           queryParameters: {"page": page, "tag": "#$tag"});
-      return Res((res.data as List).map((e) => Memo.fromJson(e)).toList());
+      return Res(
+          (res.data!["posts"] as List).map((e) => Memo.fromJson(e)).toList(),
+          subData: res.data!['maxPage'] + 1);
     } catch (e) {
       return Res.error(e.toString());
     }
   }
 
   Future<Res<bool>> likeOrUnlike(int memoId, bool isLike) async {
-    if(!appdata.isLogin) return const Res.error("Not Login");
+    if (!appdata.isLogin) return const Res.error("Not Login");
     try {
       var res = await dio.post(isLike ? "/api/post/like" : "/api/post/unlike",
           data: {"id": memoId});
@@ -228,7 +236,7 @@ class Network {
   }
 
   Future<Res<bool>> postMemo(String content, bool isPublic) async {
-    if(!appdata.isLogin) return const Res.error("Not Login");
+    if (!appdata.isLogin) return const Res.error("Not Login");
     try {
       var res = await dio.post("/api/post/create",
           data: FormData.fromMap({
@@ -242,7 +250,7 @@ class Network {
   }
 
   Future<Res<bool>> editMemo(String content, bool isPublic, int id) async {
-    if(!appdata.isLogin) return const Res.error("Not Login");
+    if (!appdata.isLogin) return const Res.error("Not Login");
     try {
       var res = await dio.post("/api/post/edit",
           data: FormData.fromMap({
@@ -257,7 +265,7 @@ class Network {
   }
 
   Future<Res<HeatMapData>> getHeatMapData([String? username]) async {
-    if(!appdata.isLogin) return const Res.error("Not Login");
+    if (!appdata.isLogin) return const Res.error("Not Login");
     try {
       var res = await dio.get<Map<String, dynamic>>("/api/user/heatmap",
           queryParameters: {"username": username ?? appdata.user.username});
@@ -287,7 +295,7 @@ class Network {
   }
 
   Future<Res<bool>> sendComment(int memoId, String content) async {
-    if(!appdata.isLogin) return const Res.error("Not Login");
+    if (!appdata.isLogin) return const Res.error("Not Login");
     try {
       var res = await dio.post("/api/comment/create", data: {
         "id": memoId,
@@ -300,7 +308,7 @@ class Network {
   }
 
   Future<Res<bool>> likeOrUnlikeComment(int id, bool isLike) async {
-    if(!appdata.isLogin) return const Res.error("Not Login");
+    if (!appdata.isLogin) return const Res.error("Not Login");
     try {
       var res = await dio.post(
           isLike ? "/api/comment/like" : "/api/comment/unlike",
@@ -321,7 +329,7 @@ class Network {
     var controller = StreamController<Object>();
     () async {
       try {
-        if(!appdata.isLogin) {
+        if (!appdata.isLogin) {
           controller.addError("Not Login");
           return;
         }
@@ -360,7 +368,7 @@ class Network {
   }
 
   Future<Res<bool>> followOrUnfollow(String userName, bool isFollow) async {
-    if(!appdata.isLogin) return const Res.error("Not Login");
+    if (!appdata.isLogin) return const Res.error("Not Login");
     try {
       var res = await dio
           .post(isFollow ? "/api/user/follow" : "/api/user/unfollow", data: {
@@ -379,11 +387,13 @@ class Network {
   Future<Res<List<User>>> getFollowers(String userName, int page) async {
     try {
       page--;
-      var res = await dio.get<List>("/api/user/follower", queryParameters: {
+      var res = await dio.get<Map>("/api/user/follower", queryParameters: {
         "username": userName,
         "page": page,
       });
-      return Res((res.data!).map((e) => User.fromJson(e)).toList());
+      return Res(
+          (res.data!["users"] as List).map((e) => User.fromJson(e)).toList(),
+          subData: res.data!["maxPage"] + 1);
     } catch (e) {
       return Res.error(e.toString());
     }
@@ -392,11 +402,13 @@ class Network {
   Future<Res<List<User>>> getFollowing(String userName, int page) async {
     try {
       page--;
-      var res = await dio.get<List>("/api/user/following", queryParameters: {
+      var res = await dio.get<Map>("/api/user/following", queryParameters: {
         "username": userName,
         "page": page,
       });
-      return Res((res.data!).map((e) => User.fromJson(e)).toList());
+      return Res(
+          (res.data!["users"] as List).map((e) => User.fromJson(e)).toList(),
+          subData: res.data!["maxPage"] + 1);
     } catch (e) {
       return Res.error(e.toString());
     }
@@ -407,7 +419,7 @@ class Network {
       String? bio,
       Uint8List? avatar,
       String? avatarFileName}) async {
-    if(!appdata.isLogin) return const Res.error("Not Login");
+    if (!appdata.isLogin) return const Res.error("Not Login");
     try {
       String? ext;
       if (avatarFileName != null) {
@@ -435,7 +447,7 @@ class Network {
       {required String password,
       required String newPassword,
       required String confirmPassword}) async {
-    if(!appdata.isLogin) return const Res.error("Not Login");
+    if (!appdata.isLogin) return const Res.error("Not Login");
     if (newPassword != confirmPassword) {
       return const Res.error("Password not match");
     }
@@ -456,7 +468,7 @@ class Network {
   }
 
   Future<Res<bool>> deleteMemo(int id) async {
-    if(!appdata.isLogin) return const Res.error("Not Login");
+    if (!appdata.isLogin) return const Res.error("Not Login");
     try {
       var res = await dio.delete("/api/post/delete/$id");
       if (res.statusCode == 200) {
@@ -491,11 +503,13 @@ class Network {
   Future<Res<List<Memo>>> search(String keyword, int page) async {
     try {
       page--;
-      var res = await dio.get<List>("/api/search/post", queryParameters: {
+      var res = await dio.get<Map>("/api/search/post", queryParameters: {
         "keyword": keyword,
         "page": page,
       });
-      return Res((res.data as List).map((e) => Memo.fromJson(e)).toList());
+      return Res(
+          (res.data!["posts"] as List).map((e) => Memo.fromJson(e)).toList(),
+          subData: res.data!["maxPage"] + 1);
     } catch (e) {
       return Res.error(e.toString());
     }
@@ -504,11 +518,13 @@ class Network {
   Future<Res<List<Memo>>> getUserLikedMemos(String username, int page) async {
     try {
       page--;
-      var res = await dio.get<List>("/api/post/likedPosts", queryParameters: {
+      var res = await dio.get<Map>("/api/post/likedPosts", queryParameters: {
         "username": username,
         "page": page,
       });
-      return Res((res.data as List).map((e) => Memo.fromJson(e)).toList());
+      return Res(
+          (res.data!["posts"] as List).map((e) => Memo.fromJson(e)).toList(),
+          subData: res.data!["maxPage"] + 1);
     } catch (e) {
       return Res.error(e.toString());
     }
@@ -542,7 +558,7 @@ class Network {
   }
 
   Future<Res<bool>> deleteFile(String id) async {
-    if(!appdata.isLogin) return const Res.error("Not Login");
+    if (!appdata.isLogin) return const Res.error("Not Login");
     try {
       var res = await dio.delete("/api/file/delete/$id");
       if (res.statusCode != 200) {

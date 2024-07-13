@@ -64,7 +64,10 @@ func HandlePostSearch(c echo.Context) error {
 			break
 		}
 	}
-	return c.JSON(http.StatusOK, result)
+	return c.JSON(http.StatusOK, echo.Map{
+		"posts":   result,
+		"maxPage": len(sr.Hits) / memento.PageSize,
+	})
 }
 
 func search() {

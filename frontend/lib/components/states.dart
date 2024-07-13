@@ -115,6 +115,8 @@ abstract class MultiPageLoadingState<T extends StatefulWidget, S extends Object>
 
   int _page = 1;
 
+  int _maxPage = 1;
+
   Future<Res<List<S>>> loadData(int page);
 
   Widget? buildFrame(BuildContext context, Widget child) => null;
@@ -126,6 +128,7 @@ abstract class MultiPageLoadingState<T extends StatefulWidget, S extends Object>
   bool get isFirstLoading => _isFirstLoading;
 
   void nextPage() {
+    if(_page > _maxPage) return;
     if (_isLoading) return;
     _isLoading = true;
     loadData(_page).then((value) {
@@ -133,14 +136,14 @@ abstract class MultiPageLoadingState<T extends StatefulWidget, S extends Object>
       if(mounted) {
         if (value.success) {
           _page++;
+          if(value.subData is int) {
+            _maxPage = value.subData as int;
+          }
           setState(() {
             data!.addAll(value.data);
           });
         } else {
           var message = value.errorMessage ?? "Network Error";
-          if (message == "No more data") {
-            return;
-          }
           if (message.length > 20) {
             message = "${message.substring(0, 20)}...";
           }
@@ -167,6 +170,9 @@ abstract class MultiPageLoadingState<T extends StatefulWidget, S extends Object>
         if (!mounted) return;
         if (value.success) {
           _page++;
+          if(value.subData is int) {
+            _maxPage = value.subData as int;
+          }
           setState(() {
             _isFirstLoading = false;
             data = value.data;
