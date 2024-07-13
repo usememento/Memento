@@ -251,7 +251,7 @@ func HandleGetUserComments(c echo.Context) error {
 	if !findPublic {
 		err = memento.GetDbConnection().Model(&user).Association("Comments").Find(&comments, memento.GetDbConnection().Order("created_at desc").Offset(page*memento.PageSize).Limit(memento.PageSize))
 	} else {
-		err = memento.GetDbConnection().Joins("JOIN posts ON posts.id = comments.post_id AND posts.is_private = false").Order("created_at desc").Offset(page * memento.PageSize).Limit(memento.PageSize).Find(&comments).Error
+		err = memento.GetDbConnection().Joins("JOIN posts ON posts.id = comments.post_id AND posts.is_private = false").Order("comments.created_at desc").Offset(page * memento.PageSize).Limit(memento.PageSize).Find(&comments).Error
 	}
 	total := memento.GetDbConnection().Model(&user).Association("Comments").Count()
 	maxPage := total / memento.PageSize

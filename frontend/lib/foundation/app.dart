@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:frontend/components/navigation_bar.dart';
 import 'package:frontend/foundation/appdata.dart';
 
 export "../utils/widget_utils.dart";
@@ -26,13 +27,15 @@ class _App {
     return PlatformDispatcher.instance.locale;
   }
 
-  NavigatorState? get navigatorState => navigatorKey?.currentState;
+  NavigatorState? get navigator => observer?.navigator;
 
-  GlobalKey<NavigatorState>? navigatorKey;
+  NaviObserver? observer;
 
   GlobalKey<NavigatorState>? rootNavigatorKey;
 
   var mainColor = Colors.blue;
+
+  var initialRoute = '/';
 
   Future<void> init() async {
     mainColor = switch(appdata.settings['color']) {

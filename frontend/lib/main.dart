@@ -34,7 +34,6 @@ class Memento extends StatefulWidget {
   const Memento({super.key});
 
   static Map<String, Widget Function(BuildContext context)> routes = {
-    '/': (context) => const MainPage(),
     '/login': (context) => const LoginPage(),
     '/register': (context) => const RegisterPage(),
   };
@@ -47,17 +46,23 @@ class MementoState extends State<Memento> {
   void forceRebuild() {}
 
   @override
+  void initState() {
+    App.initialRoute = WidgetsBinding.instance.platformDispatcher.defaultRouteName;
+    App.rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: "Memento",
-      initialRoute: '/',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: App.mainColor)
             .copyWith(surface: Colors.white, primary: App.mainColor.shade600),
         fontFamily: App.isWindows ? "Microsoft YaHei" : null,
       ),
-      navigatorKey: App.rootNavigatorKey ??= GlobalKey<NavigatorState>(),
+      navigatorKey: App.rootNavigatorKey!,
       darkTheme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
                 seedColor: App.mainColor, brightness: Brightness.dark)
@@ -70,15 +75,14 @@ class MementoState extends State<Memento> {
         _ => ThemeMode.system
       },
       onGenerateRoute: (settings) {
-        if (!appdata.isLogin &&
-            settings.name != '/login' &&
-            settings.name != '/register') {
-          settings = const RouteSettings(name: '/login');
+        var builder = Memento.routes[settings.name];
+        String? name = settings.name;
+        if(builder == null) {
+          builder = (context) => const MainPage();
+          name = null;
         }
-        final builder =
-            Memento.routes[settings.name] ?? (context) => const MainPage();
         return AppPageRoute(
-            builder: builder, settings: settings, isRootRoute: true);
+            builder: builder, settings: RouteSettings(name: name), isRootRoute: true);
       },
       builder: (context, widget) {
         ErrorWidget.builder = (FlutterErrorDetails details) {

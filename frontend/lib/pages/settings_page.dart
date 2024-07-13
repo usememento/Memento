@@ -187,6 +187,24 @@ class _AccountSettings extends StatefulWidget {
 class _AccountSettingsState extends State<_AccountSettings> {
   @override
   Widget build(BuildContext context) {
+    if(!appdata.isLogin) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text("You are not logged in".tl),
+            const SizedBox(height: 8),
+            Button.filled(
+              onPressed: () {
+                App.rootNavigatorKey!.currentContext!.to('/login');
+              },
+              child: Text("Login".tl),
+            ),
+          ],
+        )
+      );
+    }
+
     return Column(
       children: [
         ListTile(

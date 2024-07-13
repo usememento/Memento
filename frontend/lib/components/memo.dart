@@ -118,57 +118,36 @@ class _MemoWidgetState extends State<MemoWidget> {
                   if (widget.memo.author != null && widget.showUser)
                     const SizedBox(width: 36),
                   Button.normal(
-                    onPressed: like,
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    isLoading: isLiking,
-                    height: 32,
-                    width: calcButtonWidth(widget.memo.likesCount),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (widget.memo.isLiked)
-                          const Icon(Icons.favorite,
-                              size: 18, color: Colors.red)
-                        else
-                          const Icon(
-                            Icons.favorite_border,
-                            size: 18,
-                          ),
-                        const Spacer(),
-                        Text(
-                          widget.memo.likesCount.toString(),
-                          style: const TextStyle(fontSize: 14),
-                        ).paddingBottom(2),
-                        const Spacer(),
-                      ],
-                    ),
+                      onPressed: like,
+                      isLoading: isLiking,
+                      padding: const EdgeInsets.all(8),
+                      child: widget.memo.isLiked
+                          ? const Icon(Icons.favorite, size: 18, color: Colors.red)
+                          : const Icon(Icons.favorite_border, size: 18,)
                   ),
-                  const SizedBox(width: 16),
+                  Text(
+                    widget.memo.likesCount.toString(),
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                  const SizedBox(width: 16,),
                   Button.normal(
-                    onPressed: reply,
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    height: 32,
-                    width: calcButtonWidth(widget.memo.repliesCount),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.chat_bubble_outline,
-                          size: 18,
-                        ),
-                        const Spacer(),
-                        Text(
-                          widget.memo.repliesCount.toString(),
-                          style: const TextStyle(fontSize: 14),
-                        ).paddingBottom(2),
-                        const Spacer(),
-                      ],
+                    onPressed: () {
+                      CommentsPage.show(widget.memo.id);
+                    },
+                    isLoading: isLiking,
+                    padding: const EdgeInsets.all(8),
+                    child: const Icon(
+                      Icons.chat_bubble_outline,
+                      size: 18,
                     ),
                   ),
+                  Text(
+                    widget.memo.repliesCount.toString(),
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                  const SizedBox(width: 16,),
                   if (widget.memo.author == null ||
-                      widget.memo.author!.username == appdata.user.username)
+                      widget.memo.author!.username == appdata.userOrNull?.username)
                     Button.icon(
                       key: moreActionsKey,
                       onPressed: moreActions,
@@ -215,7 +194,7 @@ class _MemoWidgetState extends State<MemoWidget> {
       setState(() {
         isLiking = false;
       });
-      App.navigatorKey!.currentContext!.showMessage(res.errorMessage!);
+      App.rootNavigatorKey!.currentContext!.showMessage(res.errorMessage!);
     }
   }
 
@@ -290,10 +269,10 @@ class _MemoWidgetState extends State<MemoWidget> {
                       if (context.mounted) {
                         if (res.success) {
                           context.pop();
-                          App.navigatorKey!.currentContext!
+                          App.rootNavigatorKey!.currentContext!
                               .showMessage("Deleted".tl);
                         } else {
-                          App.navigatorKey!.currentContext!
+                          App.rootNavigatorKey!.currentContext!
                               .showMessage(res.errorMessage!);
                           setState(() {
                             isLoading = false;
@@ -318,7 +297,7 @@ void _handleLink(String link) {
     if (lr.length != 2) {
       return;
     }
-    var context = App.navigatorKey!.currentContext!;
+    var context = App.navigator!.context;
     switch (lr[0]) {
       case 'tag':
         context.to('/tag/${lr[1]}');

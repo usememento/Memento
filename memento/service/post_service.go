@@ -528,9 +528,11 @@ func HandleGetLikedPosts(c echo.Context) error {
 	currentUserName := c.Get("username")
 	username := c.QueryParam("username")
 	var currentUser model.User
-	err := memento.GetDbConnection().First(&currentUser, "username=?", currentUserName).Error
-	if err != nil {
-		return utils.RespondError(c, "username not exists")
+	if currentUserName != "" {
+		err := memento.GetDbConnection().First(&currentUser, "username=?", currentUserName).Error
+		if err != nil {
+			return utils.RespondError(c, "username not exists")
+		}
 	}
 	page, err := strconv.Atoi(c.QueryParam("page"))
 	if err != nil {
@@ -548,7 +550,7 @@ func HandleGetLikedPosts(c echo.Context) error {
 		var author model.User
 		memento.GetDbConnection().First(&author, "username=?", p.Username)
 		isLiked := currentUserName == username
-		if !isLiked {
+		if !isLiked && currentUserName != "" {
 			var likePosts []model.Post
 			memento.GetDbConnection().Model(&currentUser).Association("likes").Find(&likePosts, "id=?", p.ID)
 			isLiked = len(likePosts) > 0

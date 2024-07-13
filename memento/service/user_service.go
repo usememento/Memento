@@ -230,15 +230,19 @@ func HandleGetUser(c echo.Context) error {
 	}
 	uName := c.Get("username")
 	var currentUser model.User
-	err = memento.GetDbConnection().First(&currentUser, "username=?", uName).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return utils.RespondError(c, "username not exists")
+	isFollowed := false
+	if uName != "" {
+		err = memento.GetDbConnection().First(&currentUser, "username=?", uName).Error
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return utils.RespondError(c, "username not exists")
+			}
+			log.Errorf(err.Error())
+			return utils.RespondError(c, "unknown query error")
 		}
-		log.Errorf(err.Error())
-		return utils.RespondError(c, "unknown query error")
+		isFollowed = checkIsFollowed(currentUser.Username, user.Username)
 	}
-	return c.JSON(http.StatusOK, utils.UserToView(&user, checkIsFollowed(currentUser.Username, user.Username)))
+	return c.JSON(http.StatusOK, utils.UserToView(&user, isFollowed))
 }
 
 func PasswordAuthorizationHandler(ctx context.Context, clientID, username, password string) (userID string, err error) {

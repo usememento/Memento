@@ -14,6 +14,8 @@ export 'models.dart';
 export 'res.dart';
 
 class AppInterceptor extends Interceptor {
+  static bool isWaitingRefreshingToken = false;
+
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
     // setDebugProxy();
@@ -42,7 +44,7 @@ class AppInterceptor extends Interceptor {
           } catch (e) {
             errorMessage = "Invalid Response: $data";
           }
-        } else if (data is Map) {
+        } else if (data is Map && data['message'] != null) {
           var message = data['message'];
           errorMessage = message.toString();
         }
@@ -62,7 +64,27 @@ class AppInterceptor extends Interceptor {
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) async {
     if (response.statusCode == 401) {
+      if(!appdata.isLogin) {
+        handler.reject(DioException(
+            error: "Not Login",
+            requestOptions: response.requestOptions, response: response));
+        return;
+      }
+      if (isWaitingRefreshingToken) {
+        await Future.doWhile(() {
+          return Future.delayed(const Duration(milliseconds: 100),
+              () => isWaitingRefreshingToken);
+        });
+        response.requestOptions.headers["Authorization"] =
+            "Bearer ${appdata.user.token}";
+        Network().dio.fetch(response.requestOptions).then((value) {
+          handler.resolve(value);
+        });
+        return;
+      }
+      isWaitingRefreshingToken = true;
       var res = await Network().refresh();
+      isWaitingRefreshingToken = false;
       if (res.success) {
         appdata.user = res.data;
         response.requestOptions.headers["Authorization"] =
@@ -72,6 +94,7 @@ class AppInterceptor extends Interceptor {
         });
       } else {
         handler.reject(DioException(
+            error: "Refresh Token Failed",
             requestOptions: response.requestOptions, response: response));
       }
     } else {
@@ -190,6 +213,7 @@ class Network {
   }
 
   Future<Res<bool>> likeOrUnlike(int memoId, bool isLike) async {
+    if(!appdata.isLogin) return const Res.error("Not Login");
     try {
       var res = await dio.post(isLike ? "/api/post/like" : "/api/post/unlike",
           data: {"id": memoId});
@@ -204,6 +228,7 @@ class Network {
   }
 
   Future<Res<bool>> postMemo(String content, bool isPublic) async {
+    if(!appdata.isLogin) return const Res.error("Not Login");
     try {
       var res = await dio.post("/api/post/create",
           data: FormData.fromMap({
@@ -217,6 +242,7 @@ class Network {
   }
 
   Future<Res<bool>> editMemo(String content, bool isPublic, int id) async {
+    if(!appdata.isLogin) return const Res.error("Not Login");
     try {
       var res = await dio.post("/api/post/edit",
           data: FormData.fromMap({
@@ -231,6 +257,7 @@ class Network {
   }
 
   Future<Res<HeatMapData>> getHeatMapData([String? username]) async {
+    if(!appdata.isLogin) return const Res.error("Not Login");
     try {
       var res = await dio.get<Map<String, dynamic>>("/api/user/heatmap",
           queryParameters: {"username": username ?? appdata.user.username});
@@ -260,6 +287,7 @@ class Network {
   }
 
   Future<Res<bool>> sendComment(int memoId, String content) async {
+    if(!appdata.isLogin) return const Res.error("Not Login");
     try {
       var res = await dio.post("/api/comment/create", data: {
         "id": memoId,
@@ -272,6 +300,7 @@ class Network {
   }
 
   Future<Res<bool>> likeOrUnlikeComment(int id, bool isLike) async {
+    if(!appdata.isLogin) return const Res.error("Not Login");
     try {
       var res = await dio.post(
           isLike ? "/api/comment/like" : "/api/comment/unlike",
@@ -292,6 +321,10 @@ class Network {
     var controller = StreamController<Object>();
     () async {
       try {
+        if(!appdata.isLogin) {
+          controller.addError("Not Login");
+          return;
+        }
         var res = await dio.post<Map>("/api/file/upload",
             data: FormData.fromMap({
               "file": MultipartFile.fromBytes(data, filename: fileName),
@@ -327,6 +360,7 @@ class Network {
   }
 
   Future<Res<bool>> followOrUnfollow(String userName, bool isFollow) async {
+    if(!appdata.isLogin) return const Res.error("Not Login");
     try {
       var res = await dio
           .post(isFollow ? "/api/user/follow" : "/api/user/unfollow", data: {
@@ -373,6 +407,7 @@ class Network {
       String? bio,
       Uint8List? avatar,
       String? avatarFileName}) async {
+    if(!appdata.isLogin) return const Res.error("Not Login");
     try {
       String? ext;
       if (avatarFileName != null) {
@@ -399,28 +434,29 @@ class Network {
   Future<Res<bool>> changePassword(
       {required String password,
       required String newPassword,
-      required String confirmPassword}) {
+      required String confirmPassword}) async {
+    if(!appdata.isLogin) return const Res.error("Not Login");
     if (newPassword != confirmPassword) {
-      return Future.value(const Res.error("Password not match"));
+      return const Res.error("Password not match");
     }
 
     try {
-      return dio.post("/api/user/changePwd", data: {
+      var res = await dio.post("/api/user/changePwd", data: {
         "oldPassword": password,
         "newPassword": newPassword,
-      }).then((res) {
-        if (res.statusCode == 200) {
-          return const Res(true);
-        } else {
-          throw "Invalid Status Code ${res.statusCode}";
-        }
       });
+      if (res.statusCode == 200) {
+        return const Res(true);
+      } else {
+        throw "Invalid Status Code ${res.statusCode}";
+      }
     } catch (e) {
-      return Future.value(Res.error(e.toString()));
+      return Res.error(e.toString());
     }
   }
 
   Future<Res<bool>> deleteMemo(int id) async {
+    if(!appdata.isLogin) return const Res.error("Not Login");
     try {
       var res = await dio.delete("/api/post/delete/$id");
       if (res.statusCode == 200) {
@@ -506,6 +542,7 @@ class Network {
   }
 
   Future<Res<bool>> deleteFile(String id) async {
+    if(!appdata.isLogin) return const Res.error("Not Login");
     try {
       var res = await dio.delete("/api/file/delete/$id");
       if (res.statusCode != 200) {

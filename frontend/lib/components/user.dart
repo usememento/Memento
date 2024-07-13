@@ -83,7 +83,7 @@ class _UserCardState extends State<UserCard> {
                           style: ts.bold.s16,
                         ),
                         const Spacer(),
-                        if (widget.user.username != appdata.user.username)
+                        if (appdata.isLogin && widget.user.username != appdata.user.username)
                           Button.outlined(
                               width: widget.user.isFollowed ? 84 : 72,
                               height: 24,

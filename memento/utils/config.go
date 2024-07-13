@@ -3,19 +3,16 @@ package utils
 var (
 	DefaultConfig = MementoConfig{
 		DbConfig{
-			User:     "root",
-			Password: "123456",
-			Host:     "127.0.0.1",
-			Port:     1234,
 			Driver:   "sqlite",
 			Database: "memento.db",
 		},
 		ServiceConfig{},
 		ServerConfig{
-			Name:     "Memento",
-			Version:  "0.1.0",
-			Port:     1323,
-			BasePath: "",
+			Name:           "Memento",
+			Version:        "0.1.0",
+			Port:           1323,
+			BasePath:       "",
+			EnableRegister: true,
 		},
 	}
 )
@@ -33,10 +30,11 @@ type ServiceConfig struct {
 }
 
 type ServerConfig struct {
-	Name     string
-	Version  string
-	Port     uint16
-	BasePath string
+	Name           string
+	Version        string
+	Port           uint16
+	BasePath       string
+	EnableRegister bool `yaml:"enable_register"`
 }
 
 type MementoConfig struct {

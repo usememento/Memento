@@ -25,6 +25,20 @@ class _ResourcePageState extends State<ResourcePage> {
 
   @override
   Widget build(BuildContext context) {
+    if(!appdata.isLogin) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text("Login Required".tl, style: ts.bold.s16,),
+            const SizedBox(height: 12,),
+            Button.filled(child: Text("Login".tl), onPressed: () {
+              App.rootNavigatorKey!.currentContext!.to('/login');
+            })
+          ],
+        ),
+      );
+    }
     return Material(
       color: context.colorScheme.surface,
       child: CustomScrollView(

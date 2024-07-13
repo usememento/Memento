@@ -77,6 +77,20 @@ class _LoginPageState extends State<LoginPage> {
                 )
               ],
             ),
+          ).paddingTop(8).paddingBottom(4),
+          Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(
+                  text: "Continue with no account".tl,
+                  style: TextStyle(color: context.colorScheme.primary),
+                  recognizer: TapGestureRecognizer()
+                    ..onTap = () {
+                      context.toAndRemoveAll('/');
+                    },
+                )
+              ],
+            ),
           ).paddingVertical(8),
         ],
       ),

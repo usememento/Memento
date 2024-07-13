@@ -23,6 +23,20 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    if(!appdata.isLogin) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text("Login Required".tl, style: ts.bold.s16,),
+            const SizedBox(height: 12,),
+            Button.filled(child: Text("Login".tl), onPressed: () {
+              App.rootNavigatorKey!.currentContext!.to('/login');
+            })
+          ],
+        ),
+      );
+    }
     return LayoutBuilder(builder: (context, constrains) {
       return Row(
         children: [

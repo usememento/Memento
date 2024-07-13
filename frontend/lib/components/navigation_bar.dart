@@ -123,12 +123,12 @@ class _NaviPaneState extends State<NaviPane>
   bool isInitial = false;
 
   @override
-  void didUpdateWidget(covariant NaviPane oldWidget) {
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     if (!isInitial) {
       controller.value = targetFromContext(context);
       isInitial = true;
     }
-    super.didUpdateWidget(oldWidget);
   }
 
   @override

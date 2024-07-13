@@ -16,6 +16,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -43,11 +44,11 @@ func Init() (*MementoServer, error) {
 		log.Errorf("Error getting home directory: %s\n", err.Error())
 		return nil, err
 	}
-	data, err := os.ReadFile(path.Join(home, ".memento", ConfigFileName))
+	data, err := os.ReadFile(filepath.Join(home, ".memento", ConfigFileName))
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			memento.Config = utils.DefaultConfig
-			memento.Config.BasePath = path.Join(home, ".memento")
+			memento.Config.BasePath = filepath.Join(home, ".memento")
 			if err = os.MkdirAll(GetBasePath(), 0777); err != nil {
 				log.Errorf("Error creating base folder: %s\n", err.Error())
 				return nil, err
@@ -185,7 +186,22 @@ func SearchPost(content string) (*bleve.SearchResult, error) {
 	return searchResult, nil
 }
 func isPublicPath(path string) bool {
-	publicPaths := [...]string{"/api/post/get", "/api/file/download", "/api/comment/postComments", "/api/user/avatar"}
+	publicPaths := [...]string{
+		"/api/post/get",
+		"/api/file/download",
+		"/api/comment/postComments",
+		"/api/post/all",
+		"/api/post/userPosts",
+		"/api/post/tags",
+		"/api/search",
+		"/api/post/taggedPosts",
+		"/api/post/likedPosts",
+		"/api/user/avatar",
+		"/api/user/get",
+		"/api/user/follower",
+		"/api/user/following",
+		"/api/comment/userComments",
+	}
 	for _, p := range publicPaths {
 		if strings.HasPrefix(path, p) {
 			return true

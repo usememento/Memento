@@ -46,7 +46,10 @@ class MainPageState extends State<MainPage> {
 
   @override
   void initState() {
-    App.navigatorKey = GlobalKey();
+    App.observer = observer;
+    if(App.initialRoute == '/' && !appdata.isLogin) {
+      App.initialRoute = '/explore';
+    }
     super.initState();
   }
 
@@ -77,19 +80,22 @@ class MainPageState extends State<MainPage> {
         ],
         paneActions: [
           if (context.width <= 600)
-            PaneActionEntry(label: "Search", icon: Icons.search, onTap: () {
-              App.navigatorState!.pushNamed('/search');
-            }),
+            PaneActionEntry(
+                label: "Search",
+                icon: Icons.search,
+                onTap: () {
+                  App.navigator!.pushNamed('/search');
+                }),
           PaneActionEntry(
               routeName: '/settings',
               label: "Settings",
               icon: Icons.settings_outlined,
               onTap: () {
-                App.navigatorState!.pushNamed('/settings');
+                App.navigator!.pushNamed('/settings');
               }),
         ],
         onPageChange: (index) {
-          App.navigatorState!.pushNamedAndRemoveUntil(
+          App.navigator!.pushNamedAndRemoveUntil(
               mainPageRoutes[index], (settings) => false);
         },
         leading: NaviPaneLeading(
@@ -99,11 +105,15 @@ class MainPageState extends State<MainPage> {
               height: 48,
               width: 48,
               child: Avatar(
-                url: appdata.user.avatar,
+                url: appdata.userOrNull?.avatar ?? "",
                 size: 36,
               ).toCenter(),
             ),
           ).onTapAt((location) {
+            if (!appdata.isLogin) {
+              App.rootNavigatorKey!.currentContext!.to('/login');
+              return;
+            }
             showMenu(
                 context: context,
                 elevation: 3,
@@ -114,7 +124,7 @@ class MainPageState extends State<MainPage> {
                   PopupMenuItem(
                     height: 42,
                     onTap: () {
-                      App.navigatorState!
+                      App.navigator!
                           .pushNamed('/user/${appdata.user.username}');
                     },
                     child: Text("Profile".tl),
@@ -134,16 +144,20 @@ class MainPageState extends State<MainPage> {
             child: Row(
               children: [
                 Avatar(
-                  url: appdata.user.avatar,
+                  url: appdata.userOrNull?.avatar ?? "",
                   size: 36,
                 ),
                 const SizedBox(
                   width: 12,
                 ),
-                Text(appdata.user.nickname),
+                Text(appdata.userOrNull?.nickname ?? "Login".tl),
               ],
             ).paddingHorizontal(8).paddingVertical(8),
           ).onTapAt((location) {
+            if (!appdata.isLogin) {
+              App.rootNavigatorKey!.currentContext!.to('/login');
+              return;
+            }
             showMenu(
                 context: context,
                 elevation: 3,
@@ -154,7 +168,7 @@ class MainPageState extends State<MainPage> {
                   PopupMenuItem(
                     height: 42,
                     onTap: () {
-                      App.navigatorState!
+                      App.navigator!
                           .pushNamed('/user/${appdata.user.username}');
                     },
                     child: Text("Profile".tl),
@@ -172,11 +186,11 @@ class MainPageState extends State<MainPage> {
         ),
         pageBuilder: (index) {
           return Navigator(
-            key: App.navigatorKey ??= GlobalKey(),
             observers: [
               observer,
             ],
-            initialRoute: mainPageRoutes[index],
+            initialRoute: App.initialRoute,
+            reportsRouteUpdateToEngine: true,
             onGenerateRoute: (settings) {
               var builder = routes[settings.name];
               var params = <String, dynamic>{};

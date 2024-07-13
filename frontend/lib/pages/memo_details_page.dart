@@ -74,20 +74,28 @@ class _MemoDetails extends StatefulWidget {
 
 class _MemoDetailsState extends State<_MemoDetails> {
   Widget buildLeading() {
-    return Appbar(
-      title: title ?? 'Memo'.tl,
-      primary: App.isMobile || context.width <= 600,
-      color: context.colorScheme.surface.withOpacity(0.6),
-      actions: [
-        if (context.width <= 600)
+    return Material(
+      color: context.colorScheme.surface,
+      child: Row(
+        children: [
           Tooltip(
-            message: 'Outline'.tl,
-            child: Button.icon(
-              icon: const Icon(Icons.format_list_bulleted),
-              onPressed: showSidebar,
+              message: "Back",
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back_sharp),
+                onPressed: () {
+                  context.pop();
+                },
+              ),
             ),
-          )
-      ],
+          const SizedBox(width: 8),
+          Expanded(
+            child: buildActions(),
+          ),
+        ],
+      )
+          .fixHeight(56)
+          .paddingTop((App.isMobile || context.width <= 600) ? context.padding.top : 0)
+          .paddingHorizontal(8),
     );
   }
 
@@ -202,13 +210,9 @@ class _MemoDetailsState extends State<_MemoDetails> {
                       child: SelectionArea(
                         child: ScrollablePositionedList.builder(
                           padding: EdgeInsets.zero,
-                          itemCount: markdownContent.length + 1,
+                          itemCount: markdownContent.length,
                           itemScrollController: controller,
                           itemBuilder: (context, index) {
-                            if (index == 0) {
-                              return buildActions();
-                            }
-                            index--;
                             return markdownContent[index].paddingHorizontal(16);
                           },
                         ),
@@ -257,110 +261,74 @@ class _MemoDetailsState extends State<_MemoDetails> {
   }
 
   Widget buildActions() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: Theme.of(context).colorScheme.outlineVariant,
-            width: 0.4,
-          ),
+    return Row(
+      children: [
+        InkWell(
+          onTap: () {
+            context.to('/user/${widget.memo.author!.username}');
+          },
+          borderRadius: BorderRadius.circular(4),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Avatar(url: widget.memo.author!.avatar, size: 24),
+              const SizedBox(width: 8),
+              Text(widget.memo.author!.nickname,
+                  style: const TextStyle(fontSize: 14)),
+            ],
+          ).paddingHorizontal(8).paddingVertical(4),
         ),
-      ),
-      child: Row(
-        children: [
-          InkWell(
-            onTap: () {
-              context.to('/user/${widget.memo.author!.username}');
-            },
-            borderRadius: BorderRadius.circular(4),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Avatar(url: widget.memo.author!.avatar, size: 24),
-                const SizedBox(width: 8),
-                Text(widget.memo.author!.nickname,
-                    style: const TextStyle(fontSize: 14)),
-              ],
-            ).paddingHorizontal(8).paddingVertical(4),
+        const Spacer(),
+        Button.normal(
+          onPressed: like,
+          isLoading: isLiking,
+          padding: const EdgeInsets.all(8),
+          child: widget.memo.isLiked
+            ? const Icon(Icons.favorite, size: 18, color: Colors.red)
+            : const Icon(Icons.favorite_border, size: 18,)
           ),
-          const Spacer(),
-          Button.normal(
-            onPressed: like,
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            isLoading: isLiking,
-            height: 36,
-            width: 92,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (widget.memo.isLiked)
-                  const Icon(Icons.favorite, size: 18, color: Colors.red)
-                else
-                  const Icon(
-                    Icons.favorite_border,
-                    size: 18,
-                  ),
-                Expanded(
-                  child: Center(
-                    child: Text(
-                      widget.memo.likesCount.toString(),
-                      style: const TextStyle(fontSize: 14),
-                    ).paddingBottom(2),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Button.normal(
+        Text(
+          widget.memo.likesCount.toString(),
+          style: const TextStyle(fontSize: 14),
+        ),
+        const SizedBox(width: 16,),
+        Button.normal(
             onPressed: () {
               CommentsPage.show(widget.memo.id);
             },
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            height: 36,
-            width: 92,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.chat_bubble_outline,
-                  size: 18,
-                ),
-                Expanded(
-                  child: Center(
-                    child: Text(
-                      widget.memo.repliesCount.toString(),
-                      style: const TextStyle(fontSize: 14),
-                    ).paddingBottom(2),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Button.normal(
-            onPressed: () {},
-            onPressedAt: (location) {
-              var baseUrl = App.isWeb ? Uri.base : appdata.settings['domain'];
-              var url = baseUrl + '/memo/' + widget.memo.id.toString();
-              showPopMenu(location, [
-                MenuEntry("Copy path", () {
-                  Clipboard.setData(ClipboardData(text: url));
-                }),
-                MenuEntry("Share", () {
-                  Share.share(url);
-                }),
-              ]);
-            },
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            height: 36,
-            width: 58,
+            isLoading: isLiking,
+            padding: const EdgeInsets.all(8),
             child: const Icon(
-              Icons.share,
+              Icons.chat_bubble_outline,
               size: 18,
             ),
+        ),
+        Text(
+          widget.memo.repliesCount.toString(),
+          style: const TextStyle(fontSize: 14),
+        ),
+        const SizedBox(width: 16,),
+        Button.normal(
+          onPressed: () {},
+          onPressedAt: (location) {
+            var baseUrl = App.isWeb ? Uri.base : appdata.settings['domain'];
+            var url = baseUrl + '/memo/' + widget.memo.id.toString();
+            showPopMenu(location, [
+              MenuEntry("Copy path", () {
+                Clipboard.setData(ClipboardData(text: url));
+              }),
+              MenuEntry("Share", () {
+                Share.share(url);
+              }),
+            ]);
+          },
+          padding: const EdgeInsets.all(8),
+          child: const Icon(
+            Icons.share,
+            size: 18,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 

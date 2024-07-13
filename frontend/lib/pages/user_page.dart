@@ -77,7 +77,7 @@ class _UserInfoPageState extends LoadingState<UserInfoPage, User> {
                           ],
                         ),
                       ),
-                      if (data.username != appdata.user.username)
+                      if (appdata.isLogin && data.username != appdata.user.username)
                         Button.outlined(
                             width: data.isFollowed ? 84 : 72,
                             height: 28,
