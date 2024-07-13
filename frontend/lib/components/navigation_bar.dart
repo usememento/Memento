@@ -703,7 +703,7 @@ class _NaviPopScope extends StatelessWidget {
     Widget res = App.isIOS
         ? child
         : PopScope(
-            canPop: App.isAndroid ? false : true,
+            canPop: (App.isAndroid | App.isWeb) ? false : true,
             onPopInvoked: (value) {
               action();
             },

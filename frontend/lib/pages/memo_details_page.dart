@@ -28,7 +28,19 @@ class _MemoDetailsPageState extends State<MemoDetailsPage> {
 
   bool isLoading = true;
 
-  void load() async {}
+  void load() async {
+    var res = await Network().getMemoById(id);
+    if (mounted) {
+      if (res.success) {
+        setState(() {
+          memo = res.data;
+          isLoading = false;
+        });
+      } else {
+        context.showMessage(res.message);
+      }
+    }
+  }
 
   @override
   void didChangeDependencies() {

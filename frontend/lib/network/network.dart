@@ -220,6 +220,18 @@ class Network {
     }
   }
 
+  Future<Res<Memo>> getMemoById(String id) async {
+    try {
+      var res = await dio.get<Map<String, dynamic>>("/api/post/get", queryParameters: {
+        "id": id,
+      });
+      return Res(Memo.fromJson(res.data!));
+    }
+    catch (e) {
+      return Res.error(e.toString());
+    }
+  }
+
   Future<Res<bool>> likeOrUnlike(int memoId, bool isLike) async {
     if (!appdata.isLogin) return const Res.error("Not Login");
     try {
