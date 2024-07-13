@@ -19,7 +19,10 @@ class _Appdata {
   }
 
   var settings = <String, dynamic>{
-    "domain": ''
+    "domain": '',
+    'color': 'blue',
+    'theme_mode': 'system',
+    'default_memo_visibility': 'public'
   };
 
   Future<void> saveData() async{

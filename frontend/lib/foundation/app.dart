@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:frontend/foundation/appdata.dart';
 
 export "../utils/widget_utils.dart";
 export 'page_route.dart';
@@ -31,7 +32,19 @@ class _App {
 
   GlobalKey<NavigatorState>? rootNavigatorKey;
 
-  final mainColor = Colors.blue;
+  var mainColor = Colors.blue;
+
+  Future<void> init() async {
+    mainColor = switch(appdata.settings['color']) {
+      'red' => Colors.red,
+      'pink' => Colors.pink,
+      'purple' => Colors.purple,
+      'green' => Colors.green,
+      'orange' => Colors.orange,
+      'blue' => Colors.blue,
+      _ => Colors.blue,
+    };
+  }
 }
 
 // ignore: non_constant_identifier_names

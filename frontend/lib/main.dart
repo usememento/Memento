@@ -11,6 +11,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Translation.init();
   await appdata.readData();
+  await App.init();
   if (App.isDesktop) {
     await WindowManager.instance.ensureInitialized();
     windowManager.waitUntilReadyToShow().then((_) async {
@@ -29,7 +30,7 @@ void main() async {
   runApp(const Memento());
 }
 
-class Memento extends StatelessWidget {
+class Memento extends StatefulWidget {
   const Memento({super.key});
 
   static Map<String, Widget Function(BuildContext context)> routes = {
@@ -37,6 +38,13 @@ class Memento extends StatelessWidget {
     '/login': (context) => const LoginPage(),
     '/register': (context) => const RegisterPage(),
   };
+
+  @override
+  State<Memento> createState() => MementoState();
+}
+
+class MementoState extends State<Memento> {
+  void forceRebuild() {}
 
   @override
   Widget build(BuildContext context) {
@@ -56,13 +64,19 @@ class Memento extends StatelessWidget {
             .copyWith(surface: Colors.black, primary: App.mainColor.shade400),
         fontFamily: App.isWindows ? "Microsoft YaHei" : null,
       ),
+      themeMode: switch (appdata.settings['theme_mode']) {
+        'light' => ThemeMode.light,
+        'dark' => ThemeMode.dark,
+        _ => ThemeMode.system
+      },
       onGenerateRoute: (settings) {
         if (!appdata.isLogin &&
             settings.name != '/login' &&
             settings.name != '/register') {
           settings = const RouteSettings(name: '/login');
         }
-        final builder = routes[settings.name] ?? (context) => const MainPage();
+        final builder =
+            Memento.routes[settings.name] ?? (context) => const MainPage();
         return AppPageRoute(
             builder: builder, settings: settings, isRootRoute: true);
       },
@@ -73,7 +87,9 @@ class Memento extends StatelessWidget {
         if (widget == null) throw "Widget is null!";
         return Material(
           color: context.colorScheme.surface,
-          child: OverlayWidget(WindowBorder(child: widget,)),
+          child: OverlayWidget(WindowBorder(
+            child: widget,
+          )),
         );
       },
     );

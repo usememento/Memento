@@ -5,9 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/button.dart';
 import 'package:frontend/components/dialog.dart';
+import 'package:frontend/components/select.dart';
 import 'package:frontend/components/tab.dart';
 import 'package:frontend/components/user.dart';
 import 'package:frontend/foundation/app.dart';
+import 'package:frontend/main.dart';
 import 'package:frontend/network/network.dart';
 import 'package:frontend/pages/main_page.dart';
 import 'package:frontend/utils/translation.dart';
@@ -24,8 +26,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   static const List<String> titles = [
     "Account",
-    "Appearance",
-    "Notifications",
+    "Preference",
     "About",
   ];
 
@@ -113,6 +114,7 @@ class _SettingsPageState extends State<SettingsPage> {
       duration: const Duration(milliseconds: 200),
       child: switch (index) {
         0 => const _AccountSettings(),
+        1 => const _PreferenceSettings(),
         _ => const Placeholder(),
       },
     );
@@ -488,6 +490,87 @@ class _AccountSettingsState extends State<_AccountSettings> {
           },
           leading: const Icon(Icons.password),
           title: Text("Password".tl),
+        ),
+      ],
+    );
+  }
+}
+
+class _PreferenceSettings extends StatefulWidget {
+  const _PreferenceSettings();
+
+  @override
+  State<_PreferenceSettings> createState() => __PreferenceSettingsState();
+}
+
+class __PreferenceSettingsState extends State<_PreferenceSettings> {
+  static const colors = [
+    'blue',
+    'red',
+    'pink',
+    'purple',
+    'green',
+    'orange',
+  ];
+
+  static const themeMode = ['system', 'dark', 'light'];
+
+  static const visibility = ['public', 'private'];
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        ListTile(
+          leading: const Icon(Icons.color_lens),
+          title: Text("Theme".tl),
+          trailing: Select(
+            initialValue: colors.indexOf(appdata.settings['color'] ?? 'blue'),
+            values: colors.map((e) => e.tl).toList(),
+            onChanged: (i) async {
+              setState(() {
+                appdata.settings['color'] = colors[i];
+              });
+              appdata.saveData();
+              await App.init();
+              if (context.mounted) {
+                context
+                    .findAncestorStateOfType<MementoState>()
+                    ?.setState(() {});
+              }
+            },
+          ),
+        ),
+        ListTile(
+          leading: const Icon(Icons.dark_mode),
+          title: Text("Dark Mode".tl),
+          trailing: Select(
+            initialValue:
+                themeMode.indexOf(appdata.settings['theme_mode'] ?? 'system'),
+            values: themeMode.map((e) => e.tl).toList(),
+            onChanged: (i) async {
+              setState(() {
+                appdata.settings['theme_mode'] = themeMode[i];
+              });
+              appdata.saveData();
+              context.findAncestorStateOfType<MementoState>()?.setState(() {});
+            },
+          ),
+        ),
+        ListTile(
+          leading: const Icon(Icons.visibility),
+          title: Text("Default post visibility".tl),
+          trailing: Select(
+            initialValue: visibility.indexOf(
+                appdata.settings['default_memo_visibility'] ?? 'public'),
+            values: visibility.map((e) => e.tl).toList(),
+            onChanged: (i) {
+              setState(() {
+                appdata.settings['default_memo_visibility'] = visibility[i];
+              });
+              appdata.saveData();
+            },
+          ),
         ),
       ],
     );
