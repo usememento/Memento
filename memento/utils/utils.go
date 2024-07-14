@@ -4,10 +4,11 @@ import (
 	"Memento/memento/model"
 	"crypto/md5"
 	"encoding/hex"
-	"github.com/labstack/echo/v4"
 	"net/http"
 	"os"
 	"strings"
+
+	"github.com/labstack/echo/v4"
 )
 
 func Md5string(s string) string {
@@ -153,5 +154,6 @@ func UserToView(user *model.User, isFollowed bool) *model.UserViewModel {
 		TotalPosts:    user.TotalPosts,
 		Avatar:        avatar,
 		IsFollowed:    isFollowed,
+		IsAdmin:       user.IsAdmin,
 	}
 }

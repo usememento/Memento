@@ -19,9 +19,17 @@ import (
 )
 
 func HandleUserCreateWrapper(c echo.Context, s *server.Server) error {
+	if !memento.IsEnableRegister() {
+		return utils.RespondError(c, "Registration Disabled")
+	}
 	username := c.FormValue("username")
 	password := c.FormValue("password")
 	hashedPassword := utils.Md5string(password)
+	var totalUsers int64
+	err := memento.GetDbConnection().Model(&model.User{}).Count(&totalUsers).Error
+	if err != nil {
+		totalUsers = 0
+	}
 	user := model.User{
 		Username:     username,
 		PasswordHash: hashedPassword,
@@ -32,8 +40,9 @@ func HandleUserCreateWrapper(c echo.Context, s *server.Server) error {
 		TotalComment: 0,
 		TotalPosts:   0,
 		RegisteredAt: time.Now(),
+		IsAdmin: totalUsers == 0,
 	}
-	err := memento.GetDbConnection().Create(&user).Error
+	err = memento.GetDbConnection().Create(&user).Error
 	if err != nil {
 		// Check if the error is due to a unique constraint violation
 		if errors.Is(err, gorm.ErrDuplicatedKey) {
@@ -105,7 +114,7 @@ func HandleUserRefreshToken(c echo.Context, s *server.Server) error {
 	})
 }
 func HandleUserDelete(c echo.Context) error {
-	username := c.Get("username")
+	username := c.Param("username")
 	if username == "" {
 		return utils.RespondUnauthorized(c)
 	}
@@ -127,7 +136,7 @@ func HandleUserDelete(c echo.Context) error {
 }
 
 func HandleUserEdit(c echo.Context) error {
-	form, err := c.FormParams()
+	form, _ := c.FormParams()
 	username := c.Get("username")
 	if username == "" {
 		return utils.RespondUnauthorized(c)

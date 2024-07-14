@@ -1,8 +1,9 @@
 package model
 
 import (
-	"gorm.io/gorm"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 type User struct {
@@ -19,6 +20,7 @@ type User struct {
 	TotalFollower int64
 	TotalFollows  int64
 	RegisteredAt  time.Time
+	IsAdmin       bool
 	Posts         []Post    `gorm:"foreignKey:Username;references:Username"`
 	Files         []File    `gorm:"foreignKey:Username;references:Username"`
 	Follows       []User    `gorm:"many2many:user_follows;joinForeignKey:UserID;JoinReferences:FollowID"`
@@ -41,4 +43,5 @@ type UserViewModel struct {
 	RegisteredAt  time.Time
 	Avatar        string
 	IsFollowed    bool
+	IsAdmin       bool
 }

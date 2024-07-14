@@ -5,6 +5,14 @@ import (
 	"Memento/memento/utils"
 	"errors"
 	"fmt"
+	"net/http"
+	"os"
+	"path"
+	"path/filepath"
+	"strconv"
+	"strings"
+	"sync"
+
 	"github.com/blevesearch/bleve/v2"
 	"github.com/go-oauth2/oauth2/v4"
 	"github.com/go-oauth2/oauth2/v4/server"
@@ -13,13 +21,6 @@ import (
 	"gopkg.in/yaml.v3"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	"net/http"
-	"os"
-	"path"
-	"path/filepath"
-	"strconv"
-	"strings"
-	"sync"
 )
 
 type MementoServer struct {
@@ -37,6 +38,25 @@ const (
 
 var JwtSecret = []byte("secret")
 var memento MementoServer
+
+func writeConfig() error {
+	f, err := os.Create(path.Join(memento.Config.BasePath, ConfigFileName))
+	if err != nil {
+		log.Errorf("Error creating configuration file: %s\n", err.Error())
+		return err
+	}
+	data, err := yaml.Marshal(memento.Config)
+	if err != nil {
+		log.Errorf("Error marshalling configuration: %s\n", err.Error())
+		return err
+	}
+	_, err = f.Write(data)
+	if err != nil {
+		log.Errorf("Error writing configuration to file: %s\n", err.Error())
+		return err
+	}
+	return nil
+}
 
 func Init() (*MementoServer, error) {
 	home, err := os.UserHomeDir()
@@ -279,4 +299,13 @@ type Token struct {
 	RefreshToken string `json:"refresh_token"`
 	TokenType    string `json:"token_type"`
 	Expiry       int64  `json:"expiry"`
+}
+
+func IsEnableRegister() bool {
+	return memento.Config.EnableRegister
+}
+
+func SetIsEnableRegister(enabled bool) error {
+	memento.Config.EnableRegister = enabled
+	return writeConfig()
 }

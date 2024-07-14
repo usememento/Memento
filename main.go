@@ -78,7 +78,7 @@ func main() {
 			userApi.GET("/get", service.HandleGetUser)
 			userApi.POST("/changePwd", service.HandleUserChangePwd)
 			userApi.POST("/edit", service.HandleUserEdit)
-			userApi.DELETE("/delete", service.HandleUserDelete)
+			userApi.DELETE("/:username", service.HandleUserDelete)
 			userApi.GET("/heatmap", service.HandleUserHeatMap)
 			userApi.POST("/follow", service.HandleUserFollow)
 			userApi.POST("/unfollow", service.HandleUserUnfollow)
@@ -107,6 +107,14 @@ func main() {
 		{
 			searchApi.GET("/user", service.HandleUserSearch)
 			searchApi.GET("/post", service.HandlePostSearch)
+		}
+		adminApi := api.Group("/admin")
+		{
+			adminApi.Use(service.AdminCheck)
+			adminApi.POST("/config", service.HandleSetConfig)
+			adminApi.GET("/listUsers", service.HandleListUsers)
+			adminApi.DELETE("/deleteUser/:username", service.HandleAdminDeleteUser)
+			adminApi.POST("/setPermission", service.HandleSetUserPermission)
 		}
 	}
 	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", mServer.Config.ServerConfig.Port)))
