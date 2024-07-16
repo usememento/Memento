@@ -111,6 +111,7 @@ func main() {
 		adminApi := api.Group("/admin")
 		{
 			adminApi.Use(service.AdminCheck)
+			adminApi.GET("/config", service.HandleGetConfigs)
 			adminApi.POST("/config", service.HandleSetConfig)
 			adminApi.GET("/listUsers", service.HandleListUsers)
 			adminApi.DELETE("/deleteUser/:username", service.HandleAdminDeleteUser)

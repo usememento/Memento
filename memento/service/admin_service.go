@@ -4,6 +4,7 @@ import (
 	"Memento/memento"
 	"Memento/memento/model"
 	"Memento/memento/utils"
+	"os"
 	"strconv"
 
 	"github.com/labstack/echo/v4"
@@ -14,14 +15,12 @@ func AdminCheck(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		username := c.Get("username").(string)
 		if username == "" {
-			return c.JSON(401, echo.Map{
-				"error": "unauthorized",
+			return c.JSON(400, echo.Map{
+				"error": "Admin permission required",
 			})
 		}
-		user := model.User{
-			Username: username,
-		}
-		err := memento.GetDbConnection().First(&user).Error
+		var user model.User
+		err := memento.GetDbConnection().First(&user, "username=?", username).Error
 		if err != nil {
 			return c.JSON(401, echo.Map{
 				"error": "User not found",
@@ -34,6 +33,12 @@ func AdminCheck(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 		return next(c)
 	}
+}
+
+func HandleGetConfigs(c echo.Context) error {
+	return c.JSON(200, echo.Map{
+		"enable_register": memento.IsEnableRegister(),
+	})
 }
 
 func HandleSetConfig(c echo.Context) error {
@@ -74,19 +79,26 @@ func HandleListUsers(c echo.Context) error {
 		result = append(result, *utils.UserToView(&user, false))
 	}
 	return c.JSON(200, echo.Map{
-		"users": result,
-		"maxPage": total / memento.PageSize,
+		"users":      result,
+		"maxPage":    utils.MaxPage(total),
+		"totalUsers": total,
 	})
 }
 
 func HandleAdminDeleteUser(c echo.Context) error {
 	username := c.Param("username")
-	user := model.User {
-		Username: username,
-	}
-	err := memento.GetDbConnection().First(&user).Error
+	var user model.User
+	err := memento.GetDbConnection().First(&user, "username=?", username).Error
 	if err != nil {
 		return utils.RespondError(c, "User not found")
+	}
+	err = os.Remove(user.AvatarUrl)
+	if err != nil {
+		log.Errorf(err.Error())
+	}
+	err = memento.GetDbConnection().Delete(&user).Error
+	if err != nil {
+		return utils.RespondError(c, "Failed")
 	}
 	return c.NoContent(200)
 }
@@ -94,17 +106,8 @@ func HandleAdminDeleteUser(c echo.Context) error {
 func HandleSetUserPermission(c echo.Context) error {
 	isAdmin := c.FormValue("is_admin") == "true"
 	username := c.FormValue("username")
-	user := model.User {
-		Username: username,
-	}
-	err := memento.GetDbConnection().First(&user).Error
+	err := memento.GetDbConnection().Model(&model.User{}).Where("username = ?", username).Update("is_admin", isAdmin).Error
 	if err != nil {
-		return utils.RespondError(c, "User not found")
-	}
-	user.IsAdmin = isAdmin
-	err = memento.GetDbConnection().Update(&user).Error
-	if err != nil {
-		log.Errorf(err.Error())
 		return utils.RespondError(c, "Failed")
 	}
 	return c.NoContent(200)

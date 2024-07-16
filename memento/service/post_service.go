@@ -345,7 +345,7 @@ func HandleGetUserPosts(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, echo.Map{
 		"posts":   result,
-		"maxPage": total / memento.PageSize,
+		"maxPage": utils.MaxPage(total),
 	})
 }
 
@@ -517,7 +517,7 @@ func HandleGetTaggedPost(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, echo.Map{
 		"posts":   result,
-		"maxPage": total / memento.PageSize,
+		"maxPage": utils.MaxPage(total),
 	})
 }
 
@@ -566,7 +566,7 @@ func HandleGetAllPosts(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, echo.Map{
 		"posts":   result,
-		"maxPage": total / memento.PageSize,
+		"maxPage": utils.MaxPage(total),
 	})
 }
 
@@ -626,7 +626,7 @@ func HandleGetLikedPosts(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, echo.Map{
 		"posts":   result,
-		"maxPage": totalLikes / memento.PageSize,
+		"maxPage": utils.MaxPage(totalLikes),
 	})
 }
 

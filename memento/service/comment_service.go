@@ -208,7 +208,6 @@ func HandleGetPostComments(c echo.Context) error {
 	comments := make([]model.Comment, 0, memento.PageSize)
 	err = memento.GetDbConnection().Model(&post).Association("Comments").Find(&comments, memento.GetDbConnection().Order("created_at desc").Offset(page*memento.PageSize).Limit(memento.PageSize))
 	total := memento.GetDbConnection().Model(&post).Association("Comments").Count()
-	maxPage := total / memento.PageSize
 	if err != nil {
 		return utils.RespondError(c, "unknown query error")
 	}
@@ -222,7 +221,7 @@ func HandleGetPostComments(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		"comments": result,
-		"maxPage":  maxPage,
+		"maxPage":  utils.MaxPage(total),
 	})
 }
 
@@ -254,7 +253,6 @@ func HandleGetUserComments(c echo.Context) error {
 		err = memento.GetDbConnection().Joins("JOIN posts ON posts.id = comments.post_id AND posts.is_private = false").Order("comments.created_at desc").Offset(page * memento.PageSize).Limit(memento.PageSize).Find(&comments).Error
 	}
 	total := memento.GetDbConnection().Model(&user).Association("Comments").Count()
-	maxPage := total / memento.PageSize
 	if err != nil {
 		return utils.RespondError(c, "unknown query error")
 	}
@@ -282,6 +280,6 @@ func HandleGetUserComments(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		"comments": result,
-		"maxPage":  maxPage,
+		"maxPage":  utils.MaxPage(total),
 	})
 }

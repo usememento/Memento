@@ -5,7 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/button.dart';
 import 'package:frontend/components/dialog.dart';
+import 'package:frontend/components/flyout.dart';
 import 'package:frontend/components/select.dart';
+import 'package:frontend/components/states.dart';
 import 'package:frontend/components/tab.dart';
 import 'package:frontend/components/user.dart';
 import 'package:frontend/foundation/app.dart';
@@ -27,6 +29,7 @@ class _SettingsPageState extends State<SettingsPage> {
   static const List<String> titles = [
     "Account",
     "Preference",
+    "Admin",
     "About",
   ];
 
@@ -72,6 +75,9 @@ class _SettingsPageState extends State<SettingsPage> {
           text: "Appearance".tl,
         ),
         Tab(
+          text: "Admin".tl,
+        ),
+        Tab(
           text: "Notifications".tl,
         ),
         Tab(
@@ -115,6 +121,7 @@ class _SettingsPageState extends State<SettingsPage> {
       child: switch (index) {
         0 => const _AccountSettings(),
         1 => const _PreferenceSettings(),
+        2 => const _AdminSettings(),
         _ => const Placeholder(),
       },
     );
@@ -187,22 +194,21 @@ class _AccountSettings extends StatefulWidget {
 class _AccountSettingsState extends State<_AccountSettings> {
   @override
   Widget build(BuildContext context) {
-    if(!appdata.isLogin) {
+    if (!appdata.isLogin) {
       return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text("You are not logged in".tl),
-            const SizedBox(height: 8),
-            Button.filled(
-              onPressed: () {
-                App.rootNavigatorKey!.currentContext!.to('/login');
-              },
-              child: Text("Login".tl),
-            ),
-          ],
-        )
-      );
+          child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text("You are not logged in".tl),
+          const SizedBox(height: 8),
+          Button.filled(
+            onPressed: () {
+              App.rootNavigatorKey!.currentContext!.to('/login');
+            },
+            child: Text("Login".tl),
+          ),
+        ],
+      ));
     }
 
     return Column(
@@ -592,5 +598,372 @@ class __PreferenceSettingsState extends State<_PreferenceSettings> {
         ),
       ],
     );
+  }
+}
+
+class _AdminSettings extends StatefulWidget {
+  const _AdminSettings();
+
+  @override
+  State<_AdminSettings> createState() => __AdminSettingsState();
+}
+
+class __AdminSettingsState
+    extends LoadingState<_AdminSettings, Map<String, dynamic>> {
+  bool isLoading1 = false;
+
+  @override
+  Widget buildContent(BuildContext context, Map<String, dynamic> data) {
+    return CustomScrollView(
+      slivers: [
+        SliverToBoxAdapter(
+          child: ListTile(
+            leading: const Icon(Icons.app_registration_rounded),
+            title: Text("Enable Registration".tl),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (isLoading1)
+                  const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                    ),
+                  ),
+                const SizedBox(width: 8),
+                Switch(
+                  value: data['enable_register'] == true,
+                  onChanged: (v) async {
+                    if (isLoading1) return;
+                    setState(() {
+                      isLoading1 = true;
+                    });
+                    var res = await Network()
+                        .setConfigs({"enable_register": v ? "true" : "false"});
+                    if (context.mounted) {
+                      if (res.error) {
+                        setState(() {
+                          isLoading1 = false;
+                        });
+                        context
+                            .showMessage(res.errorMessage ?? "Unknown Error");
+                      } else {
+                        setState(() {
+                          isLoading1 = false;
+                          this.data!['enable_register'] = v;
+                        });
+                      }
+                    }
+                  },
+                )
+              ],
+            ),
+          ),
+        ),
+        const SliverPadding(padding: EdgeInsets.only(top: 16)),
+        const _UserList(),
+      ],
+    );
+  }
+
+  @override
+  Future<Res<Map<String, dynamic>>> loadData() {
+    if (!(appdata.userOrNull?.isAdmin ?? false)) {
+      return Future.value(const Res.error("Admin permission required"));
+    }
+    return Network().getConfigs();
+  }
+}
+
+class _UserList extends StatefulWidget {
+  const _UserList();
+
+  @override
+  State<_UserList> createState() => _UserListState();
+}
+
+class _UserListState extends State<_UserList> {
+  int? totalPages;
+  int page = 1;
+  var data = <int, List<User>>{};
+  var loadingStatus = <int, bool>{};
+
+  static const _kBottomBarHeight = 42.0;
+
+  void load(int page) async {
+    if (data[page] != null || loadingStatus[page] == true) {
+      return;
+    }
+    loadingStatus[page] = true;
+    var res = await Network().getAllUsers(page);
+    if (mounted) {
+      if (res.error) {
+        context.showMessage(res.errorMessage ?? "Unknown Error");
+        setState(() {
+          loadingStatus[page] = false;
+        });
+      } else {
+        setState(() {
+          loadingStatus[page] = false;
+          data[page] = res.data;
+          totalPages = res.subData;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverMainAxisGroup(
+      slivers: [
+        SliverToBoxAdapter(
+          child: Container(
+            padding: const EdgeInsets.only(bottom: 8),
+            decoration: BoxDecoration(
+              border: Border(
+                top: BorderSide(
+                  color: context.colorScheme.outlineVariant,
+                ),
+              ),
+            ),
+          ),
+        ),
+        buildUsers(),
+        buildBottom().sliverPadding(const EdgeInsets.only(top: 8)),
+      ],
+    ).sliverPaddingHorizontal(8);
+  }
+
+  Widget buildUser(User user) {
+    return InkWell(
+      onTap: () => editUser(user),
+      child: SizedBox(
+        height: 42,
+        child: Row(
+          children: [
+            Avatar(
+              url: user.avatar,
+              size: 32,
+            ),
+            const SizedBox(
+              width: 12,
+            ),
+            Expanded(
+              child: Text.rich(
+                TextSpan(children: [
+                  TextSpan(text: user.nickname),
+                  TextSpan(
+                      text: " @${user.username}",
+                      style: ts.withColor(context.colorScheme.outline))
+                ]),
+              ),
+            ),
+            Text(user.isAdmin ? "Admin" : "User"),
+          ],
+        ).paddingHorizontal(8),
+      ),
+    );
+  }
+
+  Widget buildUsers() {
+    if (data[page] == null) {
+      load(page);
+      return const SizedBox(
+        height: 96,
+        child: Center(
+          child: CircularProgressIndicator(),
+        ),
+      ).toSliver();
+    }
+    return SliverList.builder(
+      itemCount: data[page]!.length,
+      itemBuilder: (context, index) {
+        return buildUser(data[page]![index]);
+      },
+    );
+  }
+
+  Widget buildBottom() {
+    if (totalPages != null) {
+      return Row(
+        children: [
+          const Spacer(),
+          Text(
+            "Page".tl,
+            style: ts.s16,
+          ),
+          const SizedBox(
+            width: 8,
+          ),
+          Select(
+            initialValue: page - 1,
+            values: List.generate(totalPages!, (i) => (i + 1).toString()),
+            onChanged: (i) => setState(() {
+              page = i + 1;
+            }),
+          )
+        ],
+      ).fixHeight(_kBottomBarHeight).toSliver();
+    } else {
+      return const SliverPadding(
+          padding: EdgeInsets.only(top: _kBottomBarHeight));
+    }
+  }
+
+  void editUser(User user) {
+    pushDialog(
+        context: App.rootNavigatorKey!.currentContext!,
+        builder: (_) =>
+            _EditUserDialog(user: user, state: this));
+  }
+}
+
+class _EditUserDialog extends StatefulWidget {
+  const _EditUserDialog({required this.user, required this.state});
+
+  final User user;
+
+  final _UserListState state;
+
+  @override
+  State<_EditUserDialog> createState() => _EditUserDialogState();
+}
+
+class _EditUserDialogState extends State<_EditUserDialog> {
+  User get user => widget.user;
+
+  bool l1 = false;
+  bool l2 = false;
+
+  var controller = FlyoutController();
+
+  @override
+  Widget build(BuildContext context) {
+    return DialogContent(
+      title: user.nickname,
+      body: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            height: 42,
+            child: Row(
+              children: [
+                Text("Register Time".tl),
+                const Spacer(),
+                Text(user.createdAt
+                    .toIso8601String()
+                    .substring(0, 19)
+                    .replaceFirst('T', ' ')),
+              ],
+            ),
+          ),
+          SizedBox(
+            height: 42,
+            child: Row(
+              children: [
+                Text("Total Posts".tl),
+                const Spacer(),
+                Text(user.totalPosts.toString()),
+              ],
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        if (!user.isAdmin)
+          Button.outlined(
+              isLoading: l1,
+              onPressed: setPermission,
+              child: Text("Set As Admin".tl)),
+        if (user.isAdmin)
+          Button.outlined(
+              isLoading: l1,
+              onPressed: setPermission,
+              child: Text("Set As User".tl)),
+        const SizedBox(
+          width: 8,
+        ),
+        Flyout(
+          controller: controller,
+          flyoutBuilder: (context) => FlyoutContent(
+            title: "Are you sure to delete this user?".tl,
+            actions: [
+              Button.outlined(
+                onPressed: () {
+                  context.pop();
+                },
+                child: Text("Cancel".tl),
+              ),
+              Button.filled(
+                onPressed: () {
+                  context.pop();
+                  deleteUser();
+                },
+                color: Colors.red,
+                child: Text("Delete".tl),
+              ),
+            ],
+          ),
+          child: Button.filled(
+            isLoading: l2,
+            onPressed: () {
+              controller.show();
+            },
+            color: Colors.red,
+            child: Text("Delete".tl),
+          ),
+        )
+      ],
+    );
+  }
+
+  void setPermission() async {
+    setState(() {
+      l1 = true;
+    });
+    var res = await Network().setPermission(user.username, !user.isAdmin);
+    if (mounted) {
+      if (res.error) {
+        setState(() {
+          l1 = false;
+        });
+        context.showMessage(res.errorMessage ?? "Unknown Error");
+      } else {
+        setState(() {
+          l1 = false;
+        });
+        user.isAdmin = !user.isAdmin;
+        if (widget.state.mounted) {
+          widget.state.setState(() {});
+        }
+        context.pop();
+      }
+    }
+  }
+
+  void deleteUser() async {
+    setState(() {
+      l2 = true;
+    });
+    var res = await Network().deleteUser(user.username);
+    if (mounted) {
+      if (res.error) {
+        setState(() {
+          l2 = false;
+        });
+        context.showMessage(res.errorMessage ?? "Unknown Error");
+      } else {
+        setState(() {
+          l2 = false;
+        });
+        if (widget.state.mounted) {
+          widget.state.data
+              .clear();
+          widget.state.setState(() {});
+        }
+        context.pop();
+      }
+    }
   }
 }

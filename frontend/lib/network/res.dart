@@ -1,3 +1,5 @@
+import 'package:dio/dio.dart';
+
 class Res<T>{
   ///error info
   final String? errorMessage;
@@ -33,4 +35,14 @@ class Res<T>{
   const Res(this._data,{this.errorMessage, this.subData});
 
   const Res.error(this.errorMessage):_data=null, subData=null;
+
+  factory Res.fromError(Object error){
+    String errorMessage;
+    if (error is DioException) {
+      errorMessage = (error.message ?? error.error ?? "Unknown Error").toString();
+    } else {
+      errorMessage = error.toString();
+    }
+    return Res.error(errorMessage);
+  }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/components/overlay.dart';
 import 'package:frontend/components/window_border.dart';
 import 'package:frontend/foundation/app.dart';
+import 'package:frontend/network/network.dart';
 import 'package:frontend/pages/auth.dart';
 import 'package:frontend/pages/main_page.dart';
 import 'package:frontend/utils/translation.dart';
@@ -54,8 +55,13 @@ class MementoState extends State<Memento> {
 
   @override
   Widget build(BuildContext context) {
+    var initialRoute = '/';
+    if (!App.isWeb && !appdata.isLogin) {
+      initialRoute = '/login';
+    }
     return MaterialApp(
       title: "Memento",
+      initialRoute: initialRoute,
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: App.mainColor)

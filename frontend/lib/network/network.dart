@@ -111,7 +111,11 @@ class Network {
   Network._internal() {
     dio.interceptors.add(LogInterceptor());
     dio.interceptors.add(AppInterceptor());
-    setBaseUrl();
+    try {
+      setBaseUrl();
+    } catch (e) {
+      // ignore
+    }
   }
 
   factory Network() => instance ??= Network._internal();
@@ -144,7 +148,7 @@ class Network {
       });
       return Res(Account.fromJson(res.data!));
     } catch (e) {
-      return Res.error(e.toString());
+      return Res.fromError(e);
     }
   }
 
@@ -159,7 +163,7 @@ class Network {
           queryParameters: _authQuery);
       return Res(Account.fromJson(res.data!));
     } catch (e) {
-      return Res.error(e.toString());
+      return Res.fromError(e);
     }
   }
 
@@ -174,7 +178,7 @@ class Network {
           queryParameters: _authQuery);
       return Res(Account.fromJson(res.data!));
     } catch (e) {
-      return Res.error(e.toString());
+      return Res.fromError(e);
     }
   }
 
@@ -189,7 +193,7 @@ class Network {
           (res.data!["posts"] as List).map((e) => Memo.fromJson(e)).toList(),
           subData: res.data!['maxPage'] + 1);
     } catch (e) {
-      return Res.error(e.toString());
+      return Res.fromError(e);
     }
   }
 
@@ -203,7 +207,7 @@ class Network {
           (res.data!["posts"] as List).map((e) => Memo.fromJson(e)).toList(),
           subData: res.data!['maxPage'] + 1);
     } catch (e) {
-      return Res.error(e.toString());
+      return Res.fromError(e);
     }
   }
 
@@ -216,19 +220,19 @@ class Network {
           (res.data!["posts"] as List).map((e) => Memo.fromJson(e)).toList(),
           subData: res.data!['maxPage'] + 1);
     } catch (e) {
-      return Res.error(e.toString());
+      return Res.fromError(e);
     }
   }
 
   Future<Res<Memo>> getMemoById(String id) async {
     try {
-      var res = await dio.get<Map<String, dynamic>>("/api/post/get", queryParameters: {
+      var res = await dio
+          .get<Map<String, dynamic>>("/api/post/get", queryParameters: {
         "id": id,
       });
       return Res(Memo.fromJson(res.data!));
-    }
-    catch (e) {
-      return Res.error(e.toString());
+    } catch (e) {
+      return Res.fromError(e);
     }
   }
 
@@ -243,7 +247,7 @@ class Network {
         throw "Invalid Status Code ${res.statusCode}";
       }
     } catch (e) {
-      return Res.error(e.toString());
+      return Res.fromError(e);
     }
   }
 
@@ -257,7 +261,7 @@ class Network {
           }));
       return Res(res.statusCode == 200);
     } catch (e) {
-      return Res.error(e.toString());
+      return Res.fromError(e);
     }
   }
 
@@ -272,7 +276,7 @@ class Network {
           }));
       return Res(res.statusCode == 200);
     } catch (e) {
-      return Res.error(e.toString());
+      return Res.fromError(e);
     }
   }
 
@@ -284,7 +288,7 @@ class Network {
       return Res(HeatMapData(
           Map.from(res.data!['map']), res.data!['memos'], res.data!['likes']));
     } catch (e) {
-      return Res.error(e.toString());
+      return Res.fromError(e);
     }
   }
 
@@ -302,7 +306,7 @@ class Network {
               .toList(),
           subData: res.data!["maxPage"] + 1);
     } catch (e) {
-      return Res.error(e.toString());
+      return Res.fromError(e);
     }
   }
 
@@ -315,7 +319,7 @@ class Network {
       });
       return Res(res.statusCode == 200);
     } catch (e) {
-      return Res.error(e.toString());
+      return Res.fromError(e);
     }
   }
 
@@ -331,7 +335,7 @@ class Network {
         throw "Invalid Status Code ${res.statusCode}";
       }
     } catch (e) {
-      return Res.error(e.toString());
+      return Res.fromError(e);
     }
   }
 
@@ -375,7 +379,7 @@ class Network {
       });
       return Res(User.fromJson(res.data!));
     } catch (e) {
-      return Res.error(e.toString());
+      return Res.fromError(e);
     }
   }
 
@@ -392,7 +396,7 @@ class Network {
         throw "Invalid Status Code ${res.statusCode}";
       }
     } catch (e) {
-      return Res.error(e.toString());
+      return Res.fromError(e);
     }
   }
 
@@ -407,7 +411,7 @@ class Network {
           (res.data!["users"] as List).map((e) => User.fromJson(e)).toList(),
           subData: res.data!["maxPage"] + 1);
     } catch (e) {
-      return Res.error(e.toString());
+      return Res.fromError(e);
     }
   }
 
@@ -422,7 +426,7 @@ class Network {
           (res.data!["users"] as List).map((e) => User.fromJson(e)).toList(),
           subData: res.data!["maxPage"] + 1);
     } catch (e) {
-      return Res.error(e.toString());
+      return Res.fromError(e);
     }
   }
 
@@ -451,7 +455,7 @@ class Network {
           }));
       return Res(User.fromJson(res.data!));
     } catch (e) {
-      return Res.error(e.toString());
+      return Res.fromError(e);
     }
   }
 
@@ -475,7 +479,7 @@ class Network {
         throw "Invalid Status Code ${res.statusCode}";
       }
     } catch (e) {
-      return Res.error(e.toString());
+      return Res.fromError(e);
     }
   }
 
@@ -489,7 +493,7 @@ class Network {
         throw "Invalid Status Code ${res.statusCode}";
       }
     } catch (e) {
-      return Res.error(e.toString());
+      return Res.fromError(e);
     }
   }
 
@@ -508,7 +512,7 @@ class Network {
               .toList(),
           subData: res.data!["maxPage"] + 1);
     } catch (e) {
-      return Res.error(e.toString());
+      return Res.fromError(e);
     }
   }
 
@@ -523,7 +527,7 @@ class Network {
           (res.data!["posts"] as List).map((e) => Memo.fromJson(e)).toList(),
           subData: res.data!["maxPage"] + 1);
     } catch (e) {
-      return Res.error(e.toString());
+      return Res.fromError(e);
     }
   }
 
@@ -538,7 +542,7 @@ class Network {
           (res.data!["posts"] as List).map((e) => Memo.fromJson(e)).toList(),
           subData: res.data!["maxPage"] + 1);
     } catch (e) {
-      return Res.error(e.toString());
+      return Res.fromError(e);
     }
   }
 
@@ -550,7 +554,7 @@ class Network {
       });
       return Res((res.data as List).map((e) => e.toString()).toList());
     } catch (e) {
-      return Res.error(e.toString());
+      return Res.fromError(e);
     }
   }
 
@@ -565,7 +569,7 @@ class Network {
               .toList()),
           subData: res.data!["maxPage"]);
     } catch (e) {
-      return Res.error(e.toString());
+      return Res.fromError(e);
     }
   }
 
@@ -578,7 +582,59 @@ class Network {
       }
       return const Res(true);
     } catch (e) {
-      return Res.error(e.toString());
+      return Res.fromError(e);
+    }
+  }
+
+  Future<Res<Map<String, dynamic>>> getConfigs() async {
+    try {
+      var res = await dio.get<Map<String, dynamic>>("/api/admin/config");
+      return Res(res.data);
+    } catch (e) {
+      return Res.fromError(e);
+    }
+  }
+
+  Future<Res<bool>> setConfigs(Map<String, dynamic> configs) async {
+    try {
+      await dio.post("/api/admin/config", data: configs);
+      return const Res(true);
+    } catch (e) {
+      return Res.fromError(e);
+    }
+  }
+
+  Future<Res<List<User>>> getAllUsers(int page) async {
+    page--;
+    try {
+      var res = await dio
+          .get<Map<String, dynamic>>("/api/admin/listUsers", queryParameters: {
+        "page": page,
+      });
+      return Res(
+          (res.data!['users'] as List).map((e) => User.fromJson(e)).toList(),
+          subData: res.data!['maxPage'] + 1);
+    } catch (e) {
+      return Res.fromError(e);
+    }
+  }
+
+  Future<Res<bool>> deleteUser(String username) async {
+    try {
+      await dio.delete("/api/admin/deleteUser/$username");
+      return const Res(true);
+    } catch (e) {
+      return Res.fromError(e);
+    }
+  }
+
+  Future<Res<bool>> setPermission(String username, bool isAdmin) async {
+    try {
+      await dio.post("/api/admin/setPermission",
+          data: {"username": username, "is_admin": isAdmin ? 'true' : 'false'});
+      return const Res(true);
+    } catch (e) {
+      return Res.fromError(e);
     }
   }
 }

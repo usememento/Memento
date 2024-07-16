@@ -36,7 +36,6 @@ const (
 	ConfigFileName = "memento_cfg.yaml"
 )
 
-var JwtSecret = []byte("secret")
 var memento MementoServer
 
 func writeConfig() error {

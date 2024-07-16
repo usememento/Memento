@@ -424,8 +424,7 @@ func HandlerGetUserFollower(c echo.Context) error {
 	}
 	followers := make([]model.User, 0, memento.PageSize)
 	err = memento.GetDbConnection().Joins("JOIN user_follows ON user_follows.user_id = users.id").Limit(20).Offset(page*20).Where("user_follows.follow_id = ?", user.ID).Find(&followers).Error
-	var total int64
-	total = memento.GetDbConnection().Model(&user).Association("Follows").Count()
+	total := memento.GetDbConnection().Model(&user).Association("Follows").Count()
 	if err != nil {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown query error")
@@ -451,8 +450,7 @@ func HandlerGetUserFollowing(c echo.Context) error {
 	}
 	followers := make([]model.User, 0, memento.PageSize)
 	memento.GetDbConnection().Model(&user).Association("Follows").Find(&followers, memento.GetDbConnection().Offset(page*memento.PageSize).Limit(memento.PageSize))
-	var total int64
-	total = memento.GetDbConnection().Model(&user).Association("Follows").Count()
+	total := memento.GetDbConnection().Model(&user).Association("Follows").Count()
 	result := make([]model.UserViewModel, 0, memento.PageSize)
 	for _, f := range followers {
 		result = append(result, *utils.UserToView(&f, true))

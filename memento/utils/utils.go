@@ -11,6 +11,8 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+const pageSize = 20
+
 func Md5string(s string) string {
 	hasher := md5.New()
 	hasher.Write([]byte(s))
@@ -156,4 +158,11 @@ func UserToView(user *model.User, isFollowed bool) *model.UserViewModel {
 		IsFollowed:    isFollowed,
 		IsAdmin:       user.IsAdmin,
 	}
+}
+
+func MaxPage(total int64) int64 {
+	if total%pageSize == 0 {
+		return total/pageSize - 1
+	}
+	return total / pageSize
 }

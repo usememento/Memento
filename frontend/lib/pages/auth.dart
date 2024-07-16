@@ -128,6 +128,7 @@ class _LoginPageState extends State<LoginPage> {
         });
       } else {
         appdata.user = res.data;
+        App.initialRoute = '/';
         context.toAndRemoveAll('/');
       }
     }
@@ -243,6 +244,7 @@ class _RegisterPageState extends State<RegisterPage> {
         });
       } else {
         appdata.user = res.data;
+        App.initialRoute = '/';
         context.toAndRemoveAll('/');
       }
     }

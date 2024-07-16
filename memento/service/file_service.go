@@ -175,6 +175,6 @@ func HandleGetResourcesList(c echo.Context) error {
 
 	return c.JSON(200, echo.Map{
 		"files":   result,
-		"maxPage": total / memento.PageSize,
+		"maxPage": utils.MaxPage(total),
 	})
 }

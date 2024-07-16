@@ -15,6 +15,8 @@ class Account {
 
   final String refreshToken;
 
+  final bool isAdmin;
+
   const Account(
       {required this.avatar,
       required this.nickname,
@@ -23,7 +25,8 @@ class Account {
       required this.bio,
       required this.totalFollows,
       required this.totalLikes,
-      required this.refreshToken});
+      required this.refreshToken,
+      required this.isAdmin});
 
   Account copyWith(
       {String? avatar,
@@ -32,6 +35,7 @@ class Account {
       int? totalFollows,
       int? totalLikes,
       String? token,
+      bool? isAdmin,
       String? refreshToken}) {
     return Account(
         avatar: avatar ?? this.avatar,
@@ -41,7 +45,8 @@ class Account {
         totalLikes: totalLikes ?? this.totalLikes,
         token: token ?? this.token,
         refreshToken: refreshToken ?? this.refreshToken,
-        username: username);
+        username: username,
+        isAdmin: isAdmin ?? this.isAdmin);
   }
 
 /*
@@ -73,7 +78,8 @@ class Account {
         totalFollows: json['user']['TotalPosts'],
         totalLikes: json['user']['TotalLiked'],
         token: json['token']['access_token'],
-        refreshToken: json['token']['refresh_token']);
+        refreshToken: json['token']['refresh_token'],
+        isAdmin: json['user']['IsAdmin']);
   }
 
   /*
@@ -105,6 +111,7 @@ class Account {
         'Username': username,
         'TotalPosts': totalFollows,
         'TotalLiked': totalLikes,
+        "IsAdmin": isAdmin
       },
       'token': {
         'access_token': token,
@@ -133,6 +140,8 @@ class User {
 
   final int totalFiles;
 
+  bool isAdmin;
+
   int totalFollower;
 
   final int totalFollows;
@@ -151,7 +160,8 @@ class User {
       required this.totalFiles,
       required this.totalFollower,
       required this.totalFollows,
-      required this.isFollowed});
+      required this.isFollowed,
+      required this.isAdmin});
 
   /*
 {
@@ -182,7 +192,8 @@ class User {
         totalFiles: json['TotalFiles'],
         totalFollower: json['TotalFollower'],
         totalFollows: json['TotalFollows'],
-        isFollowed: json['IsFollowed']);
+        isFollowed: json['IsFollowed'],
+        isAdmin: json['IsAdmin']);
   }
 }
 
