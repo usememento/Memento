@@ -10,16 +10,68 @@ import (
 	"net/http"
 	"path"
 	"strconv"
+	"strings"
 )
 
 func HandleUserSearch(c echo.Context) error {
-	keywords := c.QueryParam("keyword")
-	if keywords == "" {
+	keyword := c.QueryParam("keyword")
+	pageStr := c.QueryParam("page")
+	page, err := strconv.Atoi(pageStr)
+	if err != nil {
+		return utils.RespondError(c, "invalid page number")
+	}
+	if keyword == "" {
 		return utils.RespondError(c, "invalid keyword")
 	}
-
-	return nil
+	var users []model.User
+	var total int64
+	if strings.HasPrefix(keyword, "@") {
+		err = memento.GetDbConnection().
+			Limit(memento.PageSize).
+			Offset(page*memento.PageSize).
+			Where("username LIKE ?", keyword[1:]+"%").
+			Find(&users).
+			Error
+		if err != nil {
+			return utils.RespondInternalError(c, "search failed")
+		}
+		err = memento.GetDbConnection().
+			Model(&model.User{}).
+			Where("username LIKE ?", "%"+keyword[1:]+"%").
+			Count(&total).
+			Error
+		if err != nil {
+			return utils.RespondInternalError(c, "search failed")
+		}
+	} else {
+		err = memento.GetDbConnection().
+			Limit(memento.PageSize).
+			Offset(page*memento.PageSize).
+			Where("username LIKE ? OR nickname LIKE ? OR bio LIKE ?", "%"+keyword+"%", "%"+keyword+"%", "%"+keyword+"%").
+			Find(&users).
+			Error
+		if err != nil {
+			return utils.RespondInternalError(c, "search failed")
+		}
+		err = memento.GetDbConnection().
+			Model(&model.User{}).
+			Where("username LIKE ? OR nickname LIKE ? OR bio LIKE ?", "%"+keyword+"%", "%"+keyword+"%", "%"+keyword+"%").
+			Count(&total).
+			Error
+		if err != nil {
+			return utils.RespondInternalError(c, "search failed")
+		}
+	}
+	result := make([]model.UserViewModel, 0, memento.PageSize)
+	for _, user := range users {
+		result = append(result, *utils.UserToView(&user, checkIsFollowed(c.Get("username").(string), user.Username)))
+	}
+	return c.JSON(http.StatusOK, echo.Map{
+		"users":   result,
+		"maxPage": utils.MaxPage(total),
+	})
 }
+
 func HandlePostSearch(c echo.Context) error {
 	username := c.Get("username")
 	keywords := c.QueryParam("keyword")

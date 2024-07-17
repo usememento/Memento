@@ -637,6 +637,21 @@ class Network {
       return Res.fromError(e);
     }
   }
+
+  Future<Res<List<User>>> searchUsers(String keyword, int page) async {
+    try {
+      page--;
+      var res = await dio.get<Map>("/api/search/user", queryParameters: {
+        "keyword": keyword,
+        "page": page,
+      });
+      return Res(
+          (res.data!["users"] as List).map((e) => User.fromJson(e)).toList(),
+          subData: res.data!["maxPage"] + 1);
+    } catch (e) {
+      return Res.fromError(e);
+    }
+  }
 }
 
 void setDebugProxy() {
