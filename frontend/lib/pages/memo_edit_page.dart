@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/foundation/app.dart';
 import 'package:frontend/utils/translation.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 
 import '../components/appbar.dart';
 import '../components/button.dart';
@@ -95,7 +96,9 @@ class _MemoEditPageState extends State<MemoEditPage> {
                 icon: const Icon(Icons.info_outline),
                 size: 18,
                 tooltip: "Content syntax".tl,
-                onPressed: () {}),
+                onPressed: () {
+                  launchUrlString("https://github.com/userMemento/Memento/doc/ContentSyntax.md");
+                }),
             const Spacer(),
             Button.filled(
               onPressed: post,

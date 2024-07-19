@@ -34,6 +34,41 @@ class _MemoWidgetState extends State<MemoWidget> {
 
   static const _maxLines = 16;
 
+  bool get editable =>
+      widget.memo.author == null ||
+      widget.memo.author!.username == appdata.userOrNull?.username;
+
+  void Function(int)? getOnTapTask() {
+    return editable ? onTapTask : null;
+  }
+
+  void onTapTask(int taskIndex) async {
+    var originContent = widget.memo.content;
+    setState(() {
+      updating = true;
+      widget.memo.content = updateContentWithTaskIndex(widget.memo.content, taskIndex);
+    });
+    var res = await Network().editMemo(
+        widget.memo.content,
+        widget.memo.isPublic,
+        widget.memo.id
+    );
+    if(mounted) {
+      if (res.success) {
+        setState(() {
+          updating = false;
+        });
+      } else {
+        setState(() {
+          updating = false;
+          widget.memo.content = originContent;
+        });
+        context.showMessage(res.errorMessage!);
+    }}
+  }
+
+  bool updating = false;
+
   @override
   Widget build(BuildContext context) {
     var content = widget.memo.content;
@@ -43,9 +78,14 @@ class _MemoWidgetState extends State<MemoWidget> {
         : content;
     return SelectionArea(
         child: InkWell(
-      onTap: () => context.to("/memo/${widget.memo.id}", {
-        'memo': widget.memo,
-      }),
+      onTap: () async {
+        await context.to("/memo/${widget.memo.id}", {
+          'memo': widget.memo,
+        });
+        if(editable) {
+          setState(() {});
+        }
+      },
       child: Container(
         decoration: BoxDecoration(
           border: Border(
@@ -88,6 +128,7 @@ class _MemoWidgetState extends State<MemoWidget> {
                               physics: const NeverScrollableScrollPhysics(),
                               child: MemoContent(
                                 content: content,
+                                onTapTask: getOnTapTask(),
                               ),
                             ),
                           ),
@@ -117,19 +158,45 @@ class _MemoWidgetState extends State<MemoWidget> {
                 children: [
                   if (widget.memo.author != null && widget.showUser)
                     const SizedBox(width: 36),
+                  if(updating)
+                    SizedBox(
+                      height: 40,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const SizedBox(width: 8,),
+                          const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2,),
+                          ),
+                          const SizedBox(width: 8,),
+                          Text("Updating".tl),
+                        ],
+                      ),
+                    ),
+                  if(!updating)
                   Button.normal(
                       onPressed: like,
                       isLoading: isLiking,
                       padding: const EdgeInsets.all(8),
                       child: widget.memo.isLiked
-                          ? const Icon(Icons.favorite, size: 18, color: Colors.red)
-                          : const Icon(Icons.favorite_border, size: 18,)
-                  ),
+                          ? const Icon(Icons.favorite,
+                              size: 24, color: Colors.red)
+                          : const Icon(
+                              Icons.favorite_border,
+                              size: 24,
+                            )),
+                  if(!updating)
                   Text(
                     widget.memo.likesCount.toString(),
                     style: const TextStyle(fontSize: 14),
                   ),
-                  const SizedBox(width: 16,),
+                  if(!updating)
+                  const SizedBox(
+                    width: 16,
+                  ),
+                  if(!updating)
                   Button.normal(
                     onPressed: () {
                       CommentsPage.show(widget.memo.id);
@@ -141,13 +208,16 @@ class _MemoWidgetState extends State<MemoWidget> {
                       size: 18,
                     ),
                   ),
+                  if(!updating)
                   Text(
                     widget.memo.repliesCount.toString(),
                     style: const TextStyle(fontSize: 14),
                   ),
-                  const SizedBox(width: 16,),
-                  if (widget.memo.author == null ||
-                      widget.memo.author!.username == appdata.userOrNull?.username)
+                  if(!updating)
+                  const SizedBox(
+                    width: 16,
+                  ),
+                  if (editable && !updating)
                     Button.icon(
                       key: moreActionsKey,
                       onPressed: moreActions,
@@ -543,30 +613,96 @@ MarkdownConfig getMemoMarkdownConfig(BuildContext context) {
               color: Colors.redAccent, size: 16);
         },
       );
-    })
+    }),
   ]);
 }
 
-MarkdownGenerator getMemoMarkdownGenerator() {
+class TaskNode extends InputNode {
+  TaskNode(super.attr, super.config);
+
+  void Function(int index)? onTap;
+
+  @override
+  InlineSpan build() {
+    bool checked = false;
+    if (attr['checked'] != null) {
+      checked = attr['checked']!.toLowerCase() == 'true';
+    }
+    Widget widget = Icon(
+      checked ? Icons.check_box : Icons.check_box_outline_blank,
+      color: App.rootNavigatorKey!.currentContext!.colorScheme.primary,
+      size: 20,
+    );
+    if (onTap != null) {
+      widget = InkWell(
+        borderRadius: BorderRadius.circular(4),
+        onTap: () => onTap?.call(int.tryParse(attr['index'] ?? '0') ?? 0),
+        child: widget,
+      );
+    }
+    return WidgetSpan(child: widget);
+  }
+}
+
+String updateContentWithTaskIndex(String content, int index) {
+  content = content.replaceAll("\r\n", "\n");
+  var lines = content.split('\n');
+  int taskId = -1;
+  for (int i = 0; i < lines.length; i++) {
+    var line = lines[i];
+    if (line.length < 6) continue;
+    if (line.startsWith("- [ ]") || line.startsWith("- [x]")) {
+      taskId++;
+      if (taskId == index) {
+        if (line.startsWith("- [ ]")) {
+          lines[i] = line.replaceFirst("- [ ]", "- [x]");
+        } else {
+          lines[i] = line.replaceFirst("- [x]", "- [ ]");
+        }
+        break;
+      }
+    }
+  }
+  content = lines.join('\n');
+  return content;
+}
+
+MarkdownGenerator getMemoMarkdownGenerator(
+    [void Function(int taskIndex)? onTapTask]) {
   const latexTag = 'latex';
-  SpanNodeGeneratorWithTag latexGenerator = SpanNodeGeneratorWithTag(
+  var latexGenerator = SpanNodeGeneratorWithTag(
       tag: latexTag,
       generator: (e, config, visitor) =>
           LatexNode(e.attributes, e.textContent, config));
+  var taskGenerator = SpanNodeGeneratorWithTag(
+      tag: 'input',
+      generator: (e, config, visitor) => TaskNode(e.attributes, config));
+  int taskIndex = 0;
   return MarkdownGenerator(
-    generators: [latexGenerator],
-    inlineSyntaxList: [LatexSyntax(), HtmlImageSyntax()],
-    blockSyntaxList: [HtmlBlockImageSyntax()],
-  );
+      generators: [latexGenerator, taskGenerator],
+      inlineSyntaxList: [LatexSyntax(), HtmlImageSyntax()],
+      blockSyntaxList: [HtmlBlockImageSyntax()],
+      onNodeAccepted: (node, index) {
+        if (node is TaskNode) {
+          node.attr['index'] = taskIndex.toString();
+          node.onTap = onTapTask;
+          taskIndex++;
+        }
+      });
 }
 
 class MemoContent extends StatelessWidget {
   const MemoContent(
-      {super.key, required this.content, this.selectable = false});
+      {super.key,
+      required this.content,
+      this.selectable = false,
+      this.onTapTask});
 
   final String content;
 
   final bool selectable;
+
+  final void Function(int taskIndex)? onTapTask;
 
   @override
   Widget build(BuildContext context) {
@@ -588,7 +724,7 @@ class MemoContent extends StatelessWidget {
       data: data,
       selectable: selectable,
       config: getMemoMarkdownConfig(context),
-      generator: getMemoMarkdownGenerator(),
+      generator: getMemoMarkdownGenerator(onTapTask),
     );
   }
 

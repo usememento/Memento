@@ -15,6 +15,7 @@ import 'package:frontend/main.dart';
 import 'package:frontend/network/network.dart';
 import 'package:frontend/pages/main_page.dart';
 import 'package:frontend/utils/translation.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -122,6 +123,7 @@ class _SettingsPageState extends State<SettingsPage> {
         0 => const _AccountSettings(),
         1 => const _PreferenceSettings(),
         2 => const _AdminSettings(),
+        3 => const _AboutPage(),
         _ => const Placeholder(),
       },
     );
@@ -965,5 +967,30 @@ class _EditUserDialogState extends State<_EditUserDialog> {
         context.pop();
       }
     }
+  }
+}
+
+class _AboutPage extends StatelessWidget {
+  const _AboutPage();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text("Memento", style: ts.s24,).paddingLeft(16).paddingBottom(8),
+        ListTile(
+          title: const Text("Version"),
+          subtitle: Text(App.version),
+        ),
+        ListTile(
+          title: const Text("Github"),
+          subtitle: const Text("https://github.com/useMemento/Memento"),
+          onTap: () {
+            launchUrlString("https://github.com/useMemento/Memento");
+          },
+        ),
+      ],
+    ).fixWidth(double.infinity);
   }
 }

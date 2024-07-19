@@ -7,6 +7,7 @@ import 'package:frontend/foundation/app.dart';
 import 'package:frontend/network/network.dart';
 import 'package:frontend/utils/translation.dart';
 import 'package:frontend/utils/upload.dart';
+import 'package:url_launcher/url_launcher_string.dart';
 
 import '../components/heat_map.dart';
 import 'memo_edit_page.dart';
@@ -219,7 +220,9 @@ class _WritingAreaState extends State<WritingArea> {
                   icon: const Icon(Icons.info_outline),
                   size: 18,
                   tooltip: "Content syntax".tl,
-                  onPressed: () {}),
+                  onPressed: () {
+                    launchUrlString("https://github.com/userMemento/Memento/doc/ContentSyntax.md");
+                  }),
               const Spacer(),
               Button.filled(
                 onPressed: post,
@@ -373,7 +376,9 @@ class _WritingPageState extends State<WritingPage> {
                 icon: const Icon(Icons.info_outline),
                 size: 18,
                 tooltip: "Content syntax".tl,
-                onPressed: () {}),
+                onPressed: () {
+                  launchUrlString("https://github.com/userMemento/Memento/doc/ContentSyntax.md");
+                }),
             const Spacer(),
             Button.filled(
               onPressed: post,

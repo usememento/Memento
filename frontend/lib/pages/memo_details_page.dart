@@ -187,6 +187,41 @@ class _MemoDetailsState extends State<_MemoDetails> {
         text[1] != '#';
   }
 
+  bool get editable =>
+      widget.memo.author == null ||
+          widget.memo.author!.username == appdata.userOrNull?.username;
+
+  void Function(int)? getOnTapTask() {
+    return editable ? onTapTask : null;
+  }
+
+  bool updating = false;
+
+  void onTapTask(int taskIndex) async {
+    var originContent = widget.memo.content;
+    setState(() {
+      updating = true;
+      widget.memo.content = updateContentWithTaskIndex(widget.memo.content, taskIndex);
+    });
+    var res = await Network().editMemo(
+        widget.memo.content,
+        widget.memo.isPublic,
+        widget.memo.id
+    );
+    if(mounted) {
+      if (res.success) {
+        setState(() {
+          updating = false;
+        });
+      } else {
+        setState(() {
+          updating = false;
+          widget.memo.content = originContent;
+        });
+        context.showMessage(res.errorMessage!);
+      }}
+  }
+
   @override
   Widget build(BuildContext context) {
     var content = widget.memo.content;
@@ -204,7 +239,7 @@ class _MemoDetailsState extends State<_MemoDetails> {
     }
     content = lines.join('\n');
     var markdownContent =
-        getMemoMarkdownGenerator().buildWidgets(onTocList: (t) {
+        getMemoMarkdownGenerator(getOnTapTask()).buildWidgets(onTocList: (t) {
       toc ??= t;
       title ??= t.firstOrNull?.node.build().toPlainText();
     }, content, config: getMemoMarkdownConfig(context));
@@ -275,21 +310,39 @@ class _MemoDetailsState extends State<_MemoDetails> {
   Widget buildActions() {
     return Row(
       children: [
-        InkWell(
-          onTap: () {
-            context.to('/user/${widget.memo.author!.username}');
-          },
-          borderRadius: BorderRadius.circular(4),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Avatar(url: widget.memo.author!.avatar, size: 24),
-              const SizedBox(width: 8),
-              Text(widget.memo.author!.nickname,
-                  style: const TextStyle(fontSize: 14)),
-            ],
-          ).paddingHorizontal(8).paddingVertical(4),
-        ),
+        if(!updating)
+          InkWell(
+            onTap: () {
+              context.to('/user/${widget.memo.author!.username}');
+            },
+            borderRadius: BorderRadius.circular(4),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Avatar(url: widget.memo.author!.avatar, size: 24),
+                const SizedBox(width: 8),
+                Text(widget.memo.author!.nickname,
+                    style: const TextStyle(fontSize: 14)),
+              ],
+            ).paddingHorizontal(8).paddingVertical(4),
+          )
+        else
+          SizedBox(
+            height: 40,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(width: 8,),
+                const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2,),
+                ),
+                const SizedBox(width: 8,),
+                Text("Updating".tl),
+              ],
+            ),
+          ),
         const Spacer(),
         Button.normal(
           onPressed: like,
