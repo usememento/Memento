@@ -65,39 +65,39 @@ class MainPageState extends State<MainPage> {
           PaneItemEntry(
             icon: Icons.home_outlined,
             activeIcon: Icons.home_filled,
-            label: "Home",
+            label: "Home".tl,
             routeName: '/',
           ),
           PaneItemEntry(
             icon: Icons.explore_outlined,
             activeIcon: Icons.explore,
-            label: "Explore",
+            label: "Explore".tl,
             routeName: '/explore',
           ),
           PaneItemEntry(
             icon: Icons.subscriptions_outlined,
             activeIcon: Icons.subscriptions,
-            label: "Following",
+            label: "Following".tl,
             routeName: '/following',
           ),
           PaneItemEntry(
             icon: Icons.my_library_books_outlined,
             activeIcon: Icons.my_library_books,
-            label: "Resources",
+            label: "Resources".tl,
             routeName: '/resources',
           ),
         ],
         paneActions: [
           if (context.width <= 600)
             PaneActionEntry(
-                label: "Search",
+                label: "Search".tl,
                 icon: Icons.search,
                 onTap: () {
                   App.navigator!.pushNamed('/search');
                 }),
           PaneActionEntry(
               routeName: '/settings',
-              label: "Settings",
+              label: "Settings".tl,
               icon: Icons.settings_outlined,
               onTap: () {
                 App.navigator!.pushNamed('/settings');

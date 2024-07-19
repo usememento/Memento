@@ -82,7 +82,7 @@ class _LoginPageState extends State<LoginPage> {
             TextSpan(
               children: [
                 TextSpan(
-                  text: "Continue with no account".tl,
+                  text: "Continue without account".tl,
                   style: TextStyle(color: context.colorScheme.primary),
                   recognizer: TapGestureRecognizer()
                     ..onTap = () {

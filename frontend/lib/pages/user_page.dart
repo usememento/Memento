@@ -241,7 +241,7 @@ class _UserListPageState extends MultiPageLoadingState<UserListPage, User> {
   @override
   Widget? buildFrame(BuildContext context, Widget child) {
     return Column(
-      children: [Appbar(title: widget.title), Expanded(child: child)],
+      children: [Appbar(title: widget.title.tl), Expanded(child: child)],
     ).withSurface();
   }
 

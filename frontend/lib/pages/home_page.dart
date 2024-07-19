@@ -90,9 +90,9 @@ class _HomePageState extends State<HomePage> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: TextField(
-                      decoration: const InputDecoration(
-                        hintText: "Search",
-                        prefixIcon: Icon(Icons.search),
+                      decoration: InputDecoration(
+                        hintText: "Search".tl,
+                        prefixIcon: const Icon(Icons.search),
                         border: InputBorder.none,
                       ),
                       onSubmitted: (s) {
@@ -158,8 +158,8 @@ class _WritingAreaState extends State<WritingArea> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           TextField(
-            decoration: const InputDecoration(
-              hintText: "Write what you think...",
+            decoration: InputDecoration(
+              hintText: "Write down your thoughts".tl,
               border: InputBorder.none,
             ),
             controller: controller,
@@ -304,7 +304,7 @@ class _WritingPageState extends State<WritingPage> {
     return Column(
       children: [
         Appbar(
-          title: "Writing".tl,
+          title: "Write".tl,
           actions: [
             Text(
               controller.text.length.toString(),
@@ -315,11 +315,11 @@ class _WritingPageState extends State<WritingPage> {
         Expanded(
           child: Container(
             child: TextField(
-              decoration: const InputDecoration(
-                hintText: "Write what you think...",
+              decoration: InputDecoration(
+                hintText: "Write down your thoughts".tl,
                 border: InputBorder.none,
                 contentPadding:
-                    EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               ),
               controller: controller,
               onChanged: (value) {

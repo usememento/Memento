@@ -26,7 +26,7 @@ class _MemoEditPageState extends State<MemoEditPage> {
     return Column(
       children: [
         Appbar(
-          title: "Writing".tl,
+          title: "Edit".tl,
           actions: [
             Text(
               controller.text.length.toString(),
@@ -37,11 +37,11 @@ class _MemoEditPageState extends State<MemoEditPage> {
         Expanded(
           child: Container(
             child: TextField(
-              decoration: const InputDecoration(
-                hintText: "Write what you think...",
+              decoration: InputDecoration(
+                hintText: "Write down your thoughts".tl,
                 border: InputBorder.none,
                 contentPadding:
-                EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               ),
               controller: controller,
               onChanged: (value) {

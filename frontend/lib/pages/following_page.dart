@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/foundation/app.dart';
+import 'package:frontend/utils/translation.dart';
 
 import '../components/memo.dart';
 import '../components/states.dart';
@@ -58,9 +59,9 @@ class _FollowingPageState extends State<FollowingPage> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: TextField(
-                      decoration: const InputDecoration(
-                        hintText: "Search",
-                        prefixIcon: Icon(Icons.search),
+                      decoration: InputDecoration(
+                        hintText: "Search".tl,
+                        prefixIcon: const Icon(Icons.search),
                         border: InputBorder.none,
                       ),
                       onSubmitted: (s) {

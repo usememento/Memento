@@ -32,8 +32,8 @@ class _CommentsPageState extends State<CommentsPage> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        const Appbar(
-          title: 'Comments',
+        Appbar(
+          title: 'Comments'.tl,
         ),
         Expanded(
           child: _CommentsList(
@@ -63,11 +63,11 @@ class _CommentsPageState extends State<CommentsPage> {
                         decoration: InputDecoration(
                             border: InputBorder.none,
                             isCollapsed: true,
-                            hintText: "评论".tl),
+                            hintText: "comment".tl),
                         minLines: 1,
-                        maxLines: 5,
                         controller: controller,
                         onSubmitted: (text) {
+                          if(text.isEmpty)  return;
                           onSend();
                         },
                       ),
@@ -97,6 +97,7 @@ class _CommentsPageState extends State<CommentsPage> {
   }
 
   void onSend() async {
+    if(controller.text.isEmpty)  return;
     setState(() {
       sending = true;
     });

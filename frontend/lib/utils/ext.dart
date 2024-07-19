@@ -1,3 +1,5 @@
+import 'package:frontend/utils/translation.dart';
+
 extension ListExt<T> on List<T>{
   /// Remove all blank value and return the list.
   List<T> getNoBlankList(){
@@ -104,18 +106,18 @@ extension TimeExt on DateTime {
       return "$year-$month-$day";
     } else if (offset > const Duration(days: 30)) {
       int month = offset.inDays ~/ 30;
-      return "$month months ago";
+      return "{0} months ago".tlParams([month]);
     } else if (offset > const Duration(days: 1)) {
       int day = offset.inDays;
-      return "$day days ago";
+      return "{0} days ago".tlParams([day]);
     } else if (offset > const Duration(hours: 1)) {
       int hour = offset.inHours;
-      return "$hour hours ago";
+      return "{0} hours ago".tlParams([hour]);
     } else if (offset > const Duration(minutes: 1)) {
       int minute = offset.inMinutes;
-      return "$minute minutes ago";
+      return "{0} minutes ago".tlParams([minute]);
     } else {
-      return "Just now";
+      return "Just now".tl;
     }
   }
 }
