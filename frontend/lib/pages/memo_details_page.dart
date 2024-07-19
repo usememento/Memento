@@ -379,10 +379,10 @@ class _MemoDetailsState extends State<_MemoDetails> {
             var baseUrl = App.isWeb ? Uri.base : appdata.settings['domain'];
             var url = baseUrl + '/memo/' + widget.memo.id.toString();
             showPopMenu(location, [
-              MenuEntry("Copy path", () {
+              MenuEntry("Copy path".tl, () {
                 Clipboard.setData(ClipboardData(text: url));
               }),
-              MenuEntry("Share", () {
+              MenuEntry("Share".tl, () {
                 Share.share(url);
               }),
             ]);

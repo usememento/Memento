@@ -19,7 +19,7 @@
     "Post": "发布",
     "Posts": "文章",
     "Days": "天",
-    "Likes": "赞",
+    "Likes": "喜欢",
     "Resources": "资源",
     "Upload": "上传",
     "Profile": "个人资料",
@@ -99,5 +99,8 @@
     "{0} hours ago": "{0}小时前",
     "{0} minutes ago": "{0}分钟前",
     "Just now": "刚刚",
-    "Comments": "评论"
+    "Comments": "评论",
+    "Outline": "大纲",
+    "Copy path": "复制路径",
+    "Share": "分享"
 }

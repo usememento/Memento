@@ -185,11 +185,11 @@ class _ButtonState extends State<Button> {
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
         onTap: isLoading ? null : widget.onPressed,
-        onTapUp: (details) {
+        onTapUp: widget.onPressedAt != null && !isLoading ? (details) {
           if (widget.onPressedAt != null && !isLoading) {
             widget.onPressedAt!(details.globalPosition);
           }
-        },
+        }: null,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 160),
           padding: padding,
