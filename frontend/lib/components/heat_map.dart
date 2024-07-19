@@ -5,18 +5,23 @@ import 'package:frontend/network/network.dart';
 import 'package:frontend/utils/translation.dart';
 
 class HeatMapWithLoadingState extends StatefulWidget {
-  const HeatMapWithLoadingState({super.key, this.username});
+  const HeatMapWithLoadingState(
+      {super.key, this.username, this.showStatistics = true});
 
   final String? username;
 
+  final bool showStatistics;
+
   @override
-  State<HeatMapWithLoadingState> createState() => _HeatMapWithLoadingStateState();
+  State<HeatMapWithLoadingState> createState() =>
+      _HeatMapWithLoadingStateState();
 }
 
-class _HeatMapWithLoadingStateState extends LoadingState<HeatMapWithLoadingState, HeatMapData> {
+class _HeatMapWithLoadingStateState
+    extends LoadingState<HeatMapWithLoadingState, HeatMapData> {
   @override
   Widget buildContent(BuildContext context, HeatMapData data) {
-    return HeatMap(data: data);
+    return HeatMap(data: data, showStatistics: widget.showStatistics);
   }
 
   @override
@@ -25,11 +30,12 @@ class _HeatMapWithLoadingStateState extends LoadingState<HeatMapWithLoadingState
   }
 }
 
-
 class HeatMap extends StatelessWidget {
-  const HeatMap({super.key, required this.data});
+  const HeatMap({super.key, required this.data, this.showStatistics = true});
 
   final HeatMapData data;
+
+  final bool showStatistics;
 
   static const _kSquareSize = 12.0;
 
@@ -54,7 +60,7 @@ class HeatMap extends StatelessWidget {
 
       return Column(
         children: [
-          buildStatistic(context),
+          if (showStatistics) buildStatistic(context),
           const SizedBox(height: 8),
           Row(
             children: columns.reversed.toList(),
@@ -62,7 +68,9 @@ class HeatMap extends StatelessWidget {
           const SizedBox(height: 8),
           buildMonthInfo(monthInfo, maxColumns),
         ],
-      ).fixWidth(_kSquareSize*maxColumns + _kPadding*(maxColumns)*2).toCenter();
+      )
+          .fixWidth(_kSquareSize * maxColumns + _kPadding * (maxColumns) * 2)
+          .toCenter();
     }).fixWidth(double.infinity);
   }
 
@@ -89,7 +97,7 @@ class HeatMap extends StatelessWidget {
 
     return Row(
       children: [
-        buildItem("Memos", data.totalMemos),
+        buildItem("Posts", data.totalMemos),
         const Spacer(),
         buildItem("Days", data.totalDays),
         const Spacer(),
@@ -99,14 +107,14 @@ class HeatMap extends StatelessWidget {
   }
 
   Widget buildOneDay(String time, int count, Color primary, Color bg) {
-    primary = primary.withOpacity(count.clamp(0, 5) * 0.2);
+    primary = primary.withOpacity(count.clamp(0, 5) * 0.16 + 0.2);
     Widget child = ColoredBox(
       color: primary,
       child: const SizedBox.square(
         dimension: _kSquareSize,
       ),
     );
-    if(count == 0) {
+    if (count == 0) {
       child = ColoredBox(
         color: bg,
         child: const SizedBox.square(
@@ -115,17 +123,17 @@ class HeatMap extends StatelessWidget {
       );
     }
     child = Tooltip(
-      message: "$time\n$count Memos",
-      textAlign: TextAlign.center,
-      child: child
-    );
+        message: "$time\n$count Posts",
+        textAlign: TextAlign.center,
+        child: child);
     return ClipRRect(
       borderRadius: BorderRadius.circular(2),
       child: child,
     ).paddingAll(_kPadding);
   }
 
-  Column buildColumn(DateTime start, BuildContext context, int columnIndex, Map<int, int> monthInfo) {
+  Column buildColumn(DateTime start, BuildContext context, int columnIndex,
+      Map<int, int> monthInfo) {
     if (start.weekday != DateTime.sunday) {
       throw ArgumentError('start must be a Sunday');
     }
@@ -134,7 +142,7 @@ class HeatMap extends StatelessWidget {
 
     for (var i = 0; i < 7; i++) {
       var date = start.add(Duration(days: i));
-      if(date.day == 1) {
+      if (date.day == 1) {
         monthInfo[date.month] = columnIndex;
       }
       var key = date.toIso8601String().substring(0, 10);
@@ -153,14 +161,24 @@ class HeatMap extends StatelessWidget {
   Widget buildMonthInfo(Map<int, int> monthInfo, int maxColumns) {
     var children = <Widget>[];
     int lastIndex = -1;
-    for(var month in monthInfo.keys) {
+    for (var month in monthInfo.keys) {
       var columnIndex = monthInfo[month]!;
       const months = [
-        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec"
       ];
-      var monthName = months[month-1];
-      if(columnIndex -lastIndex == 1) {
+      var monthName = months[month - 1];
+      if (columnIndex - lastIndex == 1) {
         columnIndex++;
       }
       var columns = (columnIndex - lastIndex);

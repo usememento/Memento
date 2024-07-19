@@ -652,6 +652,20 @@ class Network {
       return Res.fromError(e);
     }
   }
+
+  Future<Res<List<Memo>>> getFollowingMemos(int page) async {
+    try {
+      page--;
+      var res = await dio.get<Map>("/api/post/following", queryParameters: {
+        "page": page,
+      });
+      return Res(
+          (res.data!["posts"] as List).map((e) => Memo.fromJson(e)).toList(),
+          subData: res.data!['maxPage'] + 1);
+    } catch (e) {
+      return Res.fromError(e);
+    }
+  }
 }
 
 void setDebugProxy() {

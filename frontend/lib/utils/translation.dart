@@ -9,6 +9,14 @@ extension Translation on String {
     return Translation.translation[this] ?? this;
   }
 
+  String tlParams(List<Object> params) {
+    var result = tl;
+    for(var i = 0; i < params.length; i++) {
+      result = result.replaceAll('{$i}', params[i].toString());
+    }
+    return result;
+  }
+
   static Map<String, String> translation = {};
 
   static Future<void> init() async{

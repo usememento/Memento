@@ -40,7 +40,7 @@ func HandleUserCreateWrapper(c echo.Context, s *server.Server) error {
 		TotalComment: 0,
 		TotalPosts:   0,
 		RegisteredAt: time.Now(),
-		IsAdmin: totalUsers == 0,
+		IsAdmin:      totalUsers == 0,
 	}
 	err = memento.GetDbConnection().Create(&user).Error
 	if err != nil {
@@ -307,7 +307,7 @@ func HandleUserHeatMap(c echo.Context) error {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown query error")
 	}
-	sixMonthsAgo := time.Now().AddDate(0, -6, 0)
+	sixMonthsAgo := time.Now().AddDate(0, -12, 0)
 	heatmap := make(map[string]int)
 	var posts []model.Post
 	err = memento.GetDbConnection().Model(&user).Association("Posts").Find(&posts)

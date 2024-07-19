@@ -659,3 +659,56 @@ func HandleGetTags(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, tagsList)
 }
+
+func HandleGetFollowingPosts(c echo.Context) error {
+	username := c.Get("username").(string)
+	var user model.User
+	err := memento.GetDbConnection().Preload("Follows").First(&user, "username=?", username).Error
+	if err != nil {
+		return utils.RespondError(c, "username not exists")
+	}
+	page, err := strconv.Atoi(c.QueryParam("page"))
+	if err != nil {
+		return utils.RespondError(c, "invalid page")
+	}
+
+	var followedUsernames []string
+	for _, follow := range user.Follows {
+		followedUsernames = append(followedUsernames, follow.Username)
+	}
+	// Get the posts of followed users
+	var posts []model.Post
+	err = memento.GetDbConnection().Limit(memento.PageSize).Offset(memento.PageSize*page).Where("username IN ?", followedUsernames).Find(&posts).Error
+	if err != nil {
+		return utils.RespondError(c, "unknown query error")
+	}
+	var total int64
+	err = memento.GetDbConnection().Model(&model.Post{}).Where("username IN ?", followedUsernames).Count(&total).Error
+	if err != nil {
+		return utils.RespondError(c, "unknown query error")
+	}
+	result := make([]model.PostViewModel, 0, memento.PageSize)
+	for _, p := range posts {
+		var author model.User
+		memento.GetDbConnection().First(&author, "username=?", p.Username)
+		isLiked := false
+		if username != "" {
+			var likePosts []model.Post
+			err = memento.GetDbConnection().Model(&user).Association("Likes").Find(&likePosts, "id=?", p.ID)
+			if err != nil {
+				log.Errorf(err.Error())
+			}
+			isLiked = len(likePosts) > 0
+		}
+		pv, err := utils.PostToView(&p, utils.UserToView(&author, true), isLiked)
+		if err != nil {
+			log.Errorf(err.Error())
+			continue
+		}
+		result = append(result, *pv)
+	}
+	return c.JSON(http.StatusOK, echo.Map{
+		"posts":   result,
+		"maxPage": utils.MaxPage(total),
+	})
+}

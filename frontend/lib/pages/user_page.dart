@@ -8,6 +8,7 @@ import 'package:frontend/network/network.dart';
 import 'package:frontend/utils/ext.dart';
 import 'package:frontend/utils/translation.dart';
 
+import '../components/heat_map.dart';
 import '../components/memo.dart';
 import '../components/tab.dart';
 
@@ -34,6 +35,7 @@ class _UserInfoPageState extends LoadingState<UserInfoPage, User> {
   Widget buildContent(BuildContext context, User data) {
     return NotificationListener<ScrollNotification>(
         onNotification: (notification) {
+          if (notification.metrics.axis != Axis.vertical) return false;
           var showTitle = notification.metrics.pixels -
                   notification.metrics.minScrollExtent >
               64;
@@ -77,7 +79,8 @@ class _UserInfoPageState extends LoadingState<UserInfoPage, User> {
                           ],
                         ),
                       ),
-                      if (appdata.isLogin && data.username != appdata.user.username)
+                      if (appdata.isLogin &&
+                          data.username != appdata.user.username)
                         Button.outlined(
                             width: data.isFollowed ? 84 : 72,
                             height: 28,
@@ -155,11 +158,12 @@ class _UserInfoPageState extends LoadingState<UserInfoPage, User> {
                     return IndependentTabBar(
                       tabs: [
                         Tab(
-                          text: "Memos".tl,
+                          text: "Posts".tl,
                           height: 42,
                         ),
                         Tab(text: "Replies".tl, height: 42),
                         Tab(text: "Likes".tl, height: 42),
+                        Tab(text: "Statistics".tl, height: 42),
                       ],
                       onTabChange: onPageChanged,
                     );
@@ -171,14 +175,13 @@ class _UserInfoPageState extends LoadingState<UserInfoPage, User> {
   }
 
   Widget buildPage() {
-    if (page == 0) {
-      return _UserMemosList(username: data!.username);
-    } else if (page == 1) {
-      return _UserCommentsList(username: data!.username);
-    } else if (page == 2) {
-      return _UserLikedMemosList(username: data!.username);
-    }
-    return const SliverToBoxAdapter();
+    return switch (page) {
+      0 => _UserMemosList(username: data!.username),
+      1 => _UserCommentsList(username: data!.username),
+      2 => _UserLikedMemosList(username: data!.username),
+      3 => _UserStats(user: data!),
+      _ => const Placeholder(),
+    };
   }
 
   void onPageChanged(int i) {
@@ -247,7 +250,7 @@ class _UserListPageState extends MultiPageLoadingState<UserListPage, User> {
     return ListView.builder(
       padding: EdgeInsets.zero,
       itemBuilder: (context, index) {
-        if(index == data.length - 1) {
+        if (index == data.length - 1) {
           nextPage();
         }
         return UserCard(user: data[index]);
@@ -295,7 +298,7 @@ class _UserMemosListState extends MultiPageLoadingState<_UserMemosList, Memo> {
     return SliverList(
         delegate: SliverChildBuilderDelegate(
       (context, index) {
-        if(index == data.length - 1) {
+        if (index == data.length - 1) {
           nextPage();
         }
         return MemoWidget(memo: data[index], showUser: false);
@@ -344,7 +347,7 @@ class _UserCommentsListState
     return SliverList(
         delegate: SliverChildBuilderDelegate(
       (context, index) {
-        if(index == data.length - 1) {
+        if (index == data.length - 1) {
           nextPage();
         }
         return _UserCommentWidget(comment: data[index]);
@@ -474,7 +477,7 @@ class _UserLikedMemosListState
     return SliverList(
         delegate: SliverChildBuilderDelegate(
       (context, index) {
-        if(index == data.length - 1) {
+        if (index == data.length - 1) {
           nextPage();
         }
         return MemoWidget(memo: data[index]);
@@ -486,5 +489,85 @@ class _UserLikedMemosListState
   @override
   Future<Res<List<Memo>>> loadData(int page) {
     return Network().getUserLikedMemos(widget.username, page);
+  }
+}
+
+class _UserStats extends StatefulWidget {
+  const _UserStats({required this.user});
+
+  final User user;
+
+  @override
+  State<_UserStats> createState() => _UserStatsState();
+}
+
+class _UserStatsState extends LoadingState<_UserStats, HeatMapData> {
+  @override
+  Widget buildLoading() {
+    return SliverToBoxAdapter(
+      child: Center(
+        child: const CircularProgressIndicator(
+          strokeWidth: 2,
+        ).fixWidth(18).fixHeight(18),
+      ).fixHeight(64),
+    );
+  }
+
+  @override
+  Widget buildError() {
+    return SliverToBoxAdapter(
+      child: super.buildError(),
+    );
+  }
+
+  @override
+  Widget buildContent(BuildContext context, HeatMapData data) {
+    return SliverMainAxisGroup(slivers: [
+      SliverToBoxAdapter(
+        child: ListTile(
+          title: Text(
+              "{0} posts in the past year".tlParams([data.dailyData.length])),
+        ),
+      ),
+      SliverToBoxAdapter(
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          controller: ScrollController(initialScrollOffset: 850),
+          child: HeatMap(
+            showStatistics: false,
+            data: data,
+          ).fixWidth(850).paddingHorizontal(16),
+        ),
+      ).sliverPadding(const EdgeInsets.only(bottom: 12)),
+      SliverToBoxAdapter(
+        child: ListTile(
+          title: Text("Registered at".tl),
+          subtitle: Text(widget.user.createdAt.toString().substring(0, 10)),
+        ),
+      ),
+      SliverToBoxAdapter(
+        child: ListTile(
+          title: Text("Total posts".tl),
+          subtitle: Text(widget.user.totalPosts.toString()),
+        ),
+      ),
+      SliverToBoxAdapter(
+        child: ListTile(
+          title: Text("Total likes".tl),
+          subtitle: Text(widget.user.totalLiked.toString()),
+        ),
+      ),
+      SliverToBoxAdapter(
+        child: ListTile(
+          title: Text("Total comments".tl),
+          subtitle: Text(widget.user.totalComment.toString()),
+        ),
+      ),
+    ]);
+  }
+
+  @override
+  Future<Res<HeatMapData>> loadData() {
+    return Network().getHeatMapData(widget.user.username);
   }
 }

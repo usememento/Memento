@@ -12,6 +12,7 @@ import '../components/button.dart';
 import '../components/user.dart';
 import '../foundation/app.dart';
 import 'explore_page.dart';
+import 'following_page.dart';
 import 'home_page.dart';
 import 'memo_details_page.dart';
 
@@ -26,6 +27,7 @@ class MainPageState extends State<MainPage> {
   static Map<String, Widget Function(BuildContext context)> routes = {
     '/': (context) => const HomePage(),
     '/explore': (context) => const ExplorePage(),
+    '/following': (context) => const FollowingPage(),
     '/resources': (context) => const ResourcePage(),
     '/settings': (context) => const SettingsPage(),
     '/search': (context) => const SearchPage(),
@@ -36,9 +38,10 @@ class MainPageState extends State<MainPage> {
     '/user/:username/following': (context) => UserListPage.following(),
   };
 
-  static const mainPageRoutes = [
+  static const _mainPageRoutes = [
     '/',
     '/explore',
+    '/following',
     '/resources',
   ];
 
@@ -72,6 +75,12 @@ class MainPageState extends State<MainPage> {
             routeName: '/explore',
           ),
           PaneItemEntry(
+            icon: Icons.subscriptions_outlined,
+            activeIcon: Icons.subscriptions,
+            label: "Following",
+            routeName: '/following',
+          ),
+          PaneItemEntry(
             icon: Icons.my_library_books_outlined,
             activeIcon: Icons.my_library_books,
             label: "Resources",
@@ -96,7 +105,7 @@ class MainPageState extends State<MainPage> {
         ],
         onPageChange: (index) {
           App.navigator!.pushNamedAndRemoveUntil(
-              mainPageRoutes[index], (settings) => false);
+              _mainPageRoutes[index], (settings) => false);
         },
         leading: NaviPaneLeading(
           small: HoverBox(
@@ -228,7 +237,7 @@ class MainPageState extends State<MainPage> {
                   builder: builder ?? (context) => const UnknownRoutePage(),
                   settings:
                       RouteSettings(name: settings.name, arguments: params),
-                  isRootRoute: mainPageRoutes.contains(settings.name));
+                  isRootRoute: _mainPageRoutes.contains(settings.name));
             },
           );
         },
