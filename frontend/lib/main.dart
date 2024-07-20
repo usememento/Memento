@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:frontend/components/overlay.dart';
 import 'package:frontend/components/window_border.dart';
 import 'package:frontend/foundation/app.dart';
-import 'package:frontend/network/network.dart';
+import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:frontend/pages/auth.dart';
 import 'package:frontend/pages/main_page.dart';
 import 'package:frontend/utils/translation.dart';
 import 'package:window_manager/window_manager.dart';
 
 void main() async {
+  usePathUrlStrategy();
   WidgetsFlutterBinding.ensureInitialized();
   await Translation.init();
   await appdata.readData();

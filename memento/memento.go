@@ -33,7 +33,7 @@ type MementoServer struct {
 
 const (
 	PageSize       = 20
-	ConfigFileName = "memento_cfg.yaml"
+	ConfigFileName = "config.yaml"
 )
 
 var memento MementoServer

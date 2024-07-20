@@ -79,7 +79,7 @@ class _MemoWidgetState extends State<MemoWidget> {
     return SelectionArea(
         child: InkWell(
       onTap: () async {
-        await context.to("/memo/${widget.memo.id}", {
+        await context.to("/post/${widget.memo.id}", {
           'memo': widget.memo,
         });
         if(editable) {
@@ -160,7 +160,7 @@ class _MemoWidgetState extends State<MemoWidget> {
                     const SizedBox(width: 36),
                   if(updating)
                     SizedBox(
-                      height: 40,
+                      height: 34,
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -182,10 +182,10 @@ class _MemoWidgetState extends State<MemoWidget> {
                       padding: const EdgeInsets.all(8),
                       child: widget.memo.isLiked
                           ? const Icon(Icons.favorite,
-                              size: 24, color: Colors.red)
+                              size: 18, color: Colors.red)
                           : const Icon(
                               Icons.favorite_border,
-                              size: 24,
+                              size: 18,
                             )),
                   if(!updating)
                   Text(

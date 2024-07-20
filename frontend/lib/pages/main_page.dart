@@ -31,7 +31,7 @@ class MainPageState extends State<MainPage> {
     '/resources': (context) => const ResourcePage(),
     '/settings': (context) => const SettingsPage(),
     '/search': (context) => const SearchPage(),
-    '/memo/:id': (context) => const MemoDetailsPage(),
+    '/post/:id': (context) => const MemoDetailsPage(),
     '/tag/:tag': (context) => const TaggedMemosListPage(),
     '/user/:username': (context) => const UserInfoPage(),
     '/user/:username/followers': (context) => UserListPage.followers(),

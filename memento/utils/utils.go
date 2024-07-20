@@ -132,10 +132,8 @@ func CommentToView(comment *model.Comment, user *model.UserViewModel, isLiked bo
 
 func UserToView(user *model.User, isFollowed bool) *model.UserViewModel {
 	avatarPath := user.AvatarUrl
-	avatar := ""
-	if avatarPath == "" {
-		avatar = ""
-	} else {
+	avatar := "user.png"
+	if avatarPath != "" {
 		for i := len(avatarPath) - 1; i >= 0; i-- {
 			if avatarPath[i] == '/' || avatarPath[i] == '\\' {
 				avatar = avatarPath[i+1:]

@@ -132,6 +132,7 @@ func HandlePostCreate(c echo.Context) error {
 		log.Errorf(err.Error())
 		return utils.RespondInternalError(c, "index failed")
 	}
+	defer GenerateSiteMap()
 	return c.JSON(http.StatusOK, *pv)
 }
 func HandlePostDelete(c echo.Context) error {
@@ -186,6 +187,7 @@ func HandlePostDelete(c echo.Context) error {
 		return utils.RespondError(c, "unknown deletion error")
 	}
 	os.Remove(post.ContentUrl)
+	defer GenerateSiteMap()
 	return c.NoContent(http.StatusOK)
 }
 func HandlePostEdit(c echo.Context) error {
@@ -274,6 +276,7 @@ func HandlePostEdit(c echo.Context) error {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown query error")
 	}
+	defer GenerateSiteMap()
 	return c.NoContent(http.StatusOK)
 }
 func HandleGetPost(c echo.Context) error {

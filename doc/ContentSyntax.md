@@ -69,6 +69,14 @@ Only `<img>` is supported to embed a sized image.
 - [ ] Task 3
 ```
 
+## Math
+
+Math is supported with latex syntax.
+
+```markdown
+$O(n) = n^2$
+```
+
 ## Tag
 
 A tag should start with `#`, the `#` should be the start of line or after a space.

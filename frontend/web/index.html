@@ -14,25 +14,42 @@
     This is a placeholder for base href that will be replaced by the value of
     the `--base-href` argument provided to `flutter build`.
   -->
-  <base href="$FLUTTER_BASE_HREF">
+  <base href="/">
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="description" content="{{Description}}">
+
+  <!-- SEO meta -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{Title}}">
+  <meta name="twitter:description" content="{{Description}}">
+  <meta name="twitter:image" content="{{Preview}}">
+  <meta property="og:title" content="{{Title}}">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="{{Url}}">
+  <meta property="og:image" content="{{Preview}}">
+  <meta property="og:description" content="{{Description}}">
+  <meta property="og:site_name" content="{{SiteName}}">
 
   <!-- iOS meta tags & icons -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="frontend">
+  <meta name="apple-mobile-web-app-title" content="{{SiteName}}">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
   <link rel="icon" type="image/x-icon" href="favicon.ico"/>
 
-  <title>frontend</title>
+  <title>{{Title}}</title>
   <link rel="manifest" href="manifest.json">
 </head>
 <body>
+  <!-- SEO article -->
+  <div style="display:none">
+    <!-- SEO article Body-->
+  </div>
+
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

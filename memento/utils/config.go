@@ -13,6 +13,8 @@ var (
 			Port:           1323,
 			BasePath:       "",
 			EnableRegister: true,
+			SiteName:       "Memento",
+			Description:    "Memento is a self-hosted note-taking service.",
 		},
 	}
 )
@@ -35,6 +37,8 @@ type ServerConfig struct {
 	Port           uint16
 	BasePath       string
 	EnableRegister bool `yaml:"enable_register"`
+	SiteName       string
+	Description    string
 }
 
 type MementoConfig struct {

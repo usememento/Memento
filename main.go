@@ -47,7 +47,7 @@ func main() {
 	e := echo.New()
 	// Middleware
 	e.Use(middleware.Logger())
-	service.ServeFrontend(e)
+	e.Use(service.SEOFrontEndMiddleware)
 	e.POST("/api/user/refresh", func(c echo.Context) error {
 		return service.HandleUserRefreshToken(c, AuthServer)
 	})

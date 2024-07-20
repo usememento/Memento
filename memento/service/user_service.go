@@ -15,6 +15,7 @@ import (
 	"os"
 	"path"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -23,6 +24,12 @@ func HandleUserCreateWrapper(c echo.Context, s *server.Server) error {
 		return utils.RespondError(c, "Registration Disabled")
 	}
 	username := c.FormValue("username")
+	notAllowedChars := []string{" ", "\t", "\n", "\r", "\\", "/", ":", "*", "?", "\"", "<", ">", "|"}
+	for _, char := range notAllowedChars {
+		if strings.Contains(username, char) {
+			return utils.RespondError(c, "Invalid username: username contains invalid character "+char)
+		}
+	}
 	password := c.FormValue("password")
 	hashedPassword := utils.Md5string(password)
 	var totalUsers int64
@@ -161,6 +168,9 @@ func HandleUserEdit(c echo.Context) error {
 		user.Nickname = nickname[0]
 	}
 	if len(bio) == 1 {
+		if len([]rune(bio[0])) > 200 {
+			return utils.RespondError(c, "bio too long")
+		}
 		user.Bio = bio[0]
 	}
 	if hasAvatar {
@@ -463,5 +473,8 @@ func HandlerGetUserFollowing(c echo.Context) error {
 
 func HandleGetAvatar(c echo.Context) error {
 	name := c.Param("name")
+	if name == "user.png" {
+		return c.Redirect(http.StatusMovedPermanently, "/assets/assets/user.png")
+	}
 	return c.File(path.Join(memento.GetAvatarPath(), name))
 }
