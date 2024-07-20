@@ -47,6 +47,7 @@ func main() {
 	e := echo.New()
 	// Middleware
 	e.Use(middleware.Logger())
+	e.Use(middleware.Gzip())
 	e.Use(service.SEOFrontEndMiddleware)
 
 	api := e.Group("/api")
