@@ -1,6 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/components/button.dart';
+import 'package:frontend/components/captcha.dart';
 import 'package:frontend/foundation/app.dart';
 import 'package:frontend/network/network.dart';
 import 'package:frontend/utils/translation.dart';
@@ -147,6 +148,8 @@ class _RegisterPageState extends State<RegisterPage> {
 
   String password = '';
 
+  String captcha = '';
+
   bool isLoading = false;
 
   var domainController =
@@ -186,6 +189,9 @@ class _RegisterPageState extends State<RegisterPage> {
           buildTextField("Password".tl, (value) {
             password = value;
           }, Icons.lock),
+          CaptchaWidget(onCaptchaCompleted: (value) {
+            captcha = value;
+          }).paddingTop(8),
           const SizedBox(height: 12),
           Button.filled(
               isLoading: isLoading,
@@ -235,7 +241,7 @@ class _RegisterPageState extends State<RegisterPage> {
     setState(() {
       isLoading = true;
     });
-    var res = await Network().register(username, password);
+    var res = await Network().register(username, password, captcha);
     if (mounted) {
       if (res.error) {
         context.showMessage(res.message);

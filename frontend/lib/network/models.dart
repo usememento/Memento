@@ -372,3 +372,21 @@ class ServerFile {
         time: DateTime.parse(json['Time']));
   }
 }
+
+class Captcha {
+  final String identifier;
+  final String backgroundImage;
+  final String sliderImage;
+
+  const Captcha(
+      {required this.identifier,
+      required this.backgroundImage,
+      required this.sliderImage});
+
+  factory Captcha.fromJson(Map<String, dynamic> json) {
+    return Captcha(
+        identifier: json['identifier'],
+        backgroundImage: json['bg'],
+        sliderImage: json['slider']);
+  }
+}

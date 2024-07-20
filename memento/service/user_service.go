@@ -24,6 +24,10 @@ func HandleUserCreateWrapper(c echo.Context, s *server.Server) error {
 		return utils.RespondError(c, "Registration Disabled")
 	}
 	username := c.FormValue("username")
+	captchaToken := c.FormValue("captchaToken")
+	if !VerifyCaptchaToken(captchaToken) {
+		return utils.RespondError(c, "Invalid Captcha")
+	}
 	notAllowedChars := []string{" ", "\t", "\n", "\r", "\\", "/", ":", "*", "?", "\"", "<", ">", "|"}
 	for _, char := range notAllowedChars {
 		if strings.Contains(username, char) {

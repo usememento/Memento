@@ -249,10 +249,9 @@ packages:
   flutter_math_fork:
     dependency: "direct main"
     description:
-      name: flutter_math_fork
-      sha256: "94bee4642892a94939af0748c6a7de0ff8318feee588379dcdfea7dc5cba06c8"
-      url: "https://pub.dev"
-    source: hosted
+      path: "pkgs/flutter_math_fork"
+      relative: true
+    source: path
     version: "0.7.2"
   flutter_svg:
     dependency: transitive

@@ -48,13 +48,6 @@ func main() {
 	// Middleware
 	e.Use(middleware.Logger())
 	e.Use(service.SEOFrontEndMiddleware)
-	e.POST("/api/user/refresh", func(c echo.Context) error {
-		return service.HandleUserRefreshToken(c, AuthServer)
-	})
-	e.POST("/api/user/login", func(c echo.Context) error {
-		return service.HandleUserLoginWrapper(c, AuthServer)
-	})
-	e.POST("/api/user/create", func(c echo.Context) error { return service.HandleUserCreateWrapper(c, AuthServer) })
 
 	api := e.Group("/api")
 	{
@@ -76,6 +69,15 @@ func main() {
 		}
 		userApi := api.Group("/user")
 		{
+			userApi.POST("/refresh", func(c echo.Context) error {
+				return service.HandleUserRefreshToken(c, AuthServer)
+			})
+			userApi.POST("/login", func(c echo.Context) error {
+				return service.HandleUserLoginWrapper(c, AuthServer)
+			})
+			userApi.POST("/create", func(c echo.Context) error {
+				return service.HandleUserCreateWrapper(c, AuthServer)
+			})
 			userApi.GET("/get", service.HandleGetUser)
 			userApi.POST("/changePwd", service.HandleUserChangePwd)
 			userApi.POST("/edit", service.HandleUserEdit)
@@ -117,6 +119,11 @@ func main() {
 			adminApi.GET("/listUsers", service.HandleListUsers)
 			adminApi.DELETE("/deleteUser/:username", service.HandleAdminDeleteUser)
 			adminApi.POST("/setPermission", service.HandleSetUserPermission)
+		}
+		captchaApi := api.Group("/captcha")
+		{
+			captchaApi.GET("/create", service.HandleGetCaptcha)
+			captchaApi.POST("/verify", service.HandleVerifyCaptcha)
 		}
 	}
 	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", mServer.Config.ServerConfig.Port)))

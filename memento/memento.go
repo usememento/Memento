@@ -219,7 +219,13 @@ func isPublicPath(path string) bool {
 		"/api/user/get",
 		"/api/user/follower",
 		"/api/user/following",
+		"/api/user/heatmap",
+		"/api/user/login",
+		"/api/user/refresh",
+		"/api/user/create",
 		"/api/comment/userComments",
+		"/api/captcha/create",
+		"/api/captcha/verify",
 	}
 	for _, p := range publicPaths {
 		if strings.HasPrefix(path, p) {

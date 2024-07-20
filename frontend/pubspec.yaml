@@ -38,6 +38,7 @@ dependencies:
   shared_preferences: ^2.2.3
   markdown:
   flutter_math_fork:
+    path: ./pkgs/flutter_math_fork
   flutter_highlight:
   dio:
   path_provider:

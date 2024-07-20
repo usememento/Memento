@@ -174,13 +174,17 @@ class Network {
     }
   }
 
-  Future<Res<Account>> register(String username, String password) async {
+  Future<Res<Account>> register(String username, String password, String captchaToken) async {
     try {
+      if(captchaToken.isEmpty) {
+        return const Res.error("Invalid Captcha Token");
+      }
       setBaseUrl();
       var res = await dio.post<Map<String, dynamic>>("/api/user/create",
           data: {
             "username": username,
             "password": password,
+            "captchaToken": captchaToken
           },
           queryParameters: _authQuery);
       return Res(Account.fromJson(res.data!));
@@ -669,6 +673,27 @@ class Network {
       return Res(
           (res.data!["posts"] as List).map((e) => Memo.fromJson(e)).toList(),
           subData: res.data!['maxPage'] + 1);
+    } catch (e) {
+      return Res.fromError(e);
+    }
+  }
+
+  Future<Res<Captcha>> getCaptcha() async {
+    try {
+      var res = await dio.get<Map<String, dynamic>>("/api/captcha/create");
+      return Res(Captcha.fromJson(res.data!));
+    } catch (e) {
+      return Res.fromError(e);
+    }
+  }
+
+  Future<Res<String>> verifyCaptcha(String identifier, String answer) async {
+    try {
+      var res = await dio.post<Map<String, dynamic>>("/api/captcha/verify", data: {
+        "identifier": identifier,
+        "answer": answer,
+      });
+      return Res(res.data!['captcha_token']);
     } catch (e) {
       return Res.fromError(e);
     }
