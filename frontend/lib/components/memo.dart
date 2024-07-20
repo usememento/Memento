@@ -116,8 +116,7 @@ class _MemoWidgetState extends State<MemoWidget> {
                       children: [
                         if (widget.memo.author != null && widget.showUser)
                           Text(widget.memo.author!.nickname,
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.bold)),
+                              style: ts.bold.s14),
                         const SizedBox(height: 8),
                         Container(
                           constraints: const BoxConstraints(maxHeight: 400),

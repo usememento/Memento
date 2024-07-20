@@ -102,5 +102,8 @@
     "Comments": "評論",
     "Outline": "大綱",
     "Copy path": "複製路徑",
-    "Share": "分享"
+    "Share": "分享",
+    "Set As Admin": "設為管理員",
+    "Set As User": "設為使用者",
+    "Comment": "評論"
 }

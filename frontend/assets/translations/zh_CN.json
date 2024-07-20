@@ -102,5 +102,8 @@
     "Comments": "评论",
     "Outline": "大纲",
     "Copy path": "复制路径",
-    "Share": "分享"
+    "Share": "分享",
+    "Set As Admin": "设为管理员",
+    "Set As User": "设为用户",
+    "Comment": "评论"
 }
