@@ -1,24 +1,11 @@
 import 'dart:convert';
-import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 
 extension Translation on String {
-  static var words = <String>{};
   String get tl {
-    if(Translation.translation[this] == null) {
-      var value = words.add(this);
-      if (value) {
-        var json = <String, String>{};
-        for (var word in words) {
-          json[word] = "";
-        }
-        File("D://translation.json").writeAsStringSync(
-            const JsonEncoder.withIndent("  ").convert(json));
-      }
-    }
     return Translation.translation[this] ?? this;
   }
 

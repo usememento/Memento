@@ -58,7 +58,7 @@ class _MemoDetailsPageState extends State<MemoDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading) {
+    if (isLoading || memo == null) {
       return const Column(
         children: [
           Appbar(title: ''),
@@ -90,15 +90,16 @@ class _MemoDetailsState extends State<_MemoDetails> {
       color: context.colorScheme.surface,
       child: Row(
         children: [
-          Tooltip(
-              message: "Back",
-              child: IconButton(
-                icon: const Icon(Icons.arrow_back_sharp),
-                onPressed: () {
-                  context.pop();
-                },
+          if(Navigator.of(context).canPop())
+            Tooltip(
+                message: "Back",
+                child: IconButton(
+                  icon: const Icon(Icons.arrow_back_sharp),
+                  onPressed: () {
+                    context.pop();
+                  },
+                ),
               ),
-            ),
           const SizedBox(width: 8),
           Expanded(
             child: buildActions(),

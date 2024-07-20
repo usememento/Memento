@@ -4,9 +4,9 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:frontend/foundation/app.dart';
 import 'package:frontend/utils/image.dart';
 
-import '../foundation/appdata.dart';
 import 'res.dart';
 import 'models.dart';
 
@@ -90,6 +90,10 @@ class AppInterceptor extends Interceptor {
         appdata.user = res.data;
         response.requestOptions.headers["Authorization"] =
             "Bearer ${appdata.user.token}";
+        if (response.requestOptions.data is FormData) {
+          response.requestOptions.data =
+              (response.requestOptions.data as FormData).clone();
+        }
         Network().dio.fetch(response.requestOptions).then((value) {
           handler.resolve(value);
         });
@@ -128,6 +132,9 @@ class Network {
   void setBaseUrl() {
     var url = appdata.settings['domain'] as String;
     dio.options.baseUrl = url;
+    if (App.isWeb && kDebugMode) {
+      dio.options.baseUrl = "http://localhost:1323";
+    }
   }
 
   static const _authQuery = {

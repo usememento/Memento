@@ -24,7 +24,7 @@ class MainPage extends StatefulWidget {
 }
 
 class MainPageState extends State<MainPage> {
-  static Map<String, Widget Function(BuildContext context)> routes = {
+  static final Map<String, Widget Function(BuildContext context)> routes = {
     '/': (context) => const HomePage(),
     '/explore': (context) => const ExplorePage(),
     '/following': (context) => const FollowingPage(),
@@ -36,6 +36,12 @@ class MainPageState extends State<MainPage> {
     '/user/:username': (context) => const UserInfoPage(),
     '/user/:username/followers': (context) => UserListPage.followers(),
     '/user/:username/following': (context) => UserListPage.following(),
+  };
+
+  static const Map<String, String> redirects = {
+    '/post': '/explore',
+    '/tag': '/explore',
+    '/user': '/explore',
   };
 
   static const _mainPageRoutes = [
@@ -201,14 +207,18 @@ class MainPageState extends State<MainPage> {
             initialRoute: App.initialRoute,
             reportsRouteUpdateToEngine: true,
             onGenerateRoute: (settings) {
-              var builder = routes[settings.name];
+              var path = settings.name;
+              if (path != null && redirects.containsKey(path)) {
+                path = redirects[path];
+              }
+              var builder = routes[path];
               var params = <String, dynamic>{};
-              if (builder == null && settings.name != null) {
+              if (builder == null && path != null) {
                 var keys = routes.keys;
                 for (var key in keys) {
                   params.clear();
                   var routeSegments = key.split('/');
-                  var settingsSegments = settings.name!.split('/');
+                  var settingsSegments = path.split('/');
                   if (routeSegments.length == settingsSegments.length) {
                     var match = true;
                     for (var i = 0; i < routeSegments.length; i++) {
@@ -236,8 +246,8 @@ class MainPageState extends State<MainPage> {
               return AppPageRoute(
                   builder: builder ?? (context) => const UnknownRoutePage(),
                   settings:
-                      RouteSettings(name: settings.name, arguments: params),
-                  isRootRoute: _mainPageRoutes.contains(settings.name));
+                      RouteSettings(name: path, arguments: params),
+                  isRootRoute: _mainPageRoutes.contains(path));
             },
           );
         },
