@@ -27,7 +27,6 @@ type User struct {
 	Likes         []Post    `gorm:"many2many:user_liked_posts;foreignKey:Username;"`
 	Comments      []Comment `gorm:"foreignKey:Username;references:Username"`
 	LikedComments []Comment `gorm:"many2many:user_liked_comments;foreignKey:Username;"`
-	Tags          []Tag     `gorm:"many2many:user_tags;foreignKey:Username;"`
 }
 
 type UserViewModel struct {

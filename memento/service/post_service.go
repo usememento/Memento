@@ -94,11 +94,6 @@ func HandlePostCreate(c echo.Context) error {
 						return utils.RespondError(c, "unknown insertion error")
 					}
 				}
-				err = tx.Model(&user).Association("Tags").Append(&tag)
-				if err != nil {
-					log.Errorf(err.Error())
-					return err
-				}
 				tx.Model(&tag).Association("Posts").Append(&post)
 			}
 			err = tx.Model(&post).Association("Tags").Append(contentTags)
@@ -195,6 +190,15 @@ func HandlePostEdit(c echo.Context) error {
 	if username == "" {
 		return utils.RespondUnauthorized(c)
 	}
+	var user model.User
+	err := memento.GetDbConnection().First(&user, "username=?", username).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return utils.RespondError(c, "username not exists")
+		}
+		log.Errorf(err.Error())
+		return utils.RespondError(c, "unknown query error")
+	}
 	id := c.FormValue("id")
 	permission := c.FormValue("permission")
 	private := false
@@ -206,7 +210,7 @@ func HandlePostEdit(c echo.Context) error {
 		return utils.RespondError(c, "invalid permission level")
 	}
 	var post model.Post
-	err := memento.GetDbConnection().First(&post, "id=?", id).Error
+	err = memento.GetDbConnection().First(&post, "id=?", id).Error
 	post.IsPrivate = private
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -218,8 +222,12 @@ func HandlePostEdit(c echo.Context) error {
 	if post.Username != username {
 		return utils.RespondError(c, "permission denied")
 	}
-	oldContent, _ := os.ReadFile(post.ContentUrl)
-	oldTags := utils.GetTags(string(oldContent))
+	var oldTags []string
+	err = memento.GetDbConnection().Model(&post).Association("Tags").Find(&oldTags)
+	if err != nil {
+		log.Errorf(err.Error())
+		return utils.RespondError(c, "unknown query error")
+	}
 	contentFile, err := c.FormFile("content")
 	if err != nil {
 		return utils.RespondError(c, "post content not uploaded")
@@ -641,6 +649,14 @@ func HandleGetTags(c echo.Context) error {
 		if err != nil {
 			return utils.RespondError(c, "unknown query error")
 		}
+		tags1 := make([]model.Tag, 0, len(tags))
+		for _, t := range tags {
+			count := memento.GetDbConnection().Model(&t).Association("Posts").Count()
+			if count != 0 {
+				tags1 = append(tags1, t)
+			}
+		}
+		tags = tags1
 	} else {
 		username := c.Get("username")
 		if username == "" {
@@ -651,9 +667,19 @@ func HandleGetTags(c echo.Context) error {
 		if err != nil {
 			return utils.RespondError(c, "username not exists")
 		}
-		err = memento.GetDbConnection().Model(&user).Association("Tags").Find(&tags)
+		var posts []model.Post
+		err = memento.GetDbConnection().Preload("Tags").Model(&user).Association("Posts").Find(&posts)
 		if err != nil {
 			return utils.RespondError(c, "unknown query error")
+		}
+		tagMap := make(map[string]bool)
+		for _, p := range posts {
+			for _, t := range p.Tags {
+				tagMap[t.Name] = true
+			}
+		}
+		for k := range tagMap {
+			tags = append(tags, model.Tag{Name: k})
 		}
 	}
 	tagsList := make([]string, len(tags))

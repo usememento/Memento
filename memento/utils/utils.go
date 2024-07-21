@@ -76,28 +76,31 @@ func GetTags(content string) []string {
 }
 
 func CalcTagsDiff(oldTags []string, newTags []string) (tagToAdd []string, tagToDel []string) {
-	oldTagSet := make(map[string]struct{})
-	for _, tag := range oldTags {
-		oldTagSet[tag] = struct{}{}
+	tagToAdd = make([]string, 0)
+	tagToDel = make([]string, 0)
+
+	for _, t := range newTags {
+		if !Contains(oldTags, t) {
+			tagToAdd = append(tagToAdd, t)
+		}
 	}
 
-	newTagSet := make(map[string]struct{})
-	for _, tagName := range newTags {
-		newTagSet[tagName] = struct{}{}
-	}
-	var tagsToAdd []string
-	var tagsToDel []string
-	for _, t := range newTags {
-		if _, found := oldTagSet[t]; !found {
-			tagsToAdd = append(tagsToAdd, t)
-		}
-	}
 	for _, t := range oldTags {
-		if _, found := newTagSet[t]; !found {
-			tagsToDel = append(tagsToDel, t)
+		if !Contains(newTags, t) {
+			tagToDel = append(tagToDel, t)
 		}
 	}
+
 	return tagToAdd, tagToDel
+}
+
+func Contains(array []string, value string) bool {
+	for _, t := range array {
+		if t == value {
+			return true
+		}
+	}
+	return false
 }
 
 func PostToView(post *model.Post, user *model.UserViewModel, liked bool) (*model.PostViewModel, error) {
