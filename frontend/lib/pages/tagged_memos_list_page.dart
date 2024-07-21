@@ -19,6 +19,9 @@ class _TaggedMemosListPageState extends State<TaggedMemosListPage> {
   @override
   void didChangeDependencies() {
     tag = context.param("tag");
+    if(tag.contains('%')) {
+      tag = Uri.decodeComponent(tag);
+    }
     if (tag.startsWith("#")) {
       tag = tag.substring(1);
     }

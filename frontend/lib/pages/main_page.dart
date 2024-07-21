@@ -215,60 +215,58 @@ class MainPageState extends State<MainPage> {
                       isRootRoute: true,
                       builder: routes['/']!,
                       settings: const RouteSettings(name: '/')),
-                AppPageRoute(
-                    isRootRoute: true,
-                    builder: routes[initialRoute] ??
-                        (context) => const UnknownRoutePage(),
-                    settings: RouteSettings(name: initialRoute))
+                findRouteForSetting(RouteSettings(name: initialRoute)),
               ];
             },
             reportsRouteUpdateToEngine: true,
-            onGenerateRoute: (settings) {
-              var path = settings.name;
-              if (path != null && redirects.containsKey(path)) {
-                path = redirects[path];
-              }
-              var builder = routes[path];
-              var params = <String, dynamic>{};
-              if (builder == null && path != null) {
-                var keys = routes.keys;
-                for (var key in keys) {
-                  params.clear();
-                  var routeSegments = key.split('/');
-                  var settingsSegments = path.split('/');
-                  if (routeSegments.length == settingsSegments.length) {
-                    var match = true;
-                    for (var i = 0; i < routeSegments.length; i++) {
-                      if (routeSegments[i] == settingsSegments[i]) {
-                        continue;
-                      }
-                      if (routeSegments[i].startsWith(':')) {
-                        params[routeSegments[i].substring(1)] =
-                            settingsSegments[i];
-                      } else {
-                        match = false;
-                        break;
-                      }
-                    }
-                    if (match) {
-                      builder = routes[key];
-                      break;
-                    }
-                  }
-                }
-              }
-              if (settings.arguments is Map<String, dynamic>) {
-                params.addAll(settings.arguments as Map<String, dynamic>);
-              }
-              return AppPageRoute(
-                  builder: builder ?? (context) => const UnknownRoutePage(),
-                  settings: RouteSettings(name: path, arguments: params),
-                  isRootRoute: _mainPageRoutes.contains(path));
-            },
+            onGenerateRoute: findRouteForSetting,
           );
         },
         observer: observer,
       ),
     ).toCenter();
+  }
+
+  PageRoute findRouteForSetting(RouteSettings settings) {
+    var path = settings.name;
+    if (path != null && redirects.containsKey(path)) {
+      path = redirects[path];
+    }
+    var builder = routes[path];
+    var params = <String, dynamic>{};
+    if (builder == null && path != null) {
+      var keys = routes.keys;
+      for (var key in keys) {
+        params.clear();
+        var routeSegments = key.split('/');
+        var settingsSegments = path.split('/');
+        if (routeSegments.length == settingsSegments.length) {
+          var match = true;
+          for (var i = 0; i < routeSegments.length; i++) {
+            if (routeSegments[i] == settingsSegments[i]) {
+              continue;
+            }
+            if (routeSegments[i].startsWith(':')) {
+              params[routeSegments[i].substring(1)] =
+              settingsSegments[i];
+            } else {
+              match = false;
+              break;
+            }
+          }
+          if (match) {
+            builder = routes[key];
+            break;
+          }
+        }
+      }
+    }
+    if (settings.arguments is Map<String, dynamic>) {
+      params.addAll(settings.arguments as Map<String, dynamic>);
+    }
+    return AppPageRoute(
+        builder: builder ?? (context) => const UnknownRoutePage(),
+        settings: RouteSettings(name: path, arguments: params),
+        isRootRoute: _mainPageRoutes.contains(path));
   }
 }

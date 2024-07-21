@@ -184,12 +184,15 @@ class _ButtonState extends State<Button> {
       onExit: (_) => setState(() => isHover = false),
       cursor: SystemMouseCursors.click,
       child: GestureDetector(
-        onTap: isLoading ? null : widget.onPressed,
-        onTapUp: widget.onPressedAt != null && !isLoading ? (details) {
-          if (widget.onPressedAt != null && !isLoading) {
-            widget.onPressedAt!(details.globalPosition);
+        onTap: () {
+          if(isLoading) return;
+          widget.onPressed();
+          if(widget.onPressedAt != null) {
+            var renderBox = context.findRenderObject() as RenderBox;
+            var offset = renderBox.localToGlobal(Offset.zero);
+            widget.onPressedAt!(offset);
           }
-        }: null,
+        },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 160),
           padding: padding,

@@ -384,7 +384,7 @@ class _UserCommentWidget extends StatelessWidget {
           ),
           InkWell(
             onTap: () {
-              context.to('/memo/${comment.memo.id}', {
+              context.to('/post/${comment.memo.id}', {
                 'memo': comment.memo,
               });
             },

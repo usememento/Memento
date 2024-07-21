@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/foundation/app.dart';
+import 'package:frontend/utils/ext.dart';
 import 'package:frontend/utils/translation.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
@@ -162,10 +163,12 @@ class MemoEditingController extends TextEditingController {
       {required BuildContext context,
         TextStyle? style,
         required bool withComposing}) {
+    var text = this.text.replaceAll('\r', '');
     var lines = text.split("\n");
     var spans = <TextSpan>[];
     for (int i = 0; i < lines.length; i++) {
       var line = lines[i];
+      bool isEndLine = i == lines.length-1;
       if (i != lines.length - 1) {
         line += '\n';
       }
@@ -179,25 +182,29 @@ class MemoEditingController extends TextEditingController {
           text: line,
         ));
       } else {
+        line = line.replaceLast('\n', '');
         var buffer = '';
         var splits = line.split(' ');
-        for (var s in splits) {
+        for (int i = 0; i < splits.length; i++) {
+          var s = splits[i];
+          bool isEndSegment = i == splits.length-1;
+          var endChar = isEndLine ? '' : '\n';
           if (isTag(s)) {
             spans.add(TextSpan(
               text: buffer,
             ));
             spans.add(TextSpan(
-              text: '$s ',
+              text: '$s${isEndSegment ? endChar : " "}',
               style: const TextStyle(
                 color: Colors.blue,
               ),
             ));
             buffer = '';
           } else {
-            buffer += '$s ';
+            buffer += '$s${isEndSegment ? endChar : " "}';
           }
         }
-        if (buffer.isNotEmpty) {
+        if(buffer.isNotEmpty) {
           spans.add(TextSpan(
             text: buffer,
           ));
