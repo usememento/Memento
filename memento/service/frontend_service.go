@@ -179,7 +179,7 @@ func seoHtml(html string, reqPath string) string {
 			userView := utils.UserToView(&user, false)
 			title = userView.Nickname
 			description = userView.Bio
-			preview = "/user/avatar/" + userView.Avatar
+			preview = "/user/avatar" + userView.Avatar
 			seoArticle = userToSEOArticle(&user)
 		}
 	}()
