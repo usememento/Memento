@@ -56,7 +56,8 @@ func GetPostIndex(posts []model.Post, post model.Post) int {
 }
 
 func GetTags(content string) []string {
-	lines := strings.Split(content, "\r\n")
+	content = strings.ReplaceAll(content, "\r", "")
+	lines := strings.Split(content, "\n")
 	result := make([]string, 0)
 
 	for _, l := range lines {
