@@ -12,7 +12,7 @@ export 'appdata.dart';
 
 
 class _App {
-  final version = "1.0.0";
+  final version = "0.1.0";
 
   bool get isWeb => kIsWeb;
   bool get isAndroid => !isWeb && Platform.isAndroid;
