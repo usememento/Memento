@@ -1,0 +1,17 @@
+name: Build
+run-name: Build
+on:
+  workflow_dispatch: {}
+jobs:
+  Build:
+    runs-on: unbuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          architecture: x64
+      - run: python3 build.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build
