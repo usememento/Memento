@@ -68,7 +68,7 @@ Future<ServerFile?> uploadFile(
                                 context.pop();
                               }
                               var baseUrl = App.isWeb
-                                  ? Uri.base
+                                  ? Uri.base.toString()
                                   : appdata.settings["domain"];
                               controller?.text +=
                                   "![image]($baseUrl/api/file/download/${snapshot.data})";
