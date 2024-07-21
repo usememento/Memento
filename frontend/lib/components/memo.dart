@@ -19,11 +19,13 @@ import '../pages/comments_page.dart';
 import 'button.dart';
 
 class MemoWidget extends StatefulWidget {
-  const MemoWidget({super.key, required this.memo, this.showUser = true});
+  const MemoWidget({super.key, required this.memo, this.showUser = true, this.deleteMemoCallback});
 
   final Memo memo;
 
   final bool showUser;
+
+  final void Function()? deleteMemoCallback;
 
   @override
   State<MemoWidget> createState() => _MemoWidgetState();
@@ -324,8 +326,8 @@ class _MemoWidgetState extends State<MemoWidget> {
             bool isLoading = false;
             return StatefulBuilder(builder: (context, setState) {
               return DialogContent(
-                title: "Delete Memo".tl,
-                body: Text("Are you sure you want to delete this memo?".tl),
+                title: "Delete Post".tl,
+                body: Text("Are you sure you want to delete this post?".tl),
                 actions: [
                   Button.text(
                     onPressed: () {
@@ -345,6 +347,7 @@ class _MemoWidgetState extends State<MemoWidget> {
                           context.pop();
                           App.rootNavigatorKey!.currentContext!
                               .showMessage("Deleted".tl);
+                          widget.deleteMemoCallback?.call();
                         } else {
                           App.rootNavigatorKey!.currentContext!
                               .showMessage(res.errorMessage!);

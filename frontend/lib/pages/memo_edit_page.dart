@@ -22,6 +22,8 @@ class _MemoEditPageState extends State<MemoEditPage> {
 
   late var isPublic = widget.memo.isPublic;
 
+  bool isLoading = false;
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -103,6 +105,7 @@ class _MemoEditPageState extends State<MemoEditPage> {
             const Spacer(),
             Button.filled(
               onPressed: post,
+              isLoading: isLoading,
               child: Text("Post".tl),
             )
           ],
@@ -118,10 +121,16 @@ class _MemoEditPageState extends State<MemoEditPage> {
     if (controller.text.isEmpty) {
       return;
     }
+    setState(() {
+      isLoading = true;
+    });
     var res = await Network().editMemo(controller.text, isPublic, widget.memo.id);
     if (mounted) {
       if(res.error) {
         context.showMessage(res.errorMessage!);
+        setState(() {
+          isLoading = false;
+        });
       } else {
         context.showMessage("Post success".tl);
         context.pop({

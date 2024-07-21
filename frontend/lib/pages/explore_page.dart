@@ -129,7 +129,14 @@ class _ExplorePageMemosListState
                 if(index == data.length - 1) {
                   nextPage();
                 }
-            return MemoWidget(memo: data[index],);
+            return MemoWidget(
+              memo: data[index],
+              deleteMemoCallback: () {
+                setState(() {
+                  data.removeAt(index);
+                });
+              },
+            );
           },
           childCount: data.length,
         ));

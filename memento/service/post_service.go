@@ -9,10 +9,10 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
 	"gorm.io/gorm"
-	"io"
+	"math/rand"
 	"net/http"
 	"os"
-	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -51,32 +51,37 @@ func HandlePostCreate(c echo.Context) error {
 		EditedAt:     now,
 		TotalComment: 0,
 	}
-	contentFile, err := c.FormFile("content")
-	if err != nil {
-		return utils.RespondError(c, "post content not uploaded")
+	content := c.FormValue("content")
+	if content == "" {
+		return utils.RespondError(c, "empty content")
 	}
-	contentFilename := utils.Md5string(fmt.Sprintf("%d%s", now.UnixMilli(), contentFile.Filename)) + ".md"
-	contentFilepath := path.Join(memento.GetPostPath(), contentFilename)
-	contentBody, err := contentFile.Open()
-	if err != nil {
-		log.Errorf(err.Error())
-		return utils.RespondError(c, "can not open content file")
+	contentFilename := utils.Md5string(fmt.Sprintf("%d%d", now.Unix(), rand.Int())) + ".md"
+	subDir := utils.Md5string(fmt.Sprintf("%s%d", now.Month().String(), now.Year()))
+	contentFilepath := filepath.Join(memento.GetPostPath(), subDir, contentFilename)
+	subDirPath := filepath.Join(memento.GetPostPath(), subDir)
+	if _, err := os.Stat(subDirPath); os.IsNotExist(err) {
+		err = os.Mkdir(subDirPath, os.ModePerm)
+		if err != nil {
+			log.Errorf(err.Error())
+			return utils.RespondError(c, "os file create error")
+		}
 	}
-	defer contentBody.Close()
-	content, err := os.OpenFile(contentFilepath, os.O_CREATE|os.O_RDWR, 0777)
+
+	file, err := os.OpenFile(contentFilepath, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0777)
 	if err != nil {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "os file open error")
 	}
-	defer content.Close()
-
-	if _, err = io.Copy(content, contentBody); err != nil {
+	defer func(file *os.File) {
+		_ = file.Close()
+	}(file)
+	if _, err = file.WriteString(content); err != nil {
 		log.Errorf(err.Error())
-		return utils.RespondError(c, "data copy error")
+		return utils.RespondError(c, "data write error")
 	}
+
 	post.ContentUrl = contentFilepath
-	contentData, _ := os.ReadFile(contentFilepath)
-	contentTags := utils.GetTags(string(contentData))
+	contentTags := utils.GetTags(content)
 	err = memento.GetDbConnection().Transaction(
 		func(tx *gorm.DB) error {
 			tx.Save(&post)
@@ -94,7 +99,11 @@ func HandlePostCreate(c echo.Context) error {
 						return utils.RespondError(c, "unknown insertion error")
 					}
 				}
-				tx.Model(&tag).Association("Posts").Append(&post)
+				err = tx.Model(&tag).Association("Posts").Append(&post)
+				if err != nil {
+					log.Errorf(err.Error())
+					return err
+				}
 			}
 			err = tx.Model(&post).Association("Tags").Append(contentTags)
 			if err != nil {
@@ -115,10 +124,10 @@ func HandlePostCreate(c echo.Context) error {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown insertion error")
 	}
-	var likePosts []model.Post
-	memento.GetDbConnection().Model(&user).Association("likes").Find(&likePosts, "id=?", post.ID)
-	//log.Info(likePosts[0].ID)
-	pv, err := utils.PostToView(&post, utils.UserToView(&user, checkIsFollowed(c.Get("username").(string), user.Username)), len(likePosts) > 0)
+	pv, err := utils.PostToView(
+		&post,
+		utils.UserToView(&user, checkIsFollowed(c.Get("username").(string), user.Username)),
+		false)
 	if err != nil {
 		return utils.RespondError(c, "os open file error")
 	}
@@ -159,9 +168,17 @@ func HandlePostDelete(c echo.Context) error {
 				return err
 			}
 			var tags []model.Tag
-			tx.Model(&post).Association("Tags").Find(&tags)
+			err = tx.Model(&post).Association("Tags").Find(&tags)
+			if err != nil {
+				log.Errorf(err.Error())
+				return err
+			}
 			for _, tag := range tags {
-				tx.Model(&tag).Association("Posts").Delete(&post)
+				err = tx.Model(&tag).Association("Posts").Delete(&post)
+				if err != nil {
+					log.Errorf(err.Error())
+					return err
+				}
 			}
 			err = tx.Model(&user).Association("Posts").Delete(&post)
 			if err != nil {
@@ -174,14 +191,17 @@ func HandlePostDelete(c echo.Context) error {
 			}
 			user.TotalPosts -= 1
 			tx.Save(&user)
-			tx.Delete(model.Comment{}, "post_id=?", post.ID)
+			tx.Delete(&model.Comment{}, "post_id=?", post.ID)
 			return nil
 		})
 	if err != nil {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown deletion error")
 	}
-	os.Remove(post.ContentUrl)
+	err = os.Remove(post.ContentUrl)
+	if err != nil {
+		log.Errorf(err.Error())
+	}
 	defer GenerateSiteMap()
 	return c.NoContent(http.StatusOK)
 }
@@ -228,31 +248,26 @@ func HandlePostEdit(c echo.Context) error {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown query error")
 	}
-	contentFile, err := c.FormFile("content")
-	if err != nil {
-		return utils.RespondError(c, "post content not uploaded")
+	content := c.FormValue("content")
+	if content == "" {
+		return utils.RespondError(c, "empty content")
 	}
-	contentBody, err := contentFile.Open()
-	if err != nil {
-		log.Errorf(err.Error())
-		return utils.RespondError(c, "can not open content file")
-	}
-	defer contentBody.Close()
 	contentFilepath := post.ContentUrl
 
-	content, err := os.OpenFile(contentFilepath, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0777)
+	file, err := os.OpenFile(contentFilepath, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0777)
 	if err != nil {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "os file open error")
 	}
-	defer content.Close()
+	defer func(file *os.File) {
+		_ = file.Close()
+	}(file)
 
-	if _, err = io.Copy(content, contentBody); err != nil {
+	if _, err = file.WriteString(content); err != nil {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "data copy error")
 	}
-	newContent, _ := os.ReadFile(post.ContentUrl)
-	newTags := utils.GetTags(string(newContent))
+	newTags := utils.GetTags(content)
 	tagsToAdd, tagsToDel := utils.CalcTagsDiff(oldTags, newTags)
 	err = memento.GetDbConnection().Transaction(
 		func(tx *gorm.DB) error {
@@ -267,10 +282,18 @@ func HandlePostEdit(c echo.Context) error {
 						continue
 					}
 				}
-				tx.Model(&tag).Association("Posts").Append(&post)
+				err = tx.Model(&tag).Association("Posts").Append(&post)
+				if err != nil {
+					log.Errorf(err.Error())
+					return err
+				}
 			}
 			for _, tag := range tagsToDel {
-				tx.Model(&post).Association("Tags").Delete(&tag)
+				err = tx.Model(&post).Association("Tags").Delete(&tag)
+				if err != nil {
+					log.Errorf(err.Error())
+					return err
+				}
 			}
 			post.EditedAt = time.Now()
 			err = tx.Save(&post).Error
@@ -301,7 +324,14 @@ func HandleGetPost(c echo.Context) error {
 	var user model.User
 	memento.GetDbConnection().First(&user, "username=?", post.Username)
 	var likePosts []model.Post
-	memento.GetDbConnection().Model(&user).Association("Likes").Find(&likePosts, "id=?", post.ID)
+	err = memento.GetDbConnection().
+		Model(&user).
+		Association("Likes").
+		Find(&likePosts, "id=?", post.ID)
+	if err != nil {
+		log.Errorf(err.Error())
+		return utils.RespondError(c, "unknown query error")
+	}
 	pv, err := utils.PostToView(&post, utils.UserToView(&user, checkIsFollowed(c.Get("username").(string), user.Username)), len(likePosts) > 0)
 	if err != nil {
 		return utils.RespondError(c, "os open file error")
@@ -346,7 +376,14 @@ func HandleGetUserPosts(c echo.Context) error {
 	result := make([]model.PostViewModel, 0, memento.PageSize)
 	for _, post := range posts {
 		var likePosts []model.Post
-		memento.GetDbConnection().Model(&user).Association("Likes").Find(&likePosts, "id=?", post.ID)
+		err = memento.GetDbConnection().
+			Model(&user).
+			Association("Likes").
+			Find(&likePosts, "id=?", post.ID)
+		if err != nil {
+			log.Errorf(err.Error())
+			continue
+		}
 		pv, err := utils.PostToView(&post, utils.UserToView(&user, checkIsFollowed(c.Get("username").(string), user.Username)), len(likePosts) > 0)
 		if err != nil {
 			log.Errorf(err.Error())
@@ -385,7 +422,14 @@ func HandlePostLike(c echo.Context) error {
 		return utils.RespondError(c, "unknown query error")
 	}
 	var likedPost []model.Post
-	memento.GetDbConnection().Model(&user).Association("Likes").Find(&likedPost, "id=?", post.ID)
+	err = memento.GetDbConnection().
+		Model(&user).
+		Association("Likes").
+		Find(&likedPost, "id=?", post.ID)
+	if err != nil {
+		log.Errorf(err.Error())
+		return utils.RespondError(c, "unknown query error")
+	}
 	if len(likedPost) > 0 {
 		log.Infof("liked post: %d", len(likedPost))
 		return utils.RespondError(c, "already liked")
@@ -518,7 +562,14 @@ func HandleGetTaggedPost(c echo.Context) error {
 		var user model.User
 		memento.GetDbConnection().First(&user, "username=?", p.Username)
 		var likePosts []model.Post
-		memento.GetDbConnection().Model(&user).Association("likes").Find(&likePosts, "id=?", p.ID)
+		err = memento.GetDbConnection().
+			Model(&user).
+			Association("likes").
+			Find(&likePosts, "id=?", p.ID)
+		if err != nil {
+			log.Errorf(err.Error())
+			continue
+		}
 		pv, err := utils.PostToView(&p, utils.UserToView(&user, checkIsFollowed(username, user.Username)), len(likePosts) > 0)
 		if err != nil {
 			log.Errorf(err.Error())
@@ -625,7 +676,13 @@ func HandleGetLikedPosts(c echo.Context) error {
 		isLiked := currentUserName == username
 		if !isLiked && currentUserName != "" {
 			var likePosts []model.Post
-			memento.GetDbConnection().Model(&currentUser).Association("likes").Find(&likePosts, "id=?", p.ID)
+			err = memento.GetDbConnection().
+				Model(&currentUser).
+				Association("likes").
+				Find(&likePosts, "id=?", p.ID)
+			if err != nil {
+				log.Errorf(err.Error())
+			}
 			isLiked = len(likePosts) > 0
 		}
 		pv, err := utils.PostToView(&p, utils.UserToView(&author, checkIsFollowed(c.Get("username").(string), author.Username)), isLiked)

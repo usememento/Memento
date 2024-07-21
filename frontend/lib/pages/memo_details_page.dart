@@ -378,7 +378,7 @@ class _MemoDetailsState extends State<_MemoDetails> {
           onPressed: () {},
           onPressedAt: (location) {
             var baseUrl = App.isWeb ? Uri.base : appdata.settings['domain'];
-            var url = baseUrl + '/memo/' + widget.memo.id.toString();
+            var url = baseUrl + '/post/' + widget.memo.id.toString();
             showPopMenu(location, [
               MenuEntry("Copy path".tl, () {
                 Clipboard.setData(ClipboardData(text: url));
@@ -483,7 +483,7 @@ class _MemoDetailsState extends State<_MemoDetails> {
             minTileHeight: 32.0,
             contentPadding: padding + EdgeInsets.only(left: node.level * 8.0),
             onTap: () {
-              to(node.index + 1);
+              to(node.index);
             },
             trailing: Button.icon(
               size: 18.0,

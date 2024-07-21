@@ -106,5 +106,7 @@
     "Set As Admin": "設為管理員",
     "Set As User": "設為使用者",
     "Comment": "評論",
-    "Move the slider to correct position": "移動滑塊到正確位置"
+    "Move the slider to correct position": "移動滑塊到正確位置",
+    "Delete Post": "刪除文章",
+    "Are you sure you want to delete this post?" : "你確定要刪除這篇文章嗎？"
 }

@@ -265,10 +265,10 @@ class Network {
     if (!appdata.isLogin) return const Res.error("Not Login");
     try {
       var res = await dio.post("/api/post/create",
-          data: FormData.fromMap({
-            "content": MultipartFile.fromString(content, filename: "1.md"),
+          data: {
+            "content": content,
             "permission": isPublic ? "public" : "private"
-          }));
+          });
       return Res(res.statusCode == 200);
     } catch (e) {
       return Res.fromError(e);
@@ -279,11 +279,11 @@ class Network {
     if (!appdata.isLogin) return const Res.error("Not Login");
     try {
       var res = await dio.post("/api/post/edit",
-          data: FormData.fromMap({
-            "content": MultipartFile.fromString(content, filename: "1.md"),
+          data: {
+            "content": content,
             "permission": isPublic ? "public" : "private",
             "id": id
-          }));
+          });
       return Res(res.statusCode == 200);
     } catch (e) {
       return Res.fromError(e);

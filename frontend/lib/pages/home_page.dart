@@ -142,6 +142,8 @@ class _WritingAreaState extends State<WritingArea> {
 
   bool isPublic = true;
 
+  bool isLoading = false;
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -226,6 +228,7 @@ class _WritingAreaState extends State<WritingArea> {
               const Spacer(),
               Button.filled(
                 onPressed: post,
+                isLoading: isLoading,
                 child: Text("Post".tl),
               )
             ],
@@ -239,6 +242,9 @@ class _WritingAreaState extends State<WritingArea> {
     if (content.isEmpty) {
       return;
     }
+    setState(() {
+      isLoading = true;
+    });
     var res = await Network().postMemo(content, isPublic);
     if (mounted) {
       if (res.error) {
@@ -248,6 +254,9 @@ class _WritingAreaState extends State<WritingArea> {
         context.showMessage("Post success".tl);
         widget.onPost();
       }
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
@@ -298,6 +307,8 @@ class _WritingPageState extends State<WritingPage> {
   late var controller = MemoEditingController(text: widget.content);
 
   late var isPublic = widget.isPublic;
+
+  bool isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -382,6 +393,7 @@ class _WritingPageState extends State<WritingPage> {
             const Spacer(),
             Button.filled(
               onPressed: post,
+              isLoading: isLoading,
               child: Text("Post".tl),
             )
           ],
@@ -397,10 +409,16 @@ class _WritingPageState extends State<WritingPage> {
     if (controller.text.isEmpty) {
       return;
     }
+    setState(() {
+      isLoading = true;
+    });
     var res = await Network().postMemo(controller.text, isPublic);
     if (mounted) {
       if (res.error) {
         context.showMessage(res.errorMessage!);
+        setState(() {
+          isLoading = false;
+        });
       } else {
         controller.clear();
         context.showMessage("Post success".tl);
@@ -446,7 +464,15 @@ class _HomePageMemosListState
         if(index == data.length - 1) {
           nextPage();
         }
-        return MemoWidget(memo: data[index], showUser: false);
+        return MemoWidget(
+          memo: data[index],
+          showUser: false,
+          deleteMemoCallback: () {
+            setState(() {
+              data.removeAt(index);
+            });
+          },
+        );
       },
       childCount: data.length,
     ));
