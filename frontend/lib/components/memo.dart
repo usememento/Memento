@@ -1,8 +1,8 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_math_fork/flutter_math.dart';
 import 'package:frontend/components/dialog.dart';
+import 'package:frontend/components/math.dart';
 import 'package:frontend/components/user.dart';
 import 'package:frontend/foundation/app.dart';
 import 'package:frontend/pages/memo_edit_page.dart';
@@ -46,14 +46,12 @@ class _MemoWidgetState extends State<MemoWidget> {
     var originContent = widget.memo.content;
     setState(() {
       updating = true;
-      widget.memo.content = updateContentWithTaskIndex(widget.memo.content, taskIndex);
+      widget.memo.content =
+          updateContentWithTaskIndex(widget.memo.content, taskIndex);
     });
-    var res = await Network().editMemo(
-        widget.memo.content,
-        widget.memo.isPublic,
-        widget.memo.id
-    );
-    if(mounted) {
+    var res = await Network()
+        .editMemo(widget.memo.content, widget.memo.isPublic, widget.memo.id);
+    if (mounted) {
       if (res.success) {
         setState(() {
           updating = false;
@@ -64,7 +62,8 @@ class _MemoWidgetState extends State<MemoWidget> {
           widget.memo.content = originContent;
         });
         context.showMessage(res.errorMessage!);
-    }}
+      }
+    }
   }
 
   bool updating = false;
@@ -82,7 +81,7 @@ class _MemoWidgetState extends State<MemoWidget> {
         await context.to("/post/${widget.memo.id}", {
           'memo': widget.memo,
         });
-        if(editable) {
+        if (editable) {
           setState(() {});
         }
       },
@@ -157,65 +156,71 @@ class _MemoWidgetState extends State<MemoWidget> {
                 children: [
                   if (widget.memo.author != null && widget.showUser)
                     const SizedBox(width: 36),
-                  if(updating)
+                  if (updating)
                     SizedBox(
                       height: 34,
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const SizedBox(width: 8,),
+                          const SizedBox(
+                            width: 8,
+                          ),
                           const SizedBox(
                             width: 18,
                             height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2,),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                            ),
                           ),
-                          const SizedBox(width: 8,),
+                          const SizedBox(
+                            width: 8,
+                          ),
                           Text("Updating".tl),
                         ],
                       ),
                     ),
-                  if(!updating)
-                  Button.normal(
-                      onPressed: like,
+                  if (!updating)
+                    Button.normal(
+                        onPressed: like,
+                        isLoading: isLiking,
+                        padding: const EdgeInsets.all(8),
+                        child: widget.memo.isLiked
+                            ? const Icon(Icons.favorite,
+                                size: 18, color: Colors.red)
+                            : const Icon(
+                                Icons.favorite_border,
+                                size: 18,
+                              )),
+                  if (!updating)
+                    Text(
+                      widget.memo.likesCount.toString(),
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                  if (!updating)
+                    const SizedBox(
+                      width: 16,
+                    ),
+                  if (!updating)
+                    Button.normal(
+                      onPressed: () {
+                        CommentsPage.show(widget.memo.id);
+                      },
                       isLoading: isLiking,
                       padding: const EdgeInsets.all(8),
-                      child: widget.memo.isLiked
-                          ? const Icon(Icons.favorite,
-                              size: 18, color: Colors.red)
-                          : const Icon(
-                              Icons.favorite_border,
-                              size: 18,
-                            )),
-                  if(!updating)
-                  Text(
-                    widget.memo.likesCount.toString(),
-                    style: const TextStyle(fontSize: 14),
-                  ),
-                  if(!updating)
-                  const SizedBox(
-                    width: 16,
-                  ),
-                  if(!updating)
-                  Button.normal(
-                    onPressed: () {
-                      CommentsPage.show(widget.memo.id);
-                    },
-                    isLoading: isLiking,
-                    padding: const EdgeInsets.all(8),
-                    child: const Icon(
-                      Icons.chat_bubble_outline,
-                      size: 18,
+                      child: const Icon(
+                        Icons.chat_bubble_outline,
+                        size: 18,
+                      ),
                     ),
-                  ),
-                  if(!updating)
-                  Text(
-                    widget.memo.repliesCount.toString(),
-                    style: const TextStyle(fontSize: 14),
-                  ),
-                  if(!updating)
-                  const SizedBox(
-                    width: 16,
-                  ),
+                  if (!updating)
+                    Text(
+                      widget.memo.repliesCount.toString(),
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                  if (!updating)
+                    const SizedBox(
+                      width: 16,
+                    ),
                   if (editable && !updating)
                     Button.icon(
                       key: moreActionsKey,
@@ -501,17 +506,10 @@ class LatexNode extends SpanNode {
     final isInline = attributes['isInline'] == 'true';
     final style = parentStyle ?? config.p.textStyle;
     if (content.isEmpty) return TextSpan(style: style, text: textContent);
-    final latex = Math.tex(
-      content,
-      mathStyle: MathStyle.text,
-      textStyle: style,
-      textScaleFactor: 1,
-      onErrorFallback: (error) {
-        return Text(
-          textContent,
-          style: style.copyWith(color: Colors.red),
-        );
-      },
+    final latex = MathWidget(
+      content: content,
+      textContent: textContent,
+      style: style,
     );
     return WidgetSpan(
         alignment: PlaceholderAlignment.middle,

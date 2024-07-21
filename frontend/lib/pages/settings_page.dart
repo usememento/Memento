@@ -68,23 +68,9 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget buildTabBar() {
     return IndependentTabBar(
       initialIndex: index,
-      tabs: [
-        Tab(
-          text: "Account".tl,
-        ),
-        Tab(
-          text: "Appearance".tl,
-        ),
-        Tab(
-          text: "Admin".tl,
-        ),
-        Tab(
-          text: "Notifications".tl,
-        ),
-        Tab(
-          text: "About".tl,
-        ),
-      ],
+      tabs: titles.map((e) => Tab(
+        text: e.tl,
+      )).toList(),
       onTabChange: (index) {
         setState(() {
           this.index = index;

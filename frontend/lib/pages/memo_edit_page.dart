@@ -97,7 +97,7 @@ class _MemoEditPageState extends State<MemoEditPage> {
                 size: 18,
                 tooltip: "Content syntax".tl,
                 onPressed: () {
-                  launchUrlString("https://github.com/userMemento/Memento/doc/ContentSyntax.md");
+                  launchUrlString("https://github.com/usememento/Memento/blob/master/doc/ContentSyntax.md");
                 }),
             const Spacer(),
             Button.filled(

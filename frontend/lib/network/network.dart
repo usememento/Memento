@@ -5,7 +5,6 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:frontend/foundation/app.dart';
-import 'package:frontend/utils/image.dart';
 
 import 'res.dart';
 import 'models.dart';
@@ -451,10 +450,6 @@ class Network {
       String? ext;
       if (avatarFileName != null) {
         ext = avatarFileName.split('.').last;
-      }
-      if (avatar != null && avatar.length > 1024 * 1024) {
-        (avatar, ext) =
-            await compute((message) => resizeImage(avatar!, 256), null);
       }
       var res = await dio.post<Map<String, dynamic>>("/api/user/edit",
           data: FormData.fromMap({

@@ -56,7 +56,7 @@ class MainPageState extends State<MainPage> {
   @override
   void initState() {
     App.observer = observer;
-    if(App.initialRoute == '/' && !appdata.isLogin) {
+    if (App.initialRoute == '/' && !appdata.isLogin) {
       App.initialRoute = '/explore';
     }
     super.initState();
@@ -67,6 +67,9 @@ class MainPageState extends State<MainPage> {
     return Container(
       constraints: const BoxConstraints(maxWidth: 1400),
       child: NaviPane(
+        initialPage: _mainPageRoutes.contains(App.initialRoute)
+          ? _mainPageRoutes.indexOf(App.initialRoute)
+          : 0,
         paneItems: [
           PaneItemEntry(
             icon: Icons.home_outlined,
@@ -205,6 +208,20 @@ class MainPageState extends State<MainPage> {
               observer,
             ],
             initialRoute: App.initialRoute,
+            onGenerateInitialRoutes: (navigator, initialRoute) {
+              return [
+                if(!_mainPageRoutes.contains(initialRoute))
+                  AppPageRoute(
+                      isRootRoute: true,
+                      builder: routes['/']!,
+                      settings: const RouteSettings(name: '/')),
+                AppPageRoute(
+                    isRootRoute: true,
+                    builder: routes[initialRoute] ??
+                        (context) => const UnknownRoutePage(),
+                    settings: RouteSettings(name: initialRoute))
+              ];
+            },
             reportsRouteUpdateToEngine: true,
             onGenerateRoute: (settings) {
               var path = settings.name;
@@ -245,8 +262,7 @@ class MainPageState extends State<MainPage> {
               }
               return AppPageRoute(
                   builder: builder ?? (context) => const UnknownRoutePage(),
-                  settings:
-                      RouteSettings(name: path, arguments: params),
+                  settings: RouteSettings(name: path, arguments: params),
                   isRootRoute: _mainPageRoutes.contains(path));
             },
           );

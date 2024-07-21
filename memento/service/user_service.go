@@ -4,12 +4,16 @@ import (
 	"Memento/memento"
 	"Memento/memento/model"
 	"Memento/memento/utils"
+	"bytes"
 	"context"
 	"errors"
 	"github.com/go-oauth2/oauth2/v4/server"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
+	"github.com/nfnt/resize"
 	"gorm.io/gorm"
+	"image"
+	"image/jpeg"
 	"io"
 	"net/http"
 	"os"
@@ -185,11 +189,17 @@ func HandleUserEdit(c echo.Context) error {
 			return utils.RespondError(c, "form file open error")
 		}
 		defer file.Close()
-		size := avatar.Size
-		if size > 1024*1024 {
-			return utils.RespondError(c, "Avatar too large")
+		avatarData, err := io.ReadAll(file)
+		if err != nil {
+			log.Errorf(err.Error())
+			return utils.RespondError(c, "read file error")
 		}
+		size := avatar.Size
 		ext := path.Ext(avatar.Filename)
+		if size > 1024*1024 {
+			avatarData = resizeImage(avatarData, 256, 256)
+			ext = ".jpg"
+		}
 		filename := utils.Md5string(strconv.FormatInt(time.Now().UnixMilli(), 10)) + ext
 		// Destination
 		filepath := path.Join(memento.GetAvatarPath(), filename)
@@ -199,10 +209,11 @@ func HandleUserEdit(c echo.Context) error {
 			return utils.RespondError(c, "os file open error")
 		}
 		defer dst.Close()
-		// Copy
-		if _, err = io.Copy(dst, file); err != nil {
+		// write
+		_, err = dst.Write(avatarData)
+		if err != nil {
 			log.Errorf(err.Error())
-			return utils.RespondError(c, "data copy error")
+			return utils.RespondError(c, "write file error")
 		}
 		if user.AvatarUrl != "" {
 			err := os.Remove(user.AvatarUrl)
@@ -481,4 +492,29 @@ func HandleGetAvatar(c echo.Context) error {
 		return c.Redirect(http.StatusMovedPermanently, "/assets/assets/user.png")
 	}
 	return c.File(path.Join(memento.GetAvatarPath(), name))
+}
+
+func resizeImage(src []byte, width, height int) []byte {
+	// 读取原始图像
+	img, _, err := image.Decode(bytes.NewReader(src))
+	if err != nil {
+		log.Printf("Error decoding image: %v", err)
+		return src
+	}
+
+	if img.Bounds().Dx()/img.Bounds().Dy() != width/height {
+		height = img.Bounds().Dy() * width / img.Bounds().Dx()
+	}
+
+	// 调整图像大小
+	resizedImg := resize.Resize(uint(width), uint(height), img, resize.Lanczos3)
+
+	// 将调整后的图像编码为字节数组
+	buf := new(bytes.Buffer)
+	if err := jpeg.Encode(buf, resizedImg, nil); err != nil {
+		log.Printf("Error encoding image: %v", err)
+		return src
+	}
+
+	return buf.Bytes()
 }

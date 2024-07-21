@@ -1,0 +1,76 @@
+import 'package:highlight/languages/bash.dart';
+import 'package:highlight/languages/cmake.dart';
+import 'package:highlight/languages/cs.dart';
+import 'package:highlight/languages/css.dart';
+import 'package:highlight/languages/dart.dart';
+import 'package:highlight/languages/dockerfile.dart';
+import 'package:highlight/languages/go.dart';
+import 'package:highlight/languages/gradle.dart';
+import 'package:highlight/languages/java.dart';
+import 'package:highlight/languages/javascript.dart';
+import 'package:highlight/languages/kotlin.dart';
+import 'package:highlight/languages/lua.dart';
+import 'package:highlight/languages/makefile.dart';
+import 'package:highlight/languages/markdown.dart';
+import 'package:highlight/languages/matlab.dart';
+import 'package:highlight/languages/nginx.dart';
+import 'package:highlight/languages/php.dart';
+import 'package:highlight/languages/powershell.dart';
+import 'package:highlight/languages/python.dart';
+import 'package:highlight/languages/ruby.dart';
+import 'package:highlight/languages/rust.dart';
+import 'package:highlight/languages/shell.dart';
+import 'package:highlight/languages/sql.dart';
+import 'package:highlight/languages/swift.dart';
+import 'package:highlight/languages/typescript.dart';
+import 'package:highlight/languages/vue.dart';
+import 'package:highlight/languages/xml.dart';
+import 'package:highlight/languages/yaml.dart';
+
+import 'basic.dart';
+import 'cpp.dart';
+import 'json.dart';
+
+final mainLanguages = {
+  'cpp': cpp,
+  'cmake': cmake,
+  'c': cpp,
+  'cs': cs,
+  'csharp': cs,
+  'c#': cs,
+  'python': python,
+  'dart': dart,
+  'java': java,
+  'js': javascript,
+  'javascript': javascript,
+  'ts': typescript,
+  'typescript': typescript,
+  'go': go,
+  'golang': go,
+  'shell': shell,
+  'basic': basic,
+  'bash': bash,
+  'sh': shell,
+  'rust': rust,
+  'rs': rust,
+  'ruby': ruby,
+  'php': php,
+  'dockerfile': dockerfile,
+  'gradle': gradle,
+  'json': json,
+  'kotlin': kotlin,
+  'lua': lua,
+  'makefile': makefile,
+  'markdown': markdown,
+  'md': markdown,
+  'nginx': nginx,
+  'swift': swift,
+  'vue': vue,
+  'yaml': yaml,
+  'sql': sql,
+  'powershell': powershell,
+  'html': xml,
+  'xml': xml,
+  'css': css,
+  'matlab': matlab,
+};

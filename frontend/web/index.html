@@ -43,8 +43,75 @@
 
   <title>{{Title}}</title>
   <link rel="manifest" href="manifest.json">
+  <style>
+    .loading {
+      display: flex;
+      flex-flow: column;
+      justify-content: center;
+      align-items: center;
+      margin: 0;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      -ms-transform: translate(-50%, -50%);
+      transform: translate(-50%, -50%);
+    }
+
+    html{
+      background-color: white;
+    }
+
+    .loader {
+      border-radius: 50%;
+      border: 8px solid rgb(216, 216, 216);
+      border-right-color: #2289ff;
+      width: 48px !important;
+      height: 48px !important;
+      -webkit-animation: spin 1s linear infinite;
+      animation: spin 1s linear infinite;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      html{
+        background-color: black;
+      }
+      .loader {
+        border: 8px solid rgb(80, 80, 80);
+        border-right-color: #4a9eff;
+      }
+    }
+
+    @-webkit-keyframes spin {
+      0% {
+        -webkit-transform: rotate(0deg);
+      }
+      100% {
+        -webkit-transform: rotate(360deg);
+      }
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
 </head>
 <body>
+  <div class="loading">
+    <div class="loader"></div>
+  </div>
+
+  <script>
+    window.addEventListener("flutter-first-frame", function() {
+      let element = document.getElementsByClassName("loading");
+      element[0].parentNode.removeChild(element[0]);
+    });
+  </script>
+
   <!-- SEO article -->
   <div style="display:none">
     <!-- SEO article Body-->
