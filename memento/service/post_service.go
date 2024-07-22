@@ -242,8 +242,12 @@ func HandlePostEdit(c echo.Context) error {
 	if post.Username != username {
 		return utils.RespondError(c, "permission denied")
 	}
-	var oldTags []string
-	err = memento.GetDbConnection().Model(&post).Association("Tags").Find(&oldTags)
+	var oldTags1 []model.Tag
+	err = memento.GetDbConnection().Model(&post).Association("Tags").Find(&oldTags1)
+	oldTags := make([]string, len(oldTags1))
+	for i, t := range oldTags1 {
+		oldTags[i] = t.Name
+	}
 	if err != nil {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown query error")
