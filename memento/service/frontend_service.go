@@ -235,7 +235,7 @@ func handleRobotsTxt(c echo.Context) error {
 	return c.String(200, `User-agent: *
 Disallow: /api/
 
-Sitemap: https://`+domain+"/"+`/sitemap.xml
+Sitemap: https://`+domain+`/sitemap.xml
 `)
 }
 

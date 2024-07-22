@@ -5,10 +5,8 @@ import (
 	"Memento/memento/model"
 	"Memento/memento/utils"
 	"fmt"
-	"github.com/blevesearch/bleve/v2"
 	"github.com/labstack/echo/v4"
 	"net/http"
-	"path"
 	"strconv"
 	"strings"
 )
@@ -105,7 +103,13 @@ func HandlePostSearch(c echo.Context) error {
 		fmt.Println(hit.Fields["ID"])
 		var likePosts []model.Post
 		if username != "" {
-			memento.GetDbConnection().Model(&user).Association("Likes").Find(&likePosts, "id=?", post.ID)
+			err = memento.GetDbConnection().
+				Model(&user).
+				Association("Likes").
+				Find(&likePosts, "id=?", post.ID)
+			if err != nil {
+				return utils.RespondInternalError(c, "search failed")
+			}
 		}
 		pv, err := utils.PostToView(&post, utils.UserToView(&user, checkIsFollowed(c.Get("username").(string), user.Username)), len(likePosts) > 0)
 		if err != nil {
@@ -120,32 +124,4 @@ func HandlePostSearch(c echo.Context) error {
 		"posts":   result,
 		"maxPage": utils.MaxPage(int64(len(sr.Hits))),
 	})
-}
-
-func search() {
-	// open a new index
-	mapping := bleve.NewIndexMapping()
-	index, err := bleve.New(path.Join(memento.GetBasePath(), "inverted_index.bleve"), mapping)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	data := struct {
-		Name string
-	}{
-		Name: "text",
-	}
-	// index some data
-	index.Index("id", data)
-
-	// search for some text
-	query := bleve.NewMatchQuery("text hello")
-	search := bleve.NewSearchRequest(query)
-	searchResults, err := index.Search(search)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Println(searchResults)
 }

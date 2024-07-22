@@ -26,13 +26,6 @@ func RespondError(c echo.Context, msg interface{}) error {
 		})
 }
 
-func RespondOk(c echo.Context, msg interface{}) error {
-	return c.JSON(http.StatusOK,
-		echo.Map{
-			"message": msg,
-		})
-}
-
 func RespondUnauthorized(c echo.Context) error {
 	return c.JSON(http.StatusUnauthorized,
 		echo.Map{
@@ -44,15 +37,6 @@ func RespondInternalError(c echo.Context, msg interface{}) error {
 		echo.Map{
 			"message": msg,
 		})
-}
-
-func GetPostIndex(posts []model.Post, post model.Post) int {
-	for i, p := range posts {
-		if post.ID == p.ID {
-			return i
-		}
-	}
-	return -1
 }
 
 func GetTags(content string) []string {

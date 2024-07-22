@@ -43,9 +43,9 @@ func HandleGetConfigs(c echo.Context) error {
 
 func HandleSetConfig(c echo.Context) error {
 	enable := c.FormValue("enable_register") == "true"
-	error := memento.SetIsEnableRegister(enable)
-	if error != nil {
-		log.Errorf(error.Error())
+	err := memento.SetIsEnableRegister(enable)
+	if err != nil {
+		log.Errorf(err.Error())
 		return utils.RespondError(c, "Failed")
 	}
 	return c.NoContent(200)

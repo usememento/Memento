@@ -105,7 +105,7 @@ func HandleCommentDelete(c echo.Context) error {
 		return utils.RespondError(c, "unknown query error")
 	}
 	if comment.Username != username {
-		utils.RespondError(c, "permission denied")
+		return utils.RespondError(c, "permission denied")
 	}
 	var user model.User
 	err = memento.GetDbConnection().First(&user, "username=?", comment.Username).Error
@@ -152,7 +152,10 @@ func HandleCommentLike(c echo.Context) error {
 	var user model.User
 	memento.GetDbConnection().First(&user, "username=?", username)
 	var likedComments []model.Comment
-	memento.GetDbConnection().Model(&user).Association("LikedComments").Find(&likedComments)
+	err := memento.GetDbConnection().Model(&user).Association("LikedComments").Find(&likedComments)
+	if err != nil {
+		return utils.RespondError(c, "unknown query error")
+	}
 	id, err := strconv.Atoi(commentId)
 	if err != nil {
 		return utils.RespondError(c, "invalid comment id")
@@ -165,7 +168,7 @@ func HandleCommentLike(c echo.Context) error {
 
 	var comment model.Comment
 	memento.GetDbConnection().First(&comment, "id=?", commentId)
-	memento.GetDbConnection().Transaction(
+	err = memento.GetDbConnection().Transaction(
 		func(tx *gorm.DB) error {
 			err := tx.Model(&user).Association("LikedComments").Append(&comment)
 			if err != nil {
@@ -175,19 +178,25 @@ func HandleCommentLike(c echo.Context) error {
 			tx.Save(&comment)
 			return nil
 		})
-	return nil
+	if err != nil {
+		return utils.RespondError(c, "unknown query error")
+	}
+	return c.NoContent(http.StatusOK)
 }
 func HandleCommentCancelLike(c echo.Context) error {
 	commentId := c.FormValue("id")
 	var comment model.Comment
 	memento.GetDbConnection().First(&comment, "id=?", commentId)
-	memento.GetDbConnection().Transaction(
+	err := memento.GetDbConnection().Transaction(
 		func(tx *gorm.DB) error {
 			comment.Liked -= 1
 			tx.Save(&comment)
 			return nil
 		})
-	return nil
+	if err != nil {
+		return utils.RespondError(c, "unknown query error")
+	}
+	return c.NoContent(http.StatusOK)
 }
 
 func HandleGetPostComments(c echo.Context) error {
@@ -216,7 +225,13 @@ func HandleGetPostComments(c echo.Context) error {
 		var user model.User
 		memento.GetDbConnection().First(&user, "username=?", comm.Username)
 		var likedComments []model.Comment
-		memento.GetDbConnection().Model(&user).Association("LikedComments").Find(&likedComments, "id=?", comm.ID)
+		err = memento.GetDbConnection().
+			Model(&user).
+			Association("LikedComments").
+			Find(&likedComments, "id=?", comm.ID)
+		if err != nil {
+			return utils.RespondError(c, "unknown query error")
+		}
 		result = append(result, *utils.CommentToView(&comm, utils.UserToView(&user, checkIsFollowed(c.Get("username").(string), user.Username)), len(likedComments) > 0))
 	}
 	return c.JSON(http.StatusOK, map[string]interface{}{
@@ -262,7 +277,13 @@ func HandleGetUserComments(c echo.Context) error {
 		memento.GetDbConnection().First(&post, "id=?", comm.PostID)
 		var likedPosts []model.Post
 		if currentUsername != "" {
-			memento.GetDbConnection().Model(&currentUser).Association("LikedPosts").Find(&likedPosts, "id=?", post.ID)
+			err = memento.GetDbConnection().
+				Model(&currentUser).
+				Association("LikedPosts").
+				Find(&likedPosts, "id=?", post.ID)
+			if err != nil {
+				return utils.RespondError(c, "unknown query error")
+			}
 		}
 		postView, err := utils.PostToView(&post, utils.UserToView(&user, checkIsFollowed(c.Get("username").(string), user.Username)), len(likedPosts) > 0)
 		if err != nil {
@@ -271,7 +292,13 @@ func HandleGetUserComments(c echo.Context) error {
 		}
 		var likedComments []model.Comment
 		if currentUsername != "" {
-			memento.GetDbConnection().Model(&currentUser).Association("LikedComments").Find(&likedComments, "id=?", comm.ID)
+			err = memento.GetDbConnection().
+				Model(&currentUser).
+				Association("LikedComments").
+				Find(&likedComments, "id=?", comm.ID)
+			if err != nil {
+				return utils.RespondError(c, "unknown query error")
+			}
 		}
 		result = append(result, model.CommentWithPost{
 			Comment: *utils.CommentToView(&comm, utils.UserToView(&user, checkIsFollowed(c.Get("username").(string), user.Username)), len(likedComments) > 0),

@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"path"
@@ -43,7 +44,12 @@ func HandleFileUpload(c echo.Context) error {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "form file open error")
 	}
-	defer src.Close()
+	defer func(src multipart.File) {
+		err := src.Close()
+		if err != nil {
+			log.Errorf(err.Error())
+		}
+	}(src)
 	ext := path.Ext(file.Filename)
 	filename := utils.Md5string(fmt.Sprintf("%d%s", now.UnixMilli(), file.Filename)) + ext
 	filepath := path.Join(memento.GetUploadPath(), filename)
@@ -53,7 +59,12 @@ func HandleFileUpload(c echo.Context) error {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "os file open error")
 	}
-	defer dst.Close()
+	defer func(dst *os.File) {
+		err := dst.Close()
+		if err != nil {
+			log.Errorf(err.Error())
+		}
+	}(dst)
 	// Copy
 	if _, err = io.Copy(dst, src); err != nil {
 		log.Errorf(err.Error())
@@ -121,7 +132,7 @@ func HandleFileDelete(c echo.Context) error {
 	if err != nil {
 		return utils.RespondError(c, "unknown transaction error")
 	}
-	os.Remove(file.ContentUrl)
+	_ = os.Remove(file.ContentUrl)
 	return c.NoContent(http.StatusOK)
 }
 
@@ -144,7 +155,7 @@ func HandleGetResourcesList(c echo.Context) error {
 	pageStr := c.QueryParam("page")
 	page, err := strconv.Atoi(pageStr)
 	if err != nil {
-		utils.RespondError(c, "Invalid page")
+		return utils.RespondError(c, "Invalid page")
 	}
 	var user model.User
 	err = memento.GetDbConnection().First(&user, "username=?", username).Error

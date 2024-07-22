@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/gommon/log"
 	"image"
 	"image/color"
 	"image/draw"
@@ -35,7 +36,12 @@ func HandleGetCaptcha(c echo.Context) error {
 	if err != nil {
 		return c.JSON(500, err.Error())
 	}
-	defer dir.Close()
+	defer func(dir *os.File) {
+		err := dir.Close()
+		if err != nil {
+			log.Errorf(err.Error())
+		}
+	}(dir)
 	files, err := dir.Readdir(0)
 	if err != nil {
 		return c.JSON(500, err.Error())
@@ -169,7 +175,7 @@ func cropImage(imgData []byte, x, y, width, height int) ([]byte, error) {
 	rect := image.Rect(x, y, x+width, y+height)
 	croppedImg := image.NewRGBA(rect)
 
-	draw.Draw(croppedImg, croppedImg.Bounds(), img, image.Point{x, y}, draw.Src)
+	draw.Draw(croppedImg, croppedImg.Bounds(), img, image.Point{X: x, Y: y}, draw.Src)
 
 	var buf bytes.Buffer
 	if err := jpeg.Encode(&buf, croppedImg, nil); err != nil {

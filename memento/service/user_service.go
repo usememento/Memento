@@ -15,6 +15,7 @@ import (
 	"image"
 	"image/jpeg"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"path"
@@ -188,7 +189,12 @@ func HandleUserEdit(c echo.Context) error {
 			log.Errorf(err.Error())
 			return utils.RespondError(c, "form file open error")
 		}
-		defer file.Close()
+		defer func(file multipart.File) {
+			err := file.Close()
+			if err != nil {
+				log.Errorf(err.Error())
+			}
+		}(file)
 		avatarData, err := io.ReadAll(file)
 		if err != nil {
 			log.Errorf(err.Error())
@@ -208,7 +214,12 @@ func HandleUserEdit(c echo.Context) error {
 			log.Errorf(err.Error())
 			return utils.RespondError(c, "os file open error")
 		}
-		defer dst.Close()
+		defer func(dst *os.File) {
+			err := dst.Close()
+			if err != nil {
+				log.Errorf(err.Error())
+			}
+		}(dst)
 		// write
 		_, err = dst.Write(avatarData)
 		if err != nil {
@@ -474,7 +485,15 @@ func HandlerGetUserFollowing(c echo.Context) error {
 		return utils.RespondError(c, "invalid page")
 	}
 	followers := make([]model.User, 0, memento.PageSize)
-	memento.GetDbConnection().Model(&user).Association("Follows").Find(&followers, memento.GetDbConnection().Offset(page*memento.PageSize).Limit(memento.PageSize))
+	err = memento.GetDbConnection().
+		Model(&user).
+		Association("Follows").
+		Find(&followers, memento.GetDbConnection().Offset(page*memento.PageSize).
+			Limit(memento.PageSize))
+	if err != nil {
+		log.Errorf(err.Error())
+		return utils.RespondError(c, "unknown query error")
+	}
 	total := memento.GetDbConnection().Model(&user).Association("Follows").Count()
 	result := make([]model.UserViewModel, 0, memento.PageSize)
 	for _, f := range followers {

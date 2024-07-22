@@ -23,11 +23,10 @@ import (
 	"gorm.io/gorm"
 )
 
-type MementoServer struct {
+type Server struct {
 	DbConn    *gorm.DB
 	Config    utils.MementoConfig
 	lock      sync.Locker
-	UserIndex bleve.Index
 	PostIndex bleve.Index
 }
 
@@ -36,7 +35,7 @@ const (
 	ConfigFileName = "config.yaml"
 )
 
-var memento MementoServer
+var memento Server
 
 func writeConfig() error {
 	f, err := os.Create(path.Join(memento.Config.BasePath, ConfigFileName))
@@ -57,7 +56,7 @@ func writeConfig() error {
 	return nil
 }
 
-func Init() (*MementoServer, error) {
+func Init() (*Server, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
 		log.Errorf("Error getting home directory: %s\n", err.Error())
@@ -119,11 +118,11 @@ func Init() (*MementoServer, error) {
 		log.Errorf("Error establishing database connection: %s\n", err.Error())
 		return nil, err
 	}
-	memento.DbConn.AutoMigrate(&model.Tag{})
-	memento.DbConn.AutoMigrate(&model.File{})
-	memento.DbConn.AutoMigrate(&model.Comment{})
-	memento.DbConn.AutoMigrate(&model.Post{})
-	memento.DbConn.AutoMigrate(&model.User{})
+	_ = memento.DbConn.AutoMigrate(&model.Tag{})
+	_ = memento.DbConn.AutoMigrate(&model.File{})
+	_ = memento.DbConn.AutoMigrate(&model.Comment{})
+	_ = memento.DbConn.AutoMigrate(&model.Post{})
+	_ = memento.DbConn.AutoMigrate(&model.User{})
 	//memento.DbConn.AutoMigrate(&model.PostTag{})
 	memento.PostIndex, err = bleve.Open(path.Join(GetBasePath(), "post_index.bleve"))
 	if err != nil {
@@ -131,15 +130,6 @@ func Init() (*MementoServer, error) {
 		memento.PostIndex, err = bleve.New(path.Join(GetBasePath(), "post_index.bleve"), mapping)
 		if err != nil {
 			log.Errorf("Error creating post index: %s\n", err.Error())
-			return nil, err
-		}
-	}
-	memento.UserIndex, err = bleve.Open(path.Join(GetBasePath(), "user_index.bleve"))
-	if err != nil {
-		mapping := bleve.NewIndexMapping()
-		memento.PostIndex, err = bleve.New(path.Join(GetBasePath(), "user_index.bleve"), mapping)
-		if err != nil {
-			log.Errorf("Error creating user index: %s\n", err.Error())
 			return nil, err
 		}
 	}
@@ -189,9 +179,7 @@ func IndexPost(post *model.Post) error {
 		Content: string(content),
 	})
 }
-func IndexUser(user *model.User) error {
-	return memento.PostIndex.Index(user.Username, *user)
-}
+
 func SearchPost(content string) (*bleve.SearchResult, error) {
 	query := bleve.NewMatchQuery(content)
 	query.SetField("Content")
@@ -241,8 +229,8 @@ func TokenValidator(eServer *server.Server) echo.MiddlewareFunc {
 		return func(c echo.Context) error {
 			ti, err := eServer.ValidationBearerToken(c.Request())
 			if err != nil {
-				path := c.Request().URL.Path
-				if isPublicPath(path) {
+				p := c.Request().URL.Path
+				if isPublicPath(p) {
 					c.Set("username", "")
 					return next(c)
 				}
@@ -263,40 +251,6 @@ func AllowAuthorizedHandler(clientID string, grant oauth2.GrantType) (allowed bo
 		return true, nil
 	}
 	return false, nil
-}
-func GetUser(out *model.User, username string) error {
-	err := GetDbConnection().First(&out, "username=?", username).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return err
-		}
-		log.Errorf(err.Error())
-		return err
-	}
-	return nil
-}
-
-func GetPost(out *model.Post, postId string) error {
-	if err := GetDbConnection().First(&out, "id=?", postId).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return err
-		}
-		log.Errorf(err.Error())
-		return err
-	}
-	return nil
-}
-
-func GetFile(out *model.File, url string) error {
-	err := GetDbConnection().First(&out, "content_url=?", url).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return err
-		}
-		log.Errorf(err.Error())
-		return err
-	}
-	return nil
 }
 
 type Token struct {
