@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:frontend/foundation/app.dart';
 import 'package:frontend/utils/ext.dart';
 import 'package:frontend/utils/translation.dart';
@@ -24,6 +25,35 @@ class _MemoEditPageState extends State<MemoEditPage> {
 
   bool isLoading = false;
 
+  late FocusNode focusNode;
+
+  @override
+  void initState() {
+    focusNode = FocusNode()
+      ..onKeyEvent = (node, event) {
+        if (event.logicalKey == LogicalKeyboardKey.tab) {
+          var cursorPos = controller.selection.base.offset;
+          if (cursorPos != -1) {
+            String textAfterCursor = controller.text.substring(cursorPos);
+            String textBeforeCursor = controller.text.substring(0, cursorPos);
+            controller.value = TextEditingValue(
+              text: "$textBeforeCursor    $textAfterCursor",
+              selection: TextSelection.collapsed(offset: cursorPos + 4),
+            );
+            return KeyEventResult.handled;
+          }
+        }
+        return KeyEventResult.ignored;
+      };
+    super.initState();
+  }
+
+  @override
+  dispose() {
+    focusNode.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -40,6 +70,7 @@ class _MemoEditPageState extends State<MemoEditPage> {
         Expanded(
           child: Container(
             child: TextField(
+              focusNode: focusNode,
               decoration: InputDecoration(
                 hintText: "Write down your thoughts".tl,
                 border: InputBorder.none,
@@ -157,6 +188,7 @@ class MemoEditingController extends TextEditingController {
     if (splits.length == 1) return false;
     if (splits[1].trim().isEmpty) return false;
     var s = splits.first;
+    if(s.isEmpty) return false;
     bool isTitle = true;
     for (var char in s.characters) {
       if (char != '#') {
@@ -172,16 +204,34 @@ class MemoEditingController extends TextEditingController {
       {required BuildContext context,
         TextStyle? style,
         required bool withComposing}) {
-    var text = this.text.replaceAll('\r', '');
-    var lines = text.split("\n");
+    if(text.contains('\t')) {
+      Future.microtask(() {
+        text = text.replaceAll('\t', '    ');
+      });
+    }
+    var lineBreak = text.contains('\r\n') ? '\r\n' : '\n';
+    var lines = text.split(lineBreak);
     var spans = <TextSpan>[];
+    bool isCode = false;
     for (int i = 0; i < lines.length; i++) {
       var line = lines[i];
       bool isEndLine = i == lines.length-1;
-      if (i != lines.length - 1) {
-        line += '\n';
+      if(line.startsWith('```') || line.startsWith('~~~')){
+        isCode = !isCode;
       }
-      if (isTitle(line)) {
+      if (i != lines.length - 1) {
+        line += lineBreak;
+      }
+      if(isCode || line.startsWith('```') || line.startsWith('~~~')){
+        spans.add(TextSpan(
+          text: line,
+          style: const TextStyle(
+            fontFamily: 'monospace',
+            fontFamilyFallback: ['monospace', 'sans-serif', 'serif', 'arial'],
+          ),
+        ));
+      }
+      else if (isTitle(line)) {
         spans.add(TextSpan(
           text: line,
           style: const TextStyle(fontWeight: FontWeight.bold),
@@ -191,31 +241,51 @@ class MemoEditingController extends TextEditingController {
           text: line,
         ));
       } else {
-        line = line.replaceLast('\n', '');
-        var buffer = '';
-        var splits = line.split(' ');
-        for (int i = 0; i < splits.length; i++) {
-          var s = splits[i];
-          bool isEndSegment = i == splits.length-1;
-          var endChar = isEndLine ? '' : '\n';
-          if (isTag(s)) {
-            spans.add(TextSpan(
-              text: buffer,
-            ));
-            spans.add(TextSpan(
-              text: '$s${isEndSegment ? endChar : " "}',
-              style: const TextStyle(
-                color: Colors.blue,
-              ),
-            ));
-            buffer = '';
+        line = line.replaceLast(lineBreak, '');
+        var buffer = StringBuffer();
+        bool tag = false;
+        for(int i = 0; i < line.length; i++) {
+          var char = line[i];
+          if(tag && char == ' ') {
+            buffer.write(char);
+            if(buffer.length > 2) {
+              spans.add(TextSpan(
+                text: buffer.toString(),
+                style: const TextStyle(
+                  color: Colors.blue,
+                ),
+              ));
+            } else {
+              spans.add(TextSpan(
+                text: buffer.toString(),
+              ));
+            }
+            tag = false;
+            buffer.clear();
+            continue;
+          } else if (!tag && char == '#') {
+            if(i == 0 || line[i-1] == ' ') {
+              spans.add(TextSpan(
+                text: buffer.toString(),
+              ));
+              buffer.clear();
+              tag = true;
+            }
+            buffer.write(char);
           } else {
-            buffer += '$s${isEndSegment ? endChar : " "}';
+            buffer.write(char);
           }
         }
-        if(buffer.isNotEmpty) {
+        if(tag && buffer.length > 2) {
           spans.add(TextSpan(
-            text: buffer,
+            text: buffer.toString() + (isEndLine ? '' : lineBreak),
+            style: const TextStyle(
+              color: Colors.blue,
+            ),
+          ));
+        } else {
+          spans.add(TextSpan(
+            text: buffer.toString() + (isEndLine ? '' : lineBreak),
           ));
         }
       }

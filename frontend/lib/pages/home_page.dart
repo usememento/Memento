@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/button.dart';
 import 'package:frontend/components/memo.dart';
@@ -24,16 +25,23 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    if(!appdata.isLogin) {
+    if (!appdata.isLogin) {
       return Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text("Login Required".tl, style: ts.bold.s16,),
-            const SizedBox(height: 12,),
-            Button.filled(child: Text("Login".tl), onPressed: () {
-              App.rootNavigatorKey!.currentContext!.to('/login');
-            })
+            Text(
+              "Login Required".tl,
+              style: ts.bold.s16,
+            ),
+            const SizedBox(
+              height: 12,
+            ),
+            Button.filled(
+                child: Text("Login".tl),
+                onPressed: () {
+                  App.rootNavigatorKey!.currentContext!.to('/login');
+                })
           ],
         ),
       );
@@ -144,6 +152,35 @@ class _WritingAreaState extends State<WritingArea> {
 
   bool isLoading = false;
 
+  late FocusNode focusNode;
+
+  @override
+  void initState() {
+    focusNode = FocusNode()
+      ..onKeyEvent = (node, event) {
+        if (event.logicalKey == LogicalKeyboardKey.tab) {
+          var cursorPos = controller.selection.base.offset;
+          if (cursorPos != -1) {
+            String textAfterCursor = controller.text.substring(cursorPos);
+            String textBeforeCursor = controller.text.substring(0, cursorPos);
+            controller.value = TextEditingValue(
+              text: "$textBeforeCursor    $textAfterCursor",
+              selection: TextSelection.collapsed(offset: cursorPos + 4),
+            );
+            return KeyEventResult.handled;
+          }
+        }
+        return KeyEventResult.ignored;
+      };
+    super.initState();
+  }
+
+  @override
+  dispose() {
+    focusNode.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -160,6 +197,7 @@ class _WritingAreaState extends State<WritingArea> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           TextField(
+            focusNode: focusNode,
             decoration: InputDecoration(
               hintText: "Write down your thoughts".tl,
               border: InputBorder.none,
@@ -223,7 +261,8 @@ class _WritingAreaState extends State<WritingArea> {
                   size: 18,
                   tooltip: "Content syntax".tl,
                   onPressed: () {
-                    launchUrlString("https://github.com/usememento/Memento/blob/master/doc/ContentSyntax.md");
+                    launchUrlString(
+                        "https://github.com/usememento/Memento/blob/master/doc/ContentSyntax.md");
                   }),
               const Spacer(),
               Button.filled(
@@ -310,6 +349,35 @@ class _WritingPageState extends State<WritingPage> {
 
   bool isLoading = false;
 
+  late FocusNode focusNode;
+
+  @override
+  void initState() {
+    focusNode = FocusNode()
+      ..onKeyEvent = (node, event) {
+        if (event.logicalKey == LogicalKeyboardKey.tab) {
+          var cursorPos = controller.selection.base.offset;
+          if (cursorPos != -1) {
+            String textAfterCursor = controller.text.substring(cursorPos);
+            String textBeforeCursor = controller.text.substring(0, cursorPos);
+            controller.value = TextEditingValue(
+              text: "$textBeforeCursor    $textAfterCursor",
+              selection: TextSelection.collapsed(offset: cursorPos + 4),
+            );
+            return KeyEventResult.handled;
+          }
+        }
+        return KeyEventResult.ignored;
+      };
+    super.initState();
+  }
+
+  @override
+  dispose() {
+    focusNode.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -326,6 +394,7 @@ class _WritingPageState extends State<WritingPage> {
         Expanded(
           child: Container(
             child: TextField(
+              focusNode: focusNode,
               decoration: InputDecoration(
                 hintText: "Write down your thoughts".tl,
                 border: InputBorder.none,
@@ -388,7 +457,8 @@ class _WritingPageState extends State<WritingPage> {
                 size: 18,
                 tooltip: "Content syntax".tl,
                 onPressed: () {
-                  launchUrlString("https://github.com/usememento/Memento/blob/master/doc/ContentSyntax.md");
+                  launchUrlString(
+                      "https://github.com/usememento/Memento/blob/master/doc/ContentSyntax.md");
                 }),
             const Spacer(),
             Button.filled(
@@ -461,7 +531,7 @@ class _HomePageMemosListState
     return SliverList(
         delegate: SliverChildBuilderDelegate(
       (context, index) {
-        if(index == data.length - 1) {
+        if (index == data.length - 1) {
           nextPage();
         }
         return MemoWidget(
