@@ -228,5 +228,5 @@ extension StyledText on TextStyle {
 
   TextStyle get s40 => copyWith(fontSize: 40);
 
-  TextStyle withColor(Color color) => copyWith(color: color);
+  TextStyle withColor(Color? color) => copyWith(color: color);
 }

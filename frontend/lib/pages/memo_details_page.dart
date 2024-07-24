@@ -90,16 +90,16 @@ class _MemoDetailsState extends State<_MemoDetails> {
       color: context.colorScheme.surface,
       child: Row(
         children: [
-          if(Navigator.of(context).canPop())
+          if (Navigator.of(context).canPop())
             Tooltip(
-                message: "Back",
-                child: IconButton(
-                  icon: const Icon(Icons.arrow_back_sharp),
-                  onPressed: () {
-                    context.pop();
-                  },
-                ),
+              message: "Back",
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back_sharp),
+                onPressed: () {
+                  context.pop();
+                },
               ),
+            ),
           const SizedBox(width: 8),
           Expanded(
             child: buildActions(),
@@ -107,7 +107,8 @@ class _MemoDetailsState extends State<_MemoDetails> {
         ],
       )
           .fixHeight(56)
-          .paddingTop((App.isMobile || context.width <= 600) ? context.padding.top : 0)
+          .paddingTop(
+              (App.isMobile || context.width <= 600) ? context.padding.top : 0)
           .paddingHorizontal(8),
     );
   }
@@ -181,6 +182,8 @@ class _MemoDetailsState extends State<_MemoDetails> {
 
   final controller = ItemScrollController();
 
+  final positionsListener = ItemPositionsListener.create();
+
   bool isTag(String text) {
     return text.startsWith('#') &&
         text.length <= 20 &&
@@ -190,7 +193,7 @@ class _MemoDetailsState extends State<_MemoDetails> {
 
   bool get editable =>
       widget.memo.author == null ||
-          widget.memo.author!.username == appdata.userOrNull?.username;
+      widget.memo.author!.username == appdata.userOrNull?.username;
 
   void Function(int)? getOnTapTask() {
     return editable ? onTapTask : null;
@@ -202,16 +205,15 @@ class _MemoDetailsState extends State<_MemoDetails> {
     var originContent = widget.memo.content;
     setState(() {
       updating = true;
-      widget.memo.content = updateContentWithTaskIndex(widget.memo.content, taskIndex);
+      widget.memo.content =
+          updateContentWithTaskIndex(widget.memo.content, taskIndex);
     });
-    var res = await Network().editMemo(
-        widget.memo.content,
-        widget.memo.isPublic,
-        widget.memo.id
-    );
-    if(mounted) {
+    var res = await Network()
+        .editMemo(widget.memo.content, widget.memo.isPublic, widget.memo.id);
+    if (mounted) {
       if (res.success) {
         setState(() {
+          cachedMarkdownContent = null;
           updating = false;
         });
       } else {
@@ -220,30 +222,54 @@ class _MemoDetailsState extends State<_MemoDetails> {
           widget.memo.content = originContent;
         });
         context.showMessage(res.errorMessage!);
-      }}
+      }
+    }
+  }
+
+  List<Widget>? cachedMarkdownContent;
+
+  List<Widget> generateMarkdownContent() {
+    if (cachedMarkdownContent == null) {
+      var content = widget.memo.content;
+      var lines = content.split('\n');
+      for (var i = 0; i < lines.length; i++) {
+        var line = lines[i];
+        var split = line.split(' ');
+        for (var j = 0; j < split.length; j++) {
+          var text = split[j];
+          if (isTag(text)) {
+            split[j] = '[${split[j]}](tag:${split[j].substring(1)})';
+          }
+        }
+        lines[i] = split.join(' ');
+      }
+      content = lines.join('\n');
+      cachedMarkdownContent =
+          getMemoMarkdownGenerator(getOnTapTask()).buildWidgets(onTocList: (t) {
+        toc ??= t;
+        title ??= t.firstOrNull?.node.build().toPlainText();
+      }, content, config: getMemoMarkdownConfig(context));
+    }
+    return cachedMarkdownContent!;
+  }
+
+  int currentIndex = 0;
+
+  bool onScroll(ScrollNotification notification) {
+    if (notification is ScrollUpdateNotification) {
+      var index = positionsListener.itemPositions.value.firstOrNull?.index;
+      if(index != null && index != currentIndex) {
+        setState(() {
+          currentIndex = index;
+        });
+      }
+    }
+    return false;
   }
 
   @override
   Widget build(BuildContext context) {
-    var content = widget.memo.content;
-    var lines = content.split('\n');
-    for (var i = 0; i < lines.length; i++) {
-      var line = lines[i];
-      var split = line.split(' ');
-      for (var j = 0; j < split.length; j++) {
-        var text = split[j];
-        if (isTag(text)) {
-          split[j] = '[${split[j]}](tag:${split[j].substring(1)})';
-        }
-      }
-      lines[i] = split.join(' ');
-    }
-    content = lines.join('\n');
-    var markdownContent =
-        getMemoMarkdownGenerator(getOnTapTask()).buildWidgets(onTocList: (t) {
-      toc ??= t;
-      title ??= t.firstOrNull?.node.build().toPlainText();
-    }, content, config: getMemoMarkdownConfig(context));
+    var markdownContent = generateMarkdownContent();
     return LayoutBuilder(builder: (context, constrains) {
       return Row(
         children: [
@@ -256,13 +282,17 @@ class _MemoDetailsState extends State<_MemoDetails> {
                       context: context,
                       removeTop: true,
                       child: SelectionArea(
-                        child: ScrollablePositionedList.builder(
-                          padding: EdgeInsets.zero,
-                          itemCount: markdownContent.length,
-                          itemScrollController: controller,
-                          itemBuilder: (context, index) {
-                            return markdownContent[index].paddingHorizontal(16);
-                          },
+                        child: NotificationListener<ScrollNotification>(
+                          onNotification: onScroll,
+                          child: ScrollablePositionedList.builder(
+                            padding: EdgeInsets.zero,
+                            itemCount: markdownContent.length,
+                            itemScrollController: controller,
+                            itemPositionsListener: positionsListener,
+                            itemBuilder: (context, index) {
+                              return markdownContent[index].paddingHorizontal(16);
+                            },
+                          ),
                         ),
                       )),
                 )
@@ -311,7 +341,7 @@ class _MemoDetailsState extends State<_MemoDetails> {
   Widget buildActions() {
     return Row(
       children: [
-        if(!updating)
+        if (!updating)
           InkWell(
             onTap: () {
               context.to('/user/${widget.memo.author!.username}');
@@ -333,51 +363,64 @@ class _MemoDetailsState extends State<_MemoDetails> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const SizedBox(width: 8,),
+                const SizedBox(
+                  width: 8,
+                ),
                 const SizedBox(
                   width: 18,
                   height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2,),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                  ),
                 ),
-                const SizedBox(width: 8,),
+                const SizedBox(
+                  width: 8,
+                ),
                 Text("Updating".tl),
               ],
             ),
           ),
         const Spacer(),
         Button.normal(
-          onPressed: like,
-          isLoading: isLiking,
-          padding: const EdgeInsets.all(8),
-          child: widget.memo.isLiked
-            ? const Icon(Icons.favorite, size: 18, color: Colors.red)
-            : const Icon(Icons.favorite_border, size: 18,)
-          ),
+            onPressed: like,
+            isLoading: isLiking,
+            padding: const EdgeInsets.all(8),
+            child: widget.memo.isLiked
+                ? const Icon(Icons.favorite, size: 18, color: Colors.red)
+                : const Icon(
+                    Icons.favorite_border,
+                    size: 18,
+                  )),
         Text(
           widget.memo.likesCount.toString(),
           style: const TextStyle(fontSize: 14),
         ),
-        const SizedBox(width: 16,),
+        const SizedBox(
+          width: 16,
+        ),
         Button.normal(
-            onPressed: () {
-              CommentsPage.show(widget.memo.id);
-            },
-            isLoading: isLiking,
-            padding: const EdgeInsets.all(8),
-            child: const Icon(
-              Icons.chat_bubble_outline,
-              size: 18,
-            ),
+          onPressed: () {
+            CommentsPage.show(widget.memo.id);
+          },
+          isLoading: isLiking,
+          padding: const EdgeInsets.all(8),
+          child: const Icon(
+            Icons.chat_bubble_outline,
+            size: 18,
+          ),
         ),
         Text(
           widget.memo.repliesCount.toString(),
           style: const TextStyle(fontSize: 14),
         ),
-        const SizedBox(width: 16,),
+        const SizedBox(
+          width: 16,
+        ),
         Button.normal(
           onPressed: () {},
           onPressedAt: (location) {
-            var baseUrl = App.isWeb ? Uri.base.toString() : appdata.settings['domain'];
+            var baseUrl =
+                App.isWeb ? Uri.base.toString() : appdata.settings['domain'];
             var url = baseUrl + '/post/' + widget.memo.id.toString();
             showPopMenu(location, [
               MenuEntry("Copy path".tl, () {
@@ -470,27 +513,35 @@ class _MemoDetailsState extends State<_MemoDetails> {
 
     EdgeInsets padding = const EdgeInsets.symmetric(horizontal: 16);
 
-    MyExpansionPanel buildNode(_OutlineItem node) {
+    MyExpansionPanel buildNode(_OutlineItem node, bool isActive) {
+      var children = <MyExpansionPanel>[];
+      for(int i = 0; i<node.children.length; i++) {
+        var current = node.children[i];
+        var next = node.children.elementAtOrNull(i+1);
+        var active = isActive && current.index <= currentIndex
+            && (next == null || next.index > currentIndex);
+        children.add(buildNode(current, active));
+      }
       return MyExpansionPanel(
         headerBuilder: (context, isExpanded) {
           return ListTile(
             title: Text(
               node.title,
-              style: const TextStyle(fontSize: 14),
+              style: ts.s14.withColor(isActive ? null : context.colorScheme.outline),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
             minTileHeight: 32.0,
-            contentPadding: padding + EdgeInsets.only(left: node.level * 8.0),
+            contentPadding: padding + EdgeInsets.only(left: node.level * 12.0),
             onTap: () {
               to(node.index);
             },
-            trailing: Button.icon(
+            trailing: node.children.isEmpty ? null : Button.icon(
               size: 18.0,
               icon: Icon(
                 node.isExpanded
                     ? Icons.keyboard_arrow_down
-                    : Icons.keyboard_arrow_up,
+                    : Icons.keyboard_arrow_left,
               ),
               onPressed: () {
                 setState(() {
@@ -504,7 +555,8 @@ class _MemoDetailsState extends State<_MemoDetails> {
           elevation: 0,
           materialGapSize: 0,
           expandedHeaderPadding: EdgeInsets.zero,
-          children: node.children.map((e) => buildNode(e)).toList(),
+          children: children,
+          dividerColor: Colors.transparent,
         ),
         isExpanded: node.isExpanded,
       );
@@ -514,7 +566,8 @@ class _MemoDetailsState extends State<_MemoDetails> {
       elevation: 0,
       materialGapSize: 0,
       expandedHeaderPadding: EdgeInsets.zero,
-      children: [buildNode(_article!)],
+      dividerColor: Colors.transparent,
+      children: [buildNode(_article!, true)],
     ).paddingTop(4);
   }
 
