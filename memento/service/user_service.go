@@ -116,11 +116,13 @@ func HandleUserLoginWrapper(c echo.Context, s *server.Server) error {
 
 	gt, tgr, err := s.ValidationTokenRequest(c.Request())
 	if err != nil {
+		log.Errorf(err.Error())
 		return utils.RespondError(c, err.Error())
 	}
 
 	ti, err := s.GetAccessToken(c.Request().Context(), gt, tgr)
 	if err != nil {
+		log.Errorf(err.Error())
 		return utils.RespondError(c, err.Error())
 	}
 	return c.JSON(http.StatusOK, echo.Map{

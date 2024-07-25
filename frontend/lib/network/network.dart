@@ -136,20 +136,11 @@ class Network {
     }
   }
 
-  static const _authQuery = {
-    'client_id': '000000',
-    'client_secret': '999999',
-    'grant_type': 'password',
-  };
-
   Future<Res<Account>> refresh() async {
     try {
       var res =
           await dio.post<Map<String, dynamic>>("/api/user/refresh", data: {
         "refresh_token": appdata.user.refreshToken,
-      }, queryParameters: {
-        'client_id': '000000',
-        'client_secret': '999999',
         'grant_type': 'refresh_token',
       });
       return Res(Account.fromJson(res.data!));
@@ -165,8 +156,8 @@ class Network {
           data: {
             "username": username,
             "password": password,
-          },
-          queryParameters: _authQuery);
+            'grant_type': 'password',
+          },);
       return Res(Account.fromJson(res.data!));
     } catch (e) {
       return Res.fromError(e);
@@ -183,9 +174,8 @@ class Network {
           data: {
             "username": username,
             "password": password,
-            "captchaToken": captchaToken
-          },
-          queryParameters: _authQuery);
+            "captchaToken": captchaToken,
+          });
       return Res(Account.fromJson(res.data!));
     } catch (e) {
       return Res.fromError(e);

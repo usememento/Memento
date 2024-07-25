@@ -4,11 +4,12 @@ import (
 	"Memento/memento"
 	"Memento/memento/service"
 	"fmt"
+	"github.com/go-oauth2/oauth2/v4/models"
+	"net/http"
 	"path"
 
 	"github.com/go-oauth2/oauth2/v4"
 	"github.com/go-oauth2/oauth2/v4/manage"
-	"github.com/go-oauth2/oauth2/v4/models"
 	"github.com/go-oauth2/oauth2/v4/server"
 	"github.com/go-oauth2/oauth2/v4/store"
 	"github.com/labstack/echo/v4"
@@ -42,7 +43,15 @@ func main() {
 	AuthServer = server.NewDefaultServer(manager)
 	AuthServer.Config.AllowGetAccessRequest = true
 	AuthServer.SetAllowedGrantType(oauth2.Refreshing, oauth2.PasswordCredentials)
-	AuthServer.SetClientInfoHandler(server.ClientFormHandler)
+	AuthServer.SetClientInfoHandler(func(r *http.Request) (clientID, clientSecret string, err error) {
+		clientID = r.FormValue("client_id")
+		clientSecret = r.FormValue("client_secret")
+		if clientID == "" || clientSecret == "" {
+			// use the default client
+			return "000000", "999999", nil
+		}
+		return clientID, clientSecret, nil
+	})
 	AuthServer.SetPasswordAuthorizationHandler(service.PasswordAuthorizationHandler)
 	e := echo.New()
 	// Middleware
