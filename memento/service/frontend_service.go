@@ -142,7 +142,7 @@ func seoHtml(html string, reqPath string) string {
 	description := memento.GetConfig().Description
 	title := siteName
 	url := scheme + "://" + domain + reqPath
-	preview := "/icons/Icon-192.png"
+	preview := "/icons/icon-192-maskable.png"
 	seoArticle := ""
 	icon := "/favicon.png"
 
