@@ -241,9 +241,11 @@ packages:
   flutter_math_fork:
     dependency: "direct main"
     description:
-      path: "pkgs/flutter_math_fork"
-      relative: true
-    source: path
+      path: "."
+      ref: HEAD
+      resolved-ref: c53b30dc3ac5289eb551e075b1b10044205789d4
+      url: "https://github.com/usememento/flutter_math_fork"
+    source: git
     version: "0.7.2"
   flutter_svg:
     dependency: transitive
@@ -266,9 +268,11 @@ packages:
   highlight:
     dependency: "direct overridden"
     description:
-      path: "pkgs/highlight"
-      relative: true
-    source: path
+      path: highlight
+      ref: HEAD
+      resolved-ref: f981d020b7f857ff47db33c9998672f64c4f0b5f
+      url: "https://github.com/usememento/highlight.dart"
+    source: git
     version: "0.7.0"
   http:
     dependency: transitive

@@ -38,7 +38,7 @@ dependencies:
   shared_preferences: ^2.2.3
   markdown:
   flutter_math_fork:
-    path: ./pkgs/flutter_math_fork
+    git: https://github.com/usememento/flutter_math_fork
   flutter_highlight:
   dio:
   path_provider:
@@ -53,7 +53,10 @@ dependencies:
 
 dependency_overrides:
   highlight:
-    path: ./pkgs/highlight
+    git:
+      url: https://github.com/usememento/highlight.dart
+      path: ./highlight
+
 
 dev_dependencies:
   flutter_test:
