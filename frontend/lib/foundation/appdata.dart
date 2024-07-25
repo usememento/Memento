@@ -26,9 +26,10 @@ class _Appdata {
     'default_memo_visibility': 'public'
   };
 
-  String get domain => App.isWeb ? Uri.base.toString() : settings['domain'];
+  String get domain =>
+      App.isWeb ? "${Uri.base.scheme}://${Uri.base.host}" : settings['domain'];
 
-  Future<void> saveData() async{
+  Future<void> saveData() async {
     var instance = await SharedPreferences.getInstance();
     await instance.setString('user', jsonEncode(_user?.toJson()));
     await instance.setString('settings', jsonEncode(settings));

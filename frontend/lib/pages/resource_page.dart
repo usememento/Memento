@@ -133,7 +133,7 @@ class _FileWidget extends StatelessWidget {
   }
 
   void showDialog() async {
-    var domain = App.isWeb ? Uri.base.toString() : appdata.settings['domain'];
+    var domain = appdata.domain;
     var link = "$domain/api/file/download/${file.id}";
     bool isDeleted = false;
     await pushDialog(

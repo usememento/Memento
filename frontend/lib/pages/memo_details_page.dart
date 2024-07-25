@@ -419,9 +419,8 @@ class _MemoDetailsState extends State<_MemoDetails> {
         Button.normal(
           onPressed: () {},
           onPressedAt: (location) {
-            var baseUrl =
-                App.isWeb ? Uri.base.toString() : appdata.settings['domain'];
-            var url = baseUrl + '/post/' + widget.memo.id.toString();
+            var baseUrl = appdata.domain;
+            var url = '$baseUrl/post/${widget.memo.id}';
             showPopMenu(location, [
               MenuEntry("Copy path".tl, () {
                 Clipboard.setData(ClipboardData(text: url));
