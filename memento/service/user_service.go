@@ -83,6 +83,7 @@ func HandleUserCreateWrapper(c echo.Context, s *server.Server) error {
 		"user":  utils.UserToView(&user, false),
 	})
 }
+
 func HandleUserLoginWrapper(c echo.Context, s *server.Server) error {
 	username := c.FormValue("username")
 	password := c.FormValue("password")
@@ -95,7 +96,21 @@ func HandleUserLoginWrapper(c echo.Context, s *server.Server) error {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown query error")
 	}
+	if user.LockUntil.After(time.Now()) {
+		return utils.RespondError(c, "Too many login attempts, please try again later")
+	}
 	if utils.Md5string(password) != user.PasswordHash {
+		user.PasswordRetry += 1
+		if user.PasswordRetry >= 5 {
+			log.Infof("User %s has been locked due to too many login attempts", user.Username)
+			user.LockUntil = time.Now().Add(time.Minute * 5)
+			user.PasswordRetry = 0
+		}
+		err := memento.GetDbConnection().Save(&user).Error
+		if err != nil {
+			log.Errorf(err.Error())
+			return utils.RespondError(c, "unknown update error")
+		}
 		return utils.RespondError(c, "incorrect password")
 	}
 
@@ -113,6 +128,7 @@ func HandleUserLoginWrapper(c echo.Context, s *server.Server) error {
 		"user":  utils.UserToView(&user, false),
 	})
 }
+
 func HandleUserRefreshToken(c echo.Context, s *server.Server) error {
 	gt, tgr, err := s.ValidationTokenRequest(c.Request())
 	if err != nil {
@@ -129,6 +145,7 @@ func HandleUserRefreshToken(c echo.Context, s *server.Server) error {
 		"user":  *utils.UserToView(&user, false),
 	})
 }
+
 func HandleUserDelete(c echo.Context) error {
 	username := c.Param("username")
 	if username == "" {
@@ -409,6 +426,7 @@ func HandleUserFollow(c echo.Context) error {
 	}
 	return c.NoContent(http.StatusOK)
 }
+
 func HandleUserUnfollow(c echo.Context) error {
 	username := c.Get("username")
 	if username == "" {
@@ -450,6 +468,7 @@ func HandleUserUnfollow(c echo.Context) error {
 	}
 	return c.NoContent(http.StatusOK)
 }
+
 func HandlerGetUserFollower(c echo.Context) error {
 	username := c.QueryParam("username")
 	var user model.User

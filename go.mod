@@ -6,7 +6,7 @@ toolchain go1.22.3
 
 require (
 	github.com/blevesearch/bleve/v2 v2.4.1
-	github.com/go-oauth2/oauth2/v4 v4.5.1
+	github.com/go-oauth2/oauth2/v4 v4.5.2
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/gomarkdown/markdown v0.0.0-20240626202925-2eda941fd024
 	github.com/k3a/html2text v1.2.1
@@ -15,7 +15,7 @@ require (
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
 	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/driver/sqlite v1.5.6
-	gorm.io/gorm v1.25.10
+	gorm.io/gorm v1.25.11
 )
 
 require (

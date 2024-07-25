@@ -10,6 +10,8 @@ type User struct {
 	gorm.Model
 	Username      string `gorm:"uniqueIndex"`
 	PasswordHash  string
+	PasswordRetry int
+	LockUntil     time.Time
 	AvatarUrl     string
 	Nickname      string
 	Bio           string
