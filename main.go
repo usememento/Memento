@@ -120,6 +120,7 @@ func main() {
 			adminApi.GET("/listUsers", service.HandleListUsers)
 			adminApi.DELETE("/deleteUser/:username", service.HandleAdminDeleteUser)
 			adminApi.POST("/setPermission", service.HandleSetUserPermission)
+			adminApi.POST("/setIcon", service.HandleSetNewIcon)
 		}
 		captchaApi := api.Group("/captcha")
 		{

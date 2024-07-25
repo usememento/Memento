@@ -25,7 +25,7 @@ import (
 )
 
 func HandleUserCreateWrapper(c echo.Context, s *server.Server) error {
-	if !memento.IsEnableRegister() {
+	if !memento.GetConfig().EnableRegister {
 		return utils.RespondError(c, "Registration Disabled")
 	}
 	username := c.FormValue("username")

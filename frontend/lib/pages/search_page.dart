@@ -24,6 +24,16 @@ class _SearchPageState extends State<SearchPage> {
 
   int page = 0;
 
+  var focusNode = FocusNode();
+
+  @override
+  void initState() {
+    Future.delayed(const Duration(milliseconds: 300), () {
+      focusNode.requestFocus();
+    });
+    super.initState();
+  }
+
   @override
   void didChangeDependencies() {
     if (initial) {
@@ -37,6 +47,12 @@ class _SearchPageState extends State<SearchPage> {
       }
     }
     super.didChangeDependencies();
+  }
+
+  @override
+  void dispose() {
+    focusNode.dispose();
+    super.dispose();
   }
 
   @override
@@ -74,7 +90,8 @@ class _SearchPageState extends State<SearchPage> {
                             Expanded(
                               child: TextField(
                                 controller: controller,
-                                autofocus: true,
+                                autofocus: false,
+                                focusNode: focusNode,
                                 decoration: InputDecoration(
                                   hintText: "Search".tl,
                                   border: InputBorder.none,

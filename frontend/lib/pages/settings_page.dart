@@ -68,9 +68,11 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget buildTabBar() {
     return IndependentTabBar(
       initialIndex: index,
-      tabs: titles.map((e) => Tab(
-        text: e.tl,
-      )).toList(),
+      tabs: titles
+          .map((e) => Tab(
+                text: e.tl,
+              ))
+          .toList(),
       onTabChange: (index) {
         setState(() {
           this.index = index;
@@ -649,6 +651,28 @@ class __AdminSettingsState
             ),
           ),
         ),
+        SliverToBoxAdapter(
+          child: ListTile(
+            leading: const Icon(Icons.domain),
+            title: Text("Site Name".tl),
+            trailing: Text(data['site_name'] ?? ""),
+            onTap: setSiteName,
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: ListTile(
+            leading: const Icon(Icons.description_outlined),
+            title: Text("Site Description".tl),
+            onTap: setDescription,
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: ListTile(
+            leading: const Icon(Icons.image_outlined),
+            title: Text("Site Icon".tl),
+            onTap: setIcon,
+          ),
+        ),
         const SliverPadding(padding: EdgeInsets.only(top: 16)),
         const _UserList(),
       ],
@@ -661,6 +685,206 @@ class __AdminSettingsState
       return Future.value(const Res.error("Admin permission required"));
     }
     return Network().getConfigs();
+  }
+
+  void setSiteName() async {
+    var controller = TextEditingController(text: data!['site_name']);
+    bool isLoading = false;
+
+    await pushDialog(
+        context: App.rootNavigatorKey!.currentContext!,
+        builder: (context) {
+          return StatefulBuilder(
+            builder: (context, setState) {
+              return DialogContent(
+                title: "Site Name".tl,
+                body: TextField(
+                  controller: controller,
+                  decoration: const InputDecoration(
+                    labelText: "Site Name",
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                actions: [
+                  Button.filled(
+                    isLoading: isLoading,
+                    onPressed: () async {
+                      setState(() {
+                        isLoading = true;
+                      });
+                      var res = await Network()
+                          .setConfigs({"site_name": controller.text});
+                      if (context.mounted) {
+                        if (res.error) {
+                          context
+                              .showMessage(res.errorMessage ?? "Unknown Error");
+                          setState(() {
+                            isLoading = false;
+                          });
+                        } else {
+                          context.pop();
+                        }
+                      }
+                    },
+                    child: Text("Submit".tl),
+                  ),
+                ],
+              );
+            },
+          );
+        });
+
+    setState(() {
+      data!['site_name'] = controller.text;
+    });
+  }
+
+  void setDescription() async {
+    var controller = TextEditingController(text: data!['description']);
+    bool isLoading = false;
+
+    await pushDialog(
+        context: App.rootNavigatorKey!.currentContext!,
+        builder: (context) {
+          return StatefulBuilder(
+            builder: (context, setState) {
+              return DialogContent(
+                title: "Site Description".tl,
+                body: TextField(
+                  controller: controller,
+                  decoration: const InputDecoration(
+                    labelText: "Site Description",
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                actions: [
+                  Button.filled(
+                    isLoading: isLoading,
+                    onPressed: () async {
+                      setState(() {
+                        isLoading = true;
+                      });
+                      var res = await Network()
+                          .setConfigs({"description": controller.text});
+                      if (context.mounted) {
+                        if (res.error) {
+                          context
+                              .showMessage(res.errorMessage ?? "Unknown Error");
+                          setState(() {
+                            isLoading = false;
+                          });
+                        } else {
+                          context.pop();
+                        }
+                      }
+                    },
+                    child: Text("Submit".tl),
+                  ),
+                ],
+              );
+            },
+          );
+        });
+
+    setState(() {
+      data!['description'] = controller.text;
+    });
+  }
+
+  void setIcon() async {
+    Uint8List? icon;
+    bool isLoading = false;
+    String? iconFileName;
+
+    await pushDialog(
+      context: App.rootNavigatorKey!.currentContext!,
+      builder: (context) {
+        return StatefulBuilder(builder: (context, setState) {
+          return DialogContent(
+              title: "Site Icon".tl,
+              body: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Center(
+                      child: GestureDetector(
+                        onTap: () async {
+                          const XTypeGroup typeGroup = XTypeGroup(
+                            label: 'images',
+                            extensions: <String>[
+                              'jpg',
+                              'png',
+                              'jpeg',
+                              'webp'
+                            ],
+                          );
+                          final XFile? file = await openFile(
+                              acceptedTypeGroups: <XTypeGroup>[typeGroup]);
+                          if (file != null) {
+                            icon = await file.readAsBytes();
+                            iconFileName = file.name;
+                            setState(() {});
+                          }
+                        },
+                        child: MouseRegion(
+                          cursor: SystemMouseCursors.click,
+                          child: icon == null
+                              ? Avatar(
+                            url: '${appdata.domain}/icons/Icon-192.png?v=${data!['icon_version']}',
+                            size: 64,
+                          )
+                              : Container(
+                            width: 64,
+                            height: 64,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(64),
+                              image: DecorationImage(
+                                filterQuality: FilterQuality.medium,
+                                image: MemoryImage(icon!),
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                        ),
+                      )),
+                  const SizedBox(height: 12,),
+                  Text("Image must be 512 x 512".tl),
+                ],
+              ),
+            actions: [
+              Button.filled(
+                  isLoading: isLoading,
+                  onPressed: () async {
+                    setState(() {
+                      isLoading = true;
+                    });
+                    var context =
+                    App.rootNavigatorKey!.currentContext!;
+                    if (icon != null) {
+                      var res = await Network().setIcon(
+                          icon!, iconFileName!);
+                      if (context.mounted) {
+                        if (res.error) {
+                          setState(() {
+                            isLoading = false;
+                          });
+                          context.showMessage(res.message);
+                        } else {
+                          context.pop();
+                          context.showMessage("Icon updated".tl);
+                          data!['icon_version']++;
+                        }
+                      }
+                    } else {
+                      context.showMessage(
+                          "Click icon to select a new image".tl);
+                    }
+                  },
+                  child: Text("Submit".tl))
+            ],
+          );
+        });
+      },
+    );
   }
 }
 
@@ -802,8 +1026,7 @@ class _UserListState extends State<_UserList> {
   void editUser(User user) {
     pushDialog(
         context: App.rootNavigatorKey!.currentContext!,
-        builder: (_) =>
-            _EditUserDialog(user: user, state: this));
+        builder: (_) => _EditUserDialog(user: user, state: this));
   }
 }
 
@@ -946,8 +1169,7 @@ class _EditUserDialogState extends State<_EditUserDialog> {
           l2 = false;
         });
         if (widget.state.mounted) {
-          widget.state.data
-              .clear();
+          widget.state.data.clear();
           widget.state.setState(() {});
         }
         context.pop();
@@ -964,7 +1186,10 @@ class _AboutPage extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text("Memento", style: ts.s24,).paddingLeft(16).paddingBottom(8),
+        Text(
+          "Memento",
+          style: ts.s24,
+        ).paddingLeft(16).paddingVertical(8),
         ListTile(
           title: const Text("Version"),
           subtitle: Text(App.version),

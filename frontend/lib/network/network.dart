@@ -693,6 +693,18 @@ class Network {
       return Res.fromError(e);
     }
   }
+
+  Future<Res<bool>> setIcon(Uint8List imgData, String fileName) async {
+    try {
+      var res = await dio.post("/api/admin/setIcon", data: FormData.fromMap({
+        "icon": MultipartFile.fromBytes(imgData, filename: fileName),
+      }));
+      return Res(res.statusCode == 200);
+    } catch (e) {
+      return Res.fromError(e);
+    }
+
+  }
 }
 
 void setDebugProxy() {

@@ -215,7 +215,15 @@ func HandleGetPostComments(c echo.Context) error {
 		return utils.RespondError(c, "unknown query error")
 	}
 	comments := make([]model.Comment, 0, memento.PageSize)
-	err = memento.GetDbConnection().Model(&post).Association("Comments").Find(&comments, memento.GetDbConnection().Order("created_at desc").Offset(page*memento.PageSize).Limit(memento.PageSize))
+	err = memento.GetDbConnection().
+		Model(&post).
+		Association("Comments").
+		Find(
+			&comments,
+			memento.GetDbConnection().
+				Order("created_at desc").
+				Offset(page*memento.PageSize).
+				Limit(memento.PageSize))
 	total := memento.GetDbConnection().Model(&post).Association("Comments").Count()
 	if err != nil {
 		return utils.RespondError(c, "unknown query error")
@@ -232,7 +240,16 @@ func HandleGetPostComments(c echo.Context) error {
 		if err != nil {
 			return utils.RespondError(c, "unknown query error")
 		}
-		result = append(result, *utils.CommentToView(&comm, utils.UserToView(&user, checkIsFollowed(c.Get("username").(string), user.Username)), len(likedComments) > 0))
+		result = append(
+			result,
+			*utils.CommentToView(
+				&comm,
+				utils.UserToView(
+					&user,
+					checkIsFollowed(
+						c.Get("username").(string),
+						user.Username)),
+				len(likedComments) > 0))
 	}
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		"comments": result,
@@ -263,9 +280,23 @@ func HandleGetUserComments(c echo.Context) error {
 	}
 	comments := make([]model.Comment, 0, memento.PageSize)
 	if !findPublic {
-		err = memento.GetDbConnection().Model(&user).Association("Comments").Find(&comments, memento.GetDbConnection().Order("created_at desc").Offset(page*memento.PageSize).Limit(memento.PageSize))
+		err = memento.GetDbConnection().
+			Model(&user).
+			Association("Comments").
+			Find(
+				&comments,
+				memento.GetDbConnection().
+					Order("created_at desc").
+					Offset(page*memento.PageSize).
+					Limit(memento.PageSize))
 	} else {
-		err = memento.GetDbConnection().Joins("JOIN posts ON posts.id = comments.post_id AND posts.is_private = false").Order("comments.created_at desc").Offset(page * memento.PageSize).Limit(memento.PageSize).Find(&comments).Error
+		err = memento.GetDbConnection().
+			Joins("JOIN posts ON posts.id = comments.post_id AND posts.is_private = false").
+			Order("comments.created_at desc").
+			Offset(page * memento.PageSize).
+			Limit(memento.PageSize).
+			Find(&comments).
+			Error
 	}
 	total := memento.GetDbConnection().Model(&user).Association("Comments").Count()
 	if err != nil {
@@ -285,7 +316,12 @@ func HandleGetUserComments(c echo.Context) error {
 				return utils.RespondError(c, "unknown query error")
 			}
 		}
-		postView, err := utils.PostToView(&post, utils.UserToView(&user, checkIsFollowed(c.Get("username").(string), user.Username)), len(likedPosts) > 0)
+		postView, err := utils.PostToView(
+			&post,
+			utils.UserToView(
+				&user,
+				checkIsFollowed(c.Get("username").(string), user.Username)),
+			len(likedPosts) > 0)
 		if err != nil {
 			log.Errorf(err.Error())
 			return utils.RespondError(c, "unknown query error")
@@ -301,8 +337,13 @@ func HandleGetUserComments(c echo.Context) error {
 			}
 		}
 		result = append(result, model.CommentWithPost{
-			Comment: *utils.CommentToView(&comm, utils.UserToView(&user, checkIsFollowed(c.Get("username").(string), user.Username)), len(likedComments) > 0),
-			Post:    *postView,
+			Comment: *utils.CommentToView(
+				&comm,
+				utils.UserToView(
+					&user,
+					checkIsFollowed(c.Get("username").(string), user.Username)),
+				len(likedComments) > 0),
+			Post: *postView,
 		})
 	}
 	return c.JSON(http.StatusOK, map[string]interface{}{

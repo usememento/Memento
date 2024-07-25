@@ -37,7 +37,7 @@ const (
 
 var memento Server
 
-func writeConfig() error {
+func WriteConfig() error {
 	f, err := os.Create(path.Join(memento.Config.BasePath, ConfigFileName))
 	if err != nil {
 		log.Errorf("Error creating configuration file: %s\n", err.Error())
@@ -258,13 +258,4 @@ type Token struct {
 	RefreshToken string `json:"refresh_token"`
 	TokenType    string `json:"token_type"`
 	Expiry       int64  `json:"expiry"`
-}
-
-func IsEnableRegister() bool {
-	return memento.Config.EnableRegister
-}
-
-func SetIsEnableRegister(enabled bool) error {
-	memento.Config.EnableRegister = enabled
-	return writeConfig()
 }

@@ -9,7 +9,7 @@ import (
 	"github.com/gomarkdown/markdown/parser"
 	"github.com/k3a/html2text"
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
+	"github.com/labstack/gommon/log"
 	"io"
 	"net/http"
 	"os"
@@ -25,22 +25,6 @@ func getFileSystem(path string) http.FileSystem {
 	return http.Dir(path)
 }
 
-func ServeFrontend(e *echo.Echo) {
-	// Use echo gzip middleware to compress the response.
-	// Reference: https://echo.labstack.com/docs/middleware/gzip
-	skipper := func(c echo.Context) bool {
-		return strings.HasPrefix(c.Path(), "/api")
-	}
-
-	// Use echo static middleware to serve the built dist folder.
-	// Reference: https://github.com/labstack/echo/blob/master/middleware/static.go
-	e.Use(middleware.StaticWithConfig(middleware.StaticConfig{
-		HTML5:      true,
-		Filesystem: getFileSystem("frontend/build/web"),
-		Skipper:    skipper,
-	}))
-}
-
 // SEOFrontEndMiddleware is a middleware that serves the SPA frontend with SEO support.
 func SEOFrontEndMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
@@ -54,6 +38,10 @@ func SEOFrontEndMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 			return handleRobotsTxt(c)
 		} else if reqPath == "/sitemap.xml" {
 			return handleSiteMap(c)
+		} else if strings.HasPrefix(reqPath, "/icons/") || strings.HasPrefix(reqPath, "/favicon.png") {
+			if memento.GetConfig().IconVersion > 0 {
+				return handleIcon(c)
+			}
 		}
 		fileSystem := getFileSystem("frontend/build/web")
 		file, err := fileSystem.Open(reqPath)
@@ -69,14 +57,24 @@ func SEOFrontEndMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 				return err
 			}
 		}
-		defer file.Close()
+		defer func(file http.File) {
+			err := file.Close()
+			if err != nil {
+				log.Errorf("Error closing file: %s\n", err.Error())
+			}
+		}(file)
 		if fileInfo, _ := file.Stat(); fileInfo.IsDir() {
 			file, err = fileSystem.Open("index.html")
 			isHtml = true
 			if err != nil {
 				return err
 			}
-			defer file.Close()
+			defer func(file http.File) {
+				err := file.Close()
+				if err != nil {
+					log.Errorf("Error closing file: %s\n", err.Error())
+				}
+			}(file)
 		}
 		if isHtml {
 			bytes, err := io.ReadAll(file)
@@ -94,6 +92,18 @@ func SEOFrontEndMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 
 		return c.Blob(200, getContentType(ext), bytes)
 	}
+}
+
+func handleIcon(c echo.Context) error {
+	path := c.Request().URL.Path
+	iconPath := ""
+	if path == "/favicon.png" {
+		iconPath = filepath.Join(memento.GetBasePath(), "icons", "favicon.png")
+	} else {
+		path = strings.Replace(path, "/icons/", "", 1)
+		iconPath = filepath.Join(memento.GetBasePath(), "icons", path)
+	}
+	return c.File(iconPath)
 }
 
 func getContentType(ext string) string {
@@ -134,6 +144,11 @@ func seoHtml(html string, reqPath string) string {
 	url := scheme + "://" + domain + reqPath
 	preview := "/icons/Icon-192.png"
 	seoArticle := ""
+	icon := "/favicon.png"
+
+	if memento.GetConfig().IconVersion > 0 {
+		icon = icon + "?v=" + strconv.Itoa(int(memento.GetConfig().IconVersion))
+	}
 
 	func() {
 		if strings.HasPrefix(reqPath, "/post/") {
@@ -193,6 +208,7 @@ func seoHtml(html string, reqPath string) string {
 	html = strings.ReplaceAll(html, "{{SiteName}}", siteName)
 	html = strings.ReplaceAll(html, "{{Url}}", url)
 	html = strings.ReplaceAll(html, "{{Preview}}", preview)
+	html = strings.ReplaceAll(html, "{{Icon}}", icon)
 	html = strings.Replace(html, "<!-- SEO article Body-->", seoArticle, 1)
 	return html
 }

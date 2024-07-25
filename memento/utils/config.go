@@ -6,7 +6,6 @@ var (
 			Driver:   "sqlite",
 			Database: "memento.db",
 		},
-		ServiceConfig{},
 		ServerConfig{
 			Name:           "Memento",
 			Version:        "0.1.0",
@@ -28,9 +27,6 @@ type DbConfig struct {
 	Database string
 }
 
-type ServiceConfig struct {
-}
-
 type ServerConfig struct {
 	Name           string
 	Version        string
@@ -39,10 +35,10 @@ type ServerConfig struct {
 	EnableRegister bool `yaml:"enable_register"`
 	SiteName       string
 	Description    string
+	IconVersion    uint
 }
 
 type MementoConfig struct {
-	DbConfig      `yaml:"database"`
-	ServiceConfig `yaml:"service"`
-	ServerConfig  `yaml:"server"`
+	DbConfig     `yaml:"database"`
+	ServerConfig `yaml:"server"`
 }

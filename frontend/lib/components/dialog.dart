@@ -46,8 +46,7 @@ class DialogContent extends StatelessWidget {
             maxWidth: min(600, context.width - 32),
             minWidth: min(342, context.width - 32),
           ),
-          padding:
-          const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,

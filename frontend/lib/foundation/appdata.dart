@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:frontend/foundation/app.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../network/network.dart';
@@ -24,6 +25,8 @@ class _Appdata {
     'theme_mode': 'system',
     'default_memo_visibility': 'public'
   };
+
+  String get domain => App.isWeb ? Uri.base.toString() : settings['domain'];
 
   Future<void> saveData() async{
     var instance = await SharedPreferences.getInstance();

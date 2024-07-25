@@ -16,7 +16,7 @@ class Avatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var url = this.url;
-    if(url != "") {
+    if(url != "" && !url.startsWith("http")) {
       url = appdata.settings['domain'] + '/api/user/avatar/' + url;
     }
     ImageProvider image =
