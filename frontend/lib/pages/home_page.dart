@@ -356,6 +356,9 @@ class _WritingPageState extends State<WritingPage> {
     focusNode = FocusNode()
       ..onKeyEvent = (node, event) {
         if (event.logicalKey == LogicalKeyboardKey.tab) {
+          if (event is KeyDownEvent) {
+            return KeyEventResult.ignored;
+          }
           var cursorPos = controller.selection.base.offset;
           if (cursorPos != -1) {
             String textAfterCursor = controller.text.substring(cursorPos);

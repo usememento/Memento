@@ -219,15 +219,15 @@ class MemoEditingController extends TextEditingController {
       if(line.startsWith('```') || line.startsWith('~~~')){
         isCode = !isCode;
       }
-      if (i != lines.length - 1) {
+      if (!isEndLine) {
         line += lineBreak;
       }
       if(isCode || line.startsWith('```') || line.startsWith('~~~')){
         spans.add(TextSpan(
           text: line,
           style: const TextStyle(
-            fontFamily: 'monospace',
-            fontFamilyFallback: ['monospace', 'sans-serif', 'serif', 'arial'],
+            fontFamily: 'consolas',
+            fontFamilyFallback: ['monospace', 'sans-serif', 'serif'],
           ),
         ));
       }
@@ -278,14 +278,19 @@ class MemoEditingController extends TextEditingController {
         }
         if(tag && buffer.length > 2) {
           spans.add(TextSpan(
-            text: buffer.toString() + (isEndLine ? '' : lineBreak),
+            text: buffer.toString(),
             style: const TextStyle(
               color: Colors.blue,
             ),
           ));
-        } else {
+        } else if(buffer.isNotEmpty) {
           spans.add(TextSpan(
-            text: buffer.toString() + (isEndLine ? '' : lineBreak),
+            text: buffer.toString(),
+          ));
+        }
+        if(!isEndLine) {
+          spans.add(TextSpan(
+            text: lineBreak,
           ));
         }
       }
