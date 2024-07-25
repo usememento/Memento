@@ -177,7 +177,7 @@ func seoHtml(html string, reqPath string) string {
 			}
 			description = plain
 			title = findTitleInMd(postView.Content)
-			preview = "/user/avatar/" + authorView.Avatar
+			preview = "/api/user/avatar/" + authorView.Avatar
 			if title == "" {
 				title = siteName
 			}
@@ -194,14 +194,14 @@ func seoHtml(html string, reqPath string) string {
 			userView := utils.UserToView(&user, false)
 			title = userView.Nickname
 			description = userView.Bio
-			preview = "/user/avatar/" + userView.Avatar
+			preview = "/api/user/avatar/" + userView.Avatar
 			seoArticle = userToSEOArticle(&user)
 		}
 	}()
 
 	description = strings.ReplaceAll(description, "\n", " ")
 	description = strings.ReplaceAll(description, "\r", " ")
-	preview = scheme + "://" + domain + "/api" + preview
+	preview = scheme + "://" + domain + preview
 
 	html = strings.ReplaceAll(html, "{{Title}}", title)
 	html = strings.ReplaceAll(html, "{{Description}}", description)
