@@ -4,8 +4,8 @@ import (
 	"Memento/memento"
 	"Memento/memento/model"
 	"Memento/memento/utils"
-	"fmt"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/gommon/log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -81,47 +81,144 @@ func HandlePostSearch(c echo.Context) error {
 	if keywords == "" {
 		return utils.RespondError(c, "invalid keyword")
 	}
-	sr, err := memento.SearchPost(keywords)
-	fmt.Println(sr)
-	if err != nil {
-		return utils.RespondInternalError(c, "search failed")
+	keywordsList := strings.Split(keywords, " ")
+	var posts []model.Post
+	isFirst := true
+	for _, keyword := range keywordsList {
+		if keyword == "" {
+			continue
+		}
+		keyword = strings.TrimSpace(keyword)
+		result, err := doSearch(keyword)
+		log.Infof("search result: %d", len(result))
+		if err != nil {
+			log.Errorf("search failed: %v", err)
+			return utils.RespondInternalError(c, "search failed")
+		}
+		if isFirst {
+			isFirst = false
+			posts = result
+		} else {
+			newResult := make([]model.Post, 0, len(posts))
+			for _, post := range posts {
+				for _, newPost := range result {
+					if post.ID == newPost.ID {
+						newResult = append(newResult, post)
+						break
+					}
+				}
+			}
+			posts = newResult
+		}
 	}
 	result := make([]model.PostViewModel, 0, memento.PageSize)
-	var user model.User
-	if username != "" {
-		memento.GetDbConnection().First(&user, "username=?", username)
-	}
-	for index, hit := range sr.Hits {
-		for index < page*memento.PageSize {
+	for index, post := range posts {
+		if index < page*memento.PageSize {
 			continue
 		}
-		var post model.Post
-		memento.GetDbConnection().First(&post, "id=?", hit.Fields["ID"])
-		if post.IsPrivate && post.Username != username {
-			continue
+		if index >= (page+1)*memento.PageSize {
+			break
 		}
-		fmt.Println(hit.Fields["ID"])
-		var likePosts []model.Post
+		var author model.User
+		err = memento.GetDbConnection().
+			Where("username=?", post.Username).
+			First(&author).
+			Error
+		if err != nil {
+			log.Errorf("search failed: %v", err)
+			return utils.RespondInternalError(c, "search failed")
+		}
+		isLiked := false
 		if username != "" {
+			var user model.User
+			err = memento.GetDbConnection().
+				Where("username=?", username).
+				First(&user).
+				Error
+			if err != nil {
+				log.Errorf("search failed: %v", err)
+				return utils.RespondInternalError(c, "search failed")
+			}
+			var likedPosts []model.Post
 			err = memento.GetDbConnection().
 				Model(&user).
 				Association("Likes").
-				Find(&likePosts, "id=?", post.ID)
+				Find(&likedPosts, "id=?", post.ID)
 			if err != nil {
+				log.Errorf("search failed: %v", err)
 				return utils.RespondInternalError(c, "search failed")
 			}
+			isLiked = len(likedPosts) > 0
 		}
-		pv, err := utils.PostToView(&post, utils.UserToView(&user, checkIsFollowed(c.Get("username").(string), user.Username)), len(likePosts) > 0)
+		postView, err := utils.PostToView(
+			&post,
+			utils.UserToView(
+				&author,
+				checkIsFollowed(username.(string), author.Username)),
+			isLiked)
 		if err != nil {
-			return utils.RespondError(c, "os open file error")
+			log.Errorf("search failed: %v", err)
+			return utils.RespondInternalError(c, "search failed")
 		}
-		result = append(result, *pv)
-		if len(result) == memento.PageSize {
-			break
-		}
+		result = append(result, *postView)
 	}
 	return c.JSON(http.StatusOK, echo.Map{
 		"posts":   result,
-		"maxPage": utils.MaxPage(int64(len(sr.Hits))),
+		"maxPage": utils.MaxPage(int64(len(posts))),
 	})
+}
+
+func doSearch(keyword string) ([]model.Post, error) {
+	if strings.HasPrefix(keyword, "#") {
+		// search tag
+		var posts []model.Post
+		var tag model.Tag
+		err := memento.GetDbConnection().
+			Where("name=?", keyword).
+			First(&tag).
+			Error
+		if err != nil {
+			return make([]model.Post, 0), nil
+		}
+		err = memento.GetDbConnection().
+			Model(&tag).
+			Association("Posts").
+			Find(&posts)
+		if err != nil {
+			return make([]model.Post, 0), nil
+		}
+		return posts, nil
+	} else if strings.HasPrefix(keyword, "@") {
+		// search user
+		var posts []model.Post
+		var user model.User
+		err := memento.GetDbConnection().
+			Where("username=?", keyword[1:]).
+			First(&user).
+			Error
+		if err != nil {
+			return make([]model.Post, 0), nil
+		}
+		err = memento.GetDbConnection().
+			Model(&user).
+			Association("Posts").
+			Find(&posts)
+		if err != nil {
+			return make([]model.Post, 0), nil
+		}
+		return posts, nil
+	} else {
+		// search post
+		sr, err := memento.SearchPost(keyword)
+		if err != nil {
+			return make([]model.Post, 0), err
+		}
+		posts := make([]model.Post, 0, len(sr.Hits))
+		for _, hit := range sr.Hits {
+			var post model.Post
+			memento.GetDbConnection().First(&post, "id=?", hit.Fields["ID"])
+			posts = append(posts, post)
+		}
+		return posts, nil
+	}
 }
