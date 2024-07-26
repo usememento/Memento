@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:frontend/components/button.dart';
 import 'package:frontend/components/captcha.dart';
 import 'package:frontend/foundation/app.dart';
@@ -50,13 +51,18 @@ class _LoginPageState extends State<LoginPage> {
           if (!App.isWeb)
             buildTextField("Domain".tl, (value) {
               appdata.settings['domain'] = value;
-            }, Icons.language, domainController),
-          buildTextField("Username".tl, (value) {
-            username = value;
-          }, Icons.person),
-          buildTextField("Password".tl, (value) {
-            password = value;
-          }, Icons.lock),
+            }, Icons.language, null, domainController),
+          AutofillGroup(child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              buildTextField("Username".tl, (value) {
+                username = value;
+              }, Icons.person, AutofillHints.username),
+              buildTextField("Password".tl, (value) {
+                password = value;
+              }, Icons.lock, AutofillHints.password),
+            ],
+          )),
           const SizedBox(height: 12),
           Button.filled(
               isLoading: isLoading,
@@ -100,11 +106,13 @@ class _LoginPageState extends State<LoginPage> {
 
   Widget buildTextField(
       String hintText, void Function(String) onChanged, IconData icon,
+      String? autofillHints,
       [TextEditingController? controller]) {
     return TextField(
       onChanged: onChanged,
       controller: controller,
       obscureText: hintText == "Password".tl,
+      autofillHints: autofillHints == null ? null : [autofillHints],
       decoration: InputDecoration(
         labelText: hintText,
         border: const OutlineInputBorder(),
@@ -128,6 +136,7 @@ class _LoginPageState extends State<LoginPage> {
           isLoading = false;
         });
       } else {
+        TextInput.finishAutofillContext();
         appdata.user = res.data;
         App.initialRoute = '/';
         context.toAndRemoveAll('/');
@@ -182,13 +191,18 @@ class _RegisterPageState extends State<RegisterPage> {
           if (!App.isWeb)
             buildTextField("Domain".tl, (value) {
               appdata.settings['domain'] = value;
-            }, Icons.language, domainController),
-          buildTextField("Username".tl, (value) {
-            username = value;
-          }, Icons.person),
-          buildTextField("Password".tl, (value) {
-            password = value;
-          }, Icons.lock),
+            }, Icons.language, null, domainController),
+          AutofillGroup(child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              buildTextField("Username".tl, (value) {
+                username = value;
+              }, Icons.person, AutofillHints.username),
+              buildTextField("Password".tl, (value) {
+                password = value;
+              }, Icons.lock, AutofillHints.password),
+            ],
+          )),
           CaptchaWidget(onCaptchaCompleted: (value) {
             captcha = value;
           }).paddingTop(8),
@@ -220,12 +234,13 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   Widget buildTextField(
-      String hintText, void Function(String) onChanged, IconData icon,
+      String hintText, void Function(String) onChanged, IconData icon, String? autofillHints,
       [TextEditingController? controller]) {
     return TextField(
       onChanged: onChanged,
       controller: controller,
       obscureText: hintText == "Password".tl,
+      autofillHints: autofillHints == null ? null : [autofillHints],
       onSubmitted: (_) {
         register();
       },
@@ -249,6 +264,7 @@ class _RegisterPageState extends State<RegisterPage> {
           isLoading = false;
         });
       } else {
+        TextInput.finishAutofillContext();
         appdata.user = res.data;
         App.initialRoute = '/';
         context.toAndRemoveAll('/');

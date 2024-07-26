@@ -175,6 +175,7 @@ class Network {
             "username": username,
             "password": password,
             "captchaToken": captchaToken,
+            'grant_type': 'password',
           });
       return Res(Account.fromJson(res.data!));
     } catch (e) {
