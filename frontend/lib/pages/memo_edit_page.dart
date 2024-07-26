@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher_string.dart';
 import '../components/appbar.dart';
 import '../components/button.dart';
 import '../network/network.dart';
+import '../utils/upload.dart';
 
 class MemoEditPage extends StatefulWidget {
   const MemoEditPage({super.key, required this.memo});
@@ -125,7 +126,7 @@ class _MemoEditPageState extends State<MemoEditPage> {
                 icon: const Icon(Icons.image_outlined),
                 size: 18,
                 tooltip: "Upload image".tl,
-                onPressed: () {}),
+                onPressed: () => uploadFile(controller)),
             Button.icon(
                 icon: const Icon(Icons.info_outline),
                 size: 18,
