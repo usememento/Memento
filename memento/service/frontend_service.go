@@ -201,6 +201,7 @@ func seoHtml(html string, reqPath string) string {
 
 	description = strings.ReplaceAll(description, "\n", " ")
 	description = strings.ReplaceAll(description, "\r", " ")
+	description = strings.ReplaceAll(description, "  ", " ")
 	preview = scheme + "://" + domain + preview
 
 	html = strings.ReplaceAll(html, "{{Title}}", title)
