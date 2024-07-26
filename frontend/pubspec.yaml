@@ -43,9 +43,14 @@ dependencies:
   dio:
   path_provider:
   share_plus: ^9.0.0
-  file_selector: ^1.0.3
+  file_picker: ^8.0.6
   flutter_web_plugins:
     sdk: flutter
+  photo_view:
+    git:
+      url: https://github.com/wgh136/photo_view
+      ref: ee7e3628
+  universal_html:
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

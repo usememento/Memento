@@ -73,6 +73,10 @@ extension WidgetExtension on Widget {
     return SizedBox(height: height, child: this);
   }
 
+  Widget withClickCursor() {
+    return MouseRegion(cursor: SystemMouseCursors.click, child: this);
+  }
+
   Widget onTap(Function() onTap) {
     return GestureDetector(onTap: onTap, child: this);
   }

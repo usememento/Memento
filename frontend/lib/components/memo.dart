@@ -6,6 +6,7 @@ import 'package:frontend/components/math.dart';
 import 'package:frontend/components/user.dart';
 import 'package:frontend/foundation/app.dart';
 import 'package:frontend/pages/memo_edit_page.dart';
+import 'package:frontend/pages/show_image_page.dart';
 import 'package:frontend/utils/ext.dart';
 import 'package:frontend/utils/translation.dart';
 import 'package:markdown/markdown.dart' as m;
@@ -570,18 +571,9 @@ MarkdownConfig getMemoMarkdownConfig(BuildContext context) {
                 Button.normal(
                   onPressed: () {
                     Clipboard.setData(ClipboardData(text: code));
+                    context.showMessage("Copied".tl);
                   },
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.copy, size: 16),
-                      const SizedBox(
-                        width: 4,
-                      ),
-                      Text("Copy".tl, style: const TextStyle(fontSize: 14)),
-                    ],
-                  ),
+                  child: const Icon(Icons.copy, size: 16),
                 ),
               ],
             ),
@@ -612,7 +604,7 @@ MarkdownConfig getMemoMarkdownConfig(BuildContext context) {
           return const Icon(Icons.broken_image,
               color: Colors.redAccent, size: 16);
         },
-      );
+      ).withClickCursor().onTap(() => ShowImagePage.show(link));
     }),
   ]);
 }
@@ -691,6 +683,38 @@ MarkdownGenerator getMemoMarkdownGenerator(
       });
 }
 
+bool _isTag(String text) {
+  return text.startsWith('#') &&
+      text.length <= 20 &&
+      text.length > 1 &&
+      text[1] != '#';
+}
+
+String replaceTagWithLink(String content) {
+  content = content.replaceAll("\r\n", "\n");
+  var lines = content.split('\n');
+  bool isCode = false;
+  for (var i = 0; i < lines.length; i++) {
+    if (lines[i].startsWith('```') || lines[i].startsWith('~~~')) {
+      isCode = !isCode;
+    }
+    if (isCode) {
+      continue;
+    }
+    var line = lines[i];
+    var split = line.split(' ');
+    for (var j = 0; j < split.length; j++) {
+      var text = split[j];
+      if (_isTag(text)) {
+        split[j] = '[${split[j]}](tag:${split[j].substring(1)})';
+      }
+    }
+    lines[i] = split.join(' ');
+  }
+  content = lines.join('\n');
+  return content;
+}
+
 class MemoContent extends StatelessWidget {
   const MemoContent(
       {super.key,
@@ -706,20 +730,7 @@ class MemoContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var data = content;
-    var lines = data.split('\n');
-    for (var i = 0; i < lines.length; i++) {
-      var line = lines[i];
-      var split = line.split(' ');
-      for (var j = 0; j < split.length; j++) {
-        var text = split[j];
-        if (isTag(text)) {
-          split[j] = '[${split[j]}](tag:${split[j].substring(1)})';
-        }
-      }
-      lines[i] = split.join(' ');
-    }
-    data = lines.join('\n');
+    var data = replaceTagWithLink(content);
     return MarkdownBlock(
       data: data,
       selectable: selectable,

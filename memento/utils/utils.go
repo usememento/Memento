@@ -44,9 +44,16 @@ func GetTags(content string) []string {
 	lines := strings.Split(content, "\n")
 	result := make([]string, 0)
 
+	isCode := false
+
 	for _, l := range lines {
+		if strings.HasPrefix(l, "```") || strings.HasPrefix(l, "~~~") {
+			isCode = !isCode
+		}
+		if isCode {
+			continue
+		}
 		blocks := strings.Split(l, " ")
-		//log.Infof("%q\n", blocks)
 
 		for _, b := range blocks {
 			if len(b) > 1 && len(b) <= 21 && b[0] == '#' && b[1] != '#' {

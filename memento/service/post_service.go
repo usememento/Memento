@@ -87,7 +87,6 @@ func HandlePostCreate(c echo.Context) error {
 			tx.Save(&post)
 			// add all non-existing tags to database
 			for _, t := range contentTags {
-				log.Info(t)
 				var tag model.Tag
 				tag.Name = t
 				err := tx.First(&tag, "name=?", t).Error
@@ -104,11 +103,6 @@ func HandlePostCreate(c echo.Context) error {
 					log.Errorf(err.Error())
 					return err
 				}
-			}
-			err = tx.Model(&post).Association("Tags").Append(contentTags)
-			if err != nil {
-				log.Errorf(err.Error())
-				return err
 			}
 			err = tx.Model(&user).Association("Posts").Append(&post)
 			if err != nil {

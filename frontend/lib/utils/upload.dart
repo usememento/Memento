@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import 'package:file_selector/file_selector.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/components/button.dart';
 import 'package:frontend/foundation/app.dart';
@@ -8,17 +8,14 @@ import 'package:frontend/utils/translation.dart';
 import '../network/network.dart';
 
 Future<ServerFile?> uploadFile(
-    [TextEditingController? controller, XTypeGroup? xTypeGroup]) async {
-  var typeGroup = xTypeGroup ??
-      const XTypeGroup(
-        label: 'images',
-        extensions: <String>['jpg', 'png', 'jpeg', 'gif', 'webp'],
-      );
-  final XFile? file =
-      await openFile(acceptedTypeGroups: <XTypeGroup>[typeGroup]);
+    [TextEditingController? controller, List<String>? fileTypes]) async {
+  var typeGroup = fileTypes ?? ['jpg', 'png', 'jpeg', 'gif', 'webp'];
+  final files = await FilePicker.platform
+      .pickFiles(allowedExtensions: typeGroup, withData: true);
   ServerFile? serverFile;
+  var file = files?.files.first;
   if (file != null) {
-    var data = await file.readAsBytes();
+    var data = file.bytes!;
     var cancelToken = CancelToken();
     await App.rootNavigatorKey!.currentState!.push(PageRouteBuilder(
       opaque: false,

@@ -1,4 +1,3 @@
-import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:frontend/components/appbar.dart';
@@ -59,11 +58,7 @@ class _ResourcePageState extends State<ResourcePage> {
     return Button.outlined(
         child: Text("Upload".tl),
         onPressed: () {
-          uploadFile(
-              null,
-              const XTypeGroup(
-                label: "file",
-              )).then((v) {
+          uploadFile(null).then((v) {
             if (mounted && v != null) {
               _controller.uploadNewFile(v);
             }

@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 
-import 'package:file_selector/file_selector.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/button.dart';
@@ -218,20 +218,18 @@ class _AccountSettingsState extends State<_AccountSettings> {
                       body: Center(
                         child: GestureDetector(
                           onTap: () async {
-                            const XTypeGroup typeGroup = XTypeGroup(
-                              label: 'images',
-                              extensions: <String>[
-                                'jpg',
-                                'png',
-                                'jpeg',
-                                'gif',
-                                'webp'
-                              ],
-                            );
-                            final XFile? file = await openFile(
-                                acceptedTypeGroups: <XTypeGroup>[typeGroup]);
+                            final result = await FilePicker.platform.pickFiles(
+                                allowedExtensions: [
+                                  'jpg',
+                                  'png',
+                                  'jpeg',
+                                  'gif',
+                                  'webp'
+                                ],
+                                withData: true);
+                            final file = result?.files.first;
                             if (file != null) {
-                              avatar = await file.readAsBytes();
+                              avatar = file.bytes;
                               avatarFileName = file.name;
                               setState(() {});
                             }
@@ -801,38 +799,38 @@ class __AdminSettingsState
       builder: (context) {
         return StatefulBuilder(builder: (context, setState) {
           return DialogContent(
-              title: "Site Icon".tl,
-              body: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Center(
-                      child: GestureDetector(
-                        onTap: () async {
-                          const XTypeGroup typeGroup = XTypeGroup(
-                            label: 'images',
-                            extensions: <String>[
-                              'jpg',
-                              'png',
-                              'jpeg',
-                              'webp'
-                            ],
-                          );
-                          final XFile? file = await openFile(
-                              acceptedTypeGroups: <XTypeGroup>[typeGroup]);
-                          if (file != null) {
-                            icon = await file.readAsBytes();
-                            iconFileName = file.name;
-                            setState(() {});
-                          }
-                        },
-                        child: MouseRegion(
-                          cursor: SystemMouseCursors.click,
-                          child: icon == null
-                              ? Avatar(
-                            url: '${appdata.domain}/icons/Icon-192.png?v=${data!['icon_version']}',
+            title: "Site Icon".tl,
+            body: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Center(
+                    child: GestureDetector(
+                  onTap: () async {
+                    final result = await FilePicker.platform.pickFiles(
+                        allowedExtensions: [
+                          'jpg',
+                          'png',
+                          'jpeg',
+                          'gif',
+                          'webp'
+                        ],
+                        withData: true);
+                    final file = result?.files.first;
+                    if (file != null) {
+                      icon = file.bytes;
+                      iconFileName = file.name;
+                      setState(() {});
+                    }
+                  },
+                  child: MouseRegion(
+                    cursor: SystemMouseCursors.click,
+                    child: icon == null
+                        ? Avatar(
+                            url:
+                                '${appdata.domain}/icons/Icon-192.png?v=${data!['icon_version']}',
                             size: 64,
                           )
-                              : Container(
+                        : Container(
                             width: 64,
                             height: 64,
                             decoration: BoxDecoration(
@@ -844,12 +842,14 @@ class __AdminSettingsState
                               ),
                             ),
                           ),
-                        ),
-                      )),
-                  const SizedBox(height: 12,),
-                  Text("Image must be 512 x 512".tl),
-                ],
-              ),
+                  ),
+                )),
+                const SizedBox(
+                  height: 12,
+                ),
+                Text("Image must be 512 x 512".tl),
+              ],
+            ),
             actions: [
               Button.filled(
                   isLoading: isLoading,
@@ -857,11 +857,9 @@ class __AdminSettingsState
                     setState(() {
                       isLoading = true;
                     });
-                    var context =
-                    App.rootNavigatorKey!.currentContext!;
+                    var context = App.rootNavigatorKey!.currentContext!;
                     if (icon != null) {
-                      var res = await Network().setIcon(
-                          icon!, iconFileName!);
+                      var res = await Network().setIcon(icon!, iconFileName!);
                       if (context.mounted) {
                         if (res.error) {
                           setState(() {
@@ -875,8 +873,8 @@ class __AdminSettingsState
                         }
                       }
                     } else {
-                      context.showMessage(
-                          "Click icon to select a new image".tl);
+                      context
+                          .showMessage("Click icon to select a new image".tl);
                     }
                   },
                   child: Text("Submit".tl))
