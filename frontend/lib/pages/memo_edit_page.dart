@@ -1,3 +1,4 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:frontend/foundation/app.dart';
@@ -126,7 +127,7 @@ class _MemoEditPageState extends State<MemoEditPage> {
                 icon: const Icon(Icons.image_outlined),
                 size: 18,
                 tooltip: "Upload image".tl,
-                onPressed: () => uploadFile(controller)),
+                onPressed: () => uploadFile(controller, FileType.image)),
             Button.icon(
                 icon: const Icon(Icons.info_outline),
                 size: 18,

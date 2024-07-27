@@ -8,10 +8,9 @@ import 'package:frontend/utils/translation.dart';
 import '../network/network.dart';
 
 Future<ServerFile?> uploadFile(
-    [TextEditingController? controller, List<String>? fileTypes]) async {
-  var typeGroup = fileTypes ?? ['jpg', 'png', 'jpeg', 'gif', 'webp'];
+    [TextEditingController? controller, FileType? fileType]) async {
   final files = await FilePicker.platform
-      .pickFiles(allowedExtensions: typeGroup, withData: true);
+      .pickFiles(withData: true, type: fileType ?? FileType.any);
   ServerFile? serverFile;
   var file = files?.files.first;
   if (file != null) {

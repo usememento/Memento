@@ -1,3 +1,4 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:frontend/components/appbar.dart';
@@ -253,7 +254,7 @@ class _WritingAreaState extends State<WritingArea> {
                   icon: const Icon(Icons.image_outlined),
                   size: 18,
                   tooltip: "Upload image".tl,
-                  onPressed: () => uploadFile(controller)),
+                  onPressed: () => uploadFile(controller, FileType.image)),
               Button.icon(
                   icon: const Icon(Icons.fullscreen),
                   size: 18,
@@ -457,7 +458,7 @@ class _WritingPageState extends State<WritingPage> {
                 icon: const Icon(Icons.image_outlined),
                 size: 18,
                 tooltip: "Upload image".tl,
-                onPressed: () => uploadFile(controller)),
+                onPressed: () => uploadFile(controller, FileType.image)),
             Button.icon(
                 icon: const Icon(Icons.info_outline),
                 size: 18,
