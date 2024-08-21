@@ -1,0 +1,285 @@
+<html>
+    <head>
+        <title>{{Title}}</title>
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:title" content="{{Title}}">
+        <meta name="twitter:description" content="{{Description}}">
+        <meta name="twitter:image" content="{{Preview}}">
+        <meta property="og:title" content="{{Title}}">
+        <meta property="og:type" content="website">
+        <meta property="og:url" content="{{Url}}">
+        <meta property="og:image" content="{{Preview}}">
+        <meta property="og:description" content="{{Description}}">
+        <meta property="og:site_name" content="{{SiteName}}">
+        <meta name="description" content="{{Description}}">
+        <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+        <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no, width=device-width, minimum-scale=1, viewport-fit=cover" id="viewport">
+        <link rel="icon" href="{{Icon}}"/>
+        <!-- Scripts -->
+    </head>
+    <style>
+        html {
+            padding: 0;
+            margin: 0;
+            width: 100%;
+            height: 100%
+        }
+        body {
+            margin: 0 auto;
+            max-width: 1200px;
+            padding: 0 8px;
+            height: 100%;
+        }
+        .head {
+            height: 56px;
+            width: 100%;
+            max-width: 1200px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            background-color: white;
+        }
+        .avatar {
+            height: 32px;
+            width: 32px;
+            border-radius: 50%;
+            margin-right: 12px;
+        }
+        .user {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: #333;
+            padding: 4px 12px;
+            border-radius: 16px;
+            transition: background-color 0.2s;
+        }
+        .user:hover {
+            background-color: #f6f6f6;
+        }
+        .open_app {
+            padding: 6px 12px;
+            border-radius: 16px;
+            text-decoration: none;
+            color: white;
+            background-color: #2a68dc;
+            margin-right: 12px;
+            transition: background-color 0.2s;
+        }
+        .open_app:hover {
+            background-color: #464bd5;
+        }
+        article {
+            padding: 56px 12px 16px 12px;
+        }
+        h1 {
+            font-size: 2em;
+            font-weight: bold;
+        }
+        h2 {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+        h3 {
+            font-size: 1.17em;
+            font-weight: bold;
+        }
+        h4 {
+            font-size: 1em;
+            font-weight: bold;
+        }
+        h5 {
+            font-size: 0.83em;
+            font-weight: bold;
+        }
+        pre {
+            background-color: #f6f6f6;
+            border: none;
+            border-radius: 8px;
+            margin: 0.5em 0;
+            padding: 0 1em 1em 1em;
+            white-space: pre-wrap;
+            display: flex;
+            flex-direction: column;
+            font-family: Consolas, Arial, sans-serif;
+        }
+        code {
+            font-family: Consolas, Arial, sans-serif;
+        }
+        pre > code {
+            line-height: 1.32em;
+        }
+        p > code {
+            background-color: #f6f6f6;
+            padding: 0 4px;
+            border-radius: 2px;
+        }
+        table {
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        article img {
+            max-width: 100%;
+            height: auto;
+        }
+        a.tag {
+            text-decoration: none;
+            color: rgb(29, 155, 240);
+        }
+        blockquote {
+            border-left: 4px solid #ddd;
+            padding-left: 8px;
+            margin: 0;
+        }
+        .code-header {
+            height: 32px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 8px;
+            display: flex;
+            align-items: end;
+            margin-bottom: 8px;
+        }
+        .code-header button {
+            padding: 0 8px;
+            border-radius: 12px;
+            background-color: #f6f6f6;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            height: 28px;
+            align-items: center;
+            margin-bottom: -4px;
+        }
+        .code-header button:hover {
+            background-color: #e6e6e6;
+        }
+        li.task {
+            list-style-type: none;
+            display: flex;
+            align-items: center;
+            font-size: 1em;
+            line-height: 1.5em;
+        }
+        li.task svg {
+            margin-right: 8px;
+            color: #4a9eff;
+        }
+        ul {
+            padding-left: 4px;
+        }
+        @media (prefers-color-scheme: dark) {
+            .head {
+                background-color: black;
+                color: #ddd;
+                border-bottom: 1px solid #555;
+            }
+            html {
+                background-color: black;
+                color: #ddd;
+            }
+            pre {
+                background-color: #353535;
+                color: #ddd;
+            }
+            .user {
+                color: #ddd;
+            }
+            .user:hover {
+                background-color: #444;
+            }
+            .open_app {
+                background-color: #464bd5;
+            }
+            .open_app:hover {
+                background-color: #5256d2;
+            }
+            th, td {
+                border-color: #555;
+            }
+            th {
+                background-color: #444;
+            }
+            a.tag {
+                color: rgb(78, 164, 230);
+            }
+            p > code {
+                background-color: #353535;
+            }
+            blockquote {
+                border-left: 4px solid #555;
+            }
+            .code-header button {
+                background-color: #353535;
+                color: #ddd;
+            }
+            .code-header button:hover {
+                background-color: #444;
+            }
+        }
+    </style>
+    <body>
+        <div class="head">
+            <a href="/user/{{Username}}" class="user" target="_blank">
+                <img class="avatar" src="{{Avatar}}" alt="avatar">
+                <span>{{Nickname}}</span>
+            </a>
+            <div style="flex-grow: 1"></div>
+            <a href="/" class="open_app" target="_blank">
+                Open App
+            </a>
+        </div>
+        <article>
+            {{Content}}
+        </article>
+    </body>
+    <script>
+        function copy(i) {
+            let code = document.getElementById(i).nextElementSibling.innerText;
+            navigator.clipboard.writeText(code);
+        }
+        window.addEventListener('DOMContentLoaded', () => {
+            let pres = document.querySelectorAll('pre');
+            let i = 0;
+            for (let pre of pres) {
+                let lang = null;
+                if (pre.children[0].classList.length > 0) {
+                    lang = pre.children[0].classList[0].split('-')[1];
+                }
+                let code = pre.children[0].innerText;
+                pre.innerHTML = `
+<div class="code-header" id="${i}">
+    <span>${lang}</span>
+    <div style="flex-grow: 1"></div>
+    <button onclick="copy(${i})">
+        <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor"><path d="M360-240q-29.7 0-50.85-21.15Q288-282.3 288-312v-480q0-29.7 21.15-50.85Q330.3-864 360-864h384q29.7 0 50.85 21.15Q816-821.7 816-792v480q0 29.7-21.15 50.85Q773.7-240 744-240H360Zm0-72h384v-480H360v480ZM216-96q-29.7 0-50.85-21.15Q144-138.3 144-168v-516q0-15.3 10.29-25.65Q164.58-720 179.79-720t25.71 10.35Q216-699.3 216-684v516h420q15.3 0 25.65 10.29Q672-147.42 672-132.21t-10.35 25.71Q651.3-96 636-96H216Zm144-216v-480 480Z"/></svg>
+        <span style="margin-left: 4px"></span>
+        <span>Copy</span>
+    </button>
+</div>
+${pre.innerHTML}
+                `
+                i++;
+            }
+            for(let li of document.querySelectorAll('li')) {
+                let content = li.innerHTML;
+                if(content.startsWith('[ ] ')) {
+                    li.classList.add('task');
+                    li.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor"><path d="M216-144q-29.7 0-50.85-21.15Q144-186.3 144-216v-528q0-29.7 21.15-50.85Q186.3-816 216-816h528q29.7 0 50.85 21.15Q816-773.7 816-744v528q0 29.7-21.15 50.85Q773.7-144 744-144H216Zm0-72h528v-528H216v528Z"/></svg>${content.slice(4)}`
+                } else if(content.startsWith('[x] ')) {
+                    li.classList.add('task');
+                    li.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="currentColor"><path d="m429-438-60-59q-11-11-25-11t-25 11q-11 11-11 25.5t11 25.5l85 85q11 11 25 11t25-11l187-187q11-11 11-25.5T641-599q-11-11-25-11t-25 11L429-438ZM216-144q-30 0-51-21t-21-51v-528q0-30 21-51t51-21h528q30 0 51 21t21 51v528q0 30-21 51t-51 21H216Z"/></svg>${content.slice(4)}`
+                }
+            }
+        })
+    </script>
+</html>

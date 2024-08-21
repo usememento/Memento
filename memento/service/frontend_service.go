@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -31,6 +32,9 @@ func SEOFrontEndMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		domain = c.Request().Host
 		scheme = c.Scheme()
 		if strings.HasPrefix(c.Request().RequestURI, "/api") {
+			return next(c)
+		}
+		if strings.HasPrefix(c.Request().RequestURI, "/public") {
 			return next(c)
 		}
 		reqPath := c.Request().URL.Path
@@ -201,7 +205,8 @@ func seoHtml(html string, reqPath string) string {
 
 	description = strings.ReplaceAll(description, "\n", " ")
 	description = strings.ReplaceAll(description, "\r", " ")
-	description = strings.ReplaceAll(description, "  ", " ")
+	regex := regexp.MustCompile(`\s+`)
+	description = regex.ReplaceAllString(description, " ")
 	preview = scheme + "://" + domain + preview
 
 	html = strings.ReplaceAll(html, "{{Title}}", title)
@@ -216,7 +221,7 @@ func seoHtml(html string, reqPath string) string {
 
 func mdToHTML(md []byte) []byte {
 	// create Markdown parser with extensions
-	extensions := parser.CommonExtensions | parser.NoEmptyLineBeforeBlock
+	extensions := parser.CommonExtensions | parser.NoEmptyLineBeforeBlock | parser.MathJax
 	p := parser.NewWithExtensions(extensions)
 	doc := p.Parse(md)
 
@@ -268,7 +273,7 @@ func GenerateSiteMap() {
 	for _, post := range posts {
 		sitemap.WriteString(`
 <url>
-	<loc>` + scheme + `://` + domain + `/post/` + strconv.Itoa(int(post.ID)) + `</loc>
+	<loc>` + scheme + `://` + domain + `/public/article/` + strconv.Itoa(int(post.ID)) + `</loc>
 	<lastmod>` + post.EditedAt.Format("2006-01-02") + `</lastmod>
 </url>`)
 	}

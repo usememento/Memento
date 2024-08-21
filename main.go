@@ -58,6 +58,7 @@ func main() {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Gzip())
 	e.Use(service.SEOFrontEndMiddleware)
+	e.Use(middleware.CORS())
 
 	api := e.Group("/api")
 	{
@@ -137,5 +138,11 @@ func main() {
 			captchaApi.POST("/verify", service.HandleVerifyCaptcha)
 		}
 	}
+
+	public := e.Group("/public")
+	{
+		public.GET("/article/:id", service.HandlePublicArticle)
+	}
+
 	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", mServer.Config.ServerConfig.Port)))
 }
