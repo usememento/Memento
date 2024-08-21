@@ -11,7 +11,6 @@ jobs:
         with:
           channel: 'stable'
           architecture: x64
-          flutter-version: 3.22.3 # TODO: remove this line when the issue(https://github.com/flutter/flutter/issues/153032) is fixed
       - uses: actions/setup-go@v5
         with:
           go-version: '>=1.21'
