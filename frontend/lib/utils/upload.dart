@@ -4,11 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:frontend/components/button.dart';
 import 'package:frontend/foundation/app.dart';
 import 'package:frontend/utils/translation.dart';
+import 'package:web_native_text/web_native_editable.dart';
 
 import '../network/network.dart';
 
 Future<ServerFile?> uploadFile(
-    [TextEditingController? controller, FileType? fileType]) async {
+    [WNEditingController? controller, FileType? fileType]) async {
   final files = await FilePicker.platform
       .pickFiles(withData: true, type: fileType ?? FileType.any);
   ServerFile? serverFile;

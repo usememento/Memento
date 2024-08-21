@@ -26,8 +26,17 @@ class _Appdata {
     'default_memo_visibility': 'public'
   };
 
-  String get domain =>
-      App.isWeb ? "${Uri.base.scheme}://${Uri.base.host}" : settings['domain'];
+  String get domain {
+    if(App.isWeb) {
+      var domain = Uri.base.toString();
+      if(domain.endsWith('/')) {
+        domain = domain.substring(0, domain.length - 1);
+      }
+      return domain;
+    } else {
+      return settings['domain'];
+    }
+  }
 
   Future<void> saveData() async {
     var instance = await SharedPreferences.getInstance();

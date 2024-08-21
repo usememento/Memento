@@ -400,7 +400,7 @@ class _MemoDetailsState extends State<_MemoDetails> {
           onPressed: () {},
           onPressedAt: (location) {
             var baseUrl = appdata.domain;
-            var url = '$baseUrl/post/${widget.memo.id}';
+            var url = '$baseUrl/public/article/${widget.memo.id}';
             showPopMenu(location, [
               MenuEntry("Copy path".tl, () {
                 Clipboard.setData(ClipboardData(text: url));

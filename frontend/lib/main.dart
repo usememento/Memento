@@ -6,6 +6,7 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:frontend/pages/auth.dart';
 import 'package:frontend/pages/main_page.dart';
 import 'package:frontend/utils/translation.dart';
+import 'package:universal_html/html.dart';
 import 'package:window_manager/window_manager.dart';
 
 void main() async {
@@ -27,6 +28,11 @@ void main() async {
       }
       await windowManager.setMinimumSize(const Size(500, 600));
       await windowManager.show();
+    });
+  }
+  if (App.isWeb) {
+    window.onBlur.listen((event) {
+      FocusManager.instance.primaryFocus?.unfocus();
     });
   }
   runApp(const Memento());

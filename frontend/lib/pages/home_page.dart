@@ -1,6 +1,5 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:frontend/components/appbar.dart';
 import 'package:frontend/components/button.dart';
 import 'package:frontend/components/memo.dart';
@@ -10,9 +9,9 @@ import 'package:frontend/network/network.dart';
 import 'package:frontend/utils/translation.dart';
 import 'package:frontend/utils/upload.dart';
 import 'package:url_launcher/url_launcher_string.dart';
+import 'package:web_native_text/web_native_editable.dart';
 
 import '../components/heat_map.dart';
-import 'memo_edit_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -147,43 +146,11 @@ class WritingArea extends StatefulWidget {
 class _WritingAreaState extends State<WritingArea> {
   String get content => controller.text;
 
-  var controller = MemoEditingController();
+  var controller = WNEditingController();
 
   bool isPublic = true;
 
   bool isLoading = false;
-
-  late FocusNode focusNode;
-
-  @override
-  void initState() {
-    focusNode = FocusNode()
-      ..onKeyEvent = (node, event) {
-        if (event.logicalKey == LogicalKeyboardKey.tab) {
-          if(event is KeyUpEvent) {
-            return KeyEventResult.ignored;
-          }
-          var cursorPos = controller.selection.base.offset;
-          if (cursorPos != -1) {
-            String textAfterCursor = controller.text.substring(cursorPos);
-            String textBeforeCursor = controller.text.substring(0, cursorPos);
-            controller.value = TextEditingValue(
-              text: "$textBeforeCursor    $textAfterCursor",
-              selection: TextSelection.collapsed(offset: cursorPos + 4),
-            );
-            return KeyEventResult.handled;
-          }
-        }
-        return KeyEventResult.ignored;
-      };
-    super.initState();
-  }
-
-  @override
-  dispose() {
-    focusNode.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -200,15 +167,12 @@ class _WritingAreaState extends State<WritingArea> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          TextField(
-            focusNode: focusNode,
-            decoration: InputDecoration(
-              hintText: "Write down your thoughts".tl,
-              border: InputBorder.none,
-            ),
+          WNEditableText(
+            hintText: "Write down your thoughts".tl,
             controller: controller,
-            maxLines: null,
-          ).fixWidth(double.infinity),
+            singleLine: false,
+            style: ts.s16,
+          ).fixWidth(double.infinity).paddingVertical(8),
           Container(
             height: 0.4,
             width: double.infinity,
@@ -347,43 +311,11 @@ class WritingPage extends StatefulWidget {
 }
 
 class _WritingPageState extends State<WritingPage> {
-  late var controller = MemoEditingController(text: widget.content);
+  late var controller = WNEditingController(text: widget.content);
 
   late var isPublic = widget.isPublic;
 
   bool isLoading = false;
-
-  late FocusNode focusNode;
-
-  @override
-  void initState() {
-    focusNode = FocusNode()
-      ..onKeyEvent = (node, event) {
-        if (event.logicalKey == LogicalKeyboardKey.tab) {
-          if (event is KeyDownEvent) {
-            return KeyEventResult.ignored;
-          }
-          var cursorPos = controller.selection.base.offset;
-          if (cursorPos != -1) {
-            String textAfterCursor = controller.text.substring(cursorPos);
-            String textBeforeCursor = controller.text.substring(0, cursorPos);
-            controller.value = TextEditingValue(
-              text: "$textBeforeCursor    $textAfterCursor",
-              selection: TextSelection.collapsed(offset: cursorPos + 4),
-            );
-            return KeyEventResult.handled;
-          }
-        }
-        return KeyEventResult.ignored;
-      };
-    super.initState();
-  }
-
-  @override
-  dispose() {
-    focusNode.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -399,24 +331,16 @@ class _WritingPageState extends State<WritingPage> {
           ],
         ),
         Expanded(
-          child: Container(
-            child: TextField(
-              focusNode: focusNode,
-              decoration: InputDecoration(
-                hintText: "Write down your thoughts".tl,
-                border: InputBorder.none,
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              ),
-              controller: controller,
-              onChanged: (value) {
-                widget.updateContent(value, isPublic);
-                setState(() {});
-              },
-              maxLines: null,
-              expands: true,
-            ).fixWidth(double.infinity),
-          ),
+          child: WNEditableText(
+            hintText: "Write down your thoughts".tl,
+            controller: controller,
+            style: ts.s16,
+            onChanged: (value) {
+              widget.updateContent(value, isPublic);
+              setState(() {});
+            },
+            singleLine: false,
+          ).fixWidth(double.infinity).paddingHorizontal(12),
         ),
         Row(
           children: [

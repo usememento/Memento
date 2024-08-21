@@ -601,7 +601,6 @@ MarkdownConfig getMemoMarkdownConfig(BuildContext context) {
             ? null
             : double.tryParse(attributes['height']!),
         errorWidget: (context, url, error) {
-          print(error);
           return const Icon(Icons.broken_image,
               color: Colors.redAccent, size: 16);
         },
