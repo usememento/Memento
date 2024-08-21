@@ -12,6 +12,11 @@ import 'models.dart';
 export 'models.dart';
 export 'res.dart';
 
+void _logout() {
+  appdata.logout();
+  App.rootNavigatorKey!.currentContext!.to('/login');
+}
+
 class AppInterceptor extends Interceptor {
   static bool isWaitingRefreshingToken = false;
 
@@ -97,6 +102,9 @@ class AppInterceptor extends Interceptor {
           handler.resolve(value);
         });
       } else {
+        if(res.errorMessage == "Token Expired") {
+          Future.microtask(_logout);
+        }
         handler.reject(DioException(
             error: "Refresh Token Failed",
             requestOptions: response.requestOptions,
@@ -142,8 +150,14 @@ class Network {
           await dio.post<Map<String, dynamic>>("/api/user/refresh", data: {
         "refresh_token": appdata.user.refreshToken,
         'grant_type': 'refresh_token',
-      });
-      return Res(Account.fromJson(res.data!));
+      }, options: Options(validateStatus: (status) => true));
+      if(res.statusCode! >= 400 && res.statusCode! < 500) {
+        return const Res.error("Token Expired");
+      }
+      if(res.statusCode == 200) {
+        return Res(Account.fromJson(res.data!));
+      }
+      throw "Invalid Status Code ${res.statusCode}";
     } catch (e) {
       return Res.fromError(e);
     }

@@ -7,6 +7,7 @@ import (
 	"github.com/go-oauth2/oauth2/v4/models"
 	"net/http"
 	"path"
+	"time"
 
 	"github.com/go-oauth2/oauth2/v4"
 	"github.com/go-oauth2/oauth2/v4/manage"
@@ -30,6 +31,9 @@ func main() {
 
 	// token store
 	manager.MustTokenStorage(store.NewFileTokenStore(path.Join(memento.GetBasePath(), "token.db")))
+	config := manage.DefaultRefreshTokenCfg
+	config.RefreshTokenExp = 30 * 24 * time.Hour
+	manager.SetRefreshTokenCfg(config)
 
 	// client store
 	clientStore := store.NewClientStore()
@@ -41,7 +45,6 @@ func main() {
 	manager.MapClientStorage(clientStore)
 	// Initialize the oauth2 service
 	AuthServer = server.NewDefaultServer(manager)
-	AuthServer.Config.AllowGetAccessRequest = true
 	AuthServer.SetAllowedGrantType(oauth2.Refreshing, oauth2.PasswordCredentials)
 	AuthServer.SetClientInfoHandler(func(r *http.Request) (clientID, clientSecret string, err error) {
 		clientID = r.FormValue("client_id")
