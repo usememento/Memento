@@ -28,9 +28,9 @@ class _Appdata {
 
   String get domain {
     if(App.isWeb) {
-      var domain = Uri.base.toString();
-      if(domain.endsWith('/')) {
-        domain = domain.substring(0, domain.length - 1);
+      var domain = "${Uri.base.scheme}://${Uri.base.host}";
+      if(Uri.base.hasPort && Uri.base.port != 80 && Uri.base.port != 443) {
+        domain += ":${Uri.base.port}";
       }
       return domain;
     } else {
