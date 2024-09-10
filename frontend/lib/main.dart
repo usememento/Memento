@@ -4,6 +4,7 @@ import 'package:frontend/components/window_border.dart';
 import 'package:frontend/foundation/app.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:frontend/pages/auth.dart';
+import 'package:frontend/pages/home_page.dart';
 import 'package:frontend/pages/main_page.dart';
 import 'package:frontend/utils/translation.dart';
 import 'package:universal_html/html.dart';
@@ -35,6 +36,7 @@ void main() async {
       FocusManager.instance.primaryFocus?.unfocus();
     });
   }
+  await initEditingValue();
   runApp(const Memento());
 }
 

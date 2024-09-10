@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/components/appbar.dart';
@@ -8,10 +10,59 @@ import 'package:frontend/foundation/app.dart';
 import 'package:frontend/network/network.dart';
 import 'package:frontend/utils/translation.dart';
 import 'package:frontend/utils/upload.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:web_native_text/web_native_editable.dart';
 
 import '../components/heat_map.dart';
+
+String _editingValue = "";
+
+String get editingValue => _editingValue;
+
+bool isModified = false;
+
+set editingValue(String value) {
+  if(value == _editingValue) {
+    return;
+  }
+  _editingValue = value;
+  if(value.isEmpty) {
+    _timer?.cancel();
+    _timer = null;
+    var s = SharedPreferencesAsync();
+    s.remove('editing').then((v) => _startTimer());
+    return;
+  }
+  isModified = true;
+}
+
+Future<void> initEditingValue() async {
+  var s = SharedPreferencesAsync();
+  var v = await s.getString('editing');
+  if(v != null) {
+    editingValue = v;
+  }
+}
+
+Timer? _timer;
+
+void _startTimer() {
+  _timer = Timer.periodic(
+    const Duration(seconds: 1),
+        (timer) async {
+      if (!isModified) {
+        return;
+      }
+      _writeEditingValue();
+    },
+  );
+}
+
+void _writeEditingValue() async {
+  var s = SharedPreferencesAsync();
+  await s.setString('editing', editingValue);
+}
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -22,6 +73,19 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _memosListKey = 0;
+
+  @override
+  void initState() {
+    _startTimer();
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _timer = null;
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -146,7 +210,7 @@ class WritingArea extends StatefulWidget {
 class _WritingAreaState extends State<WritingArea> {
   String get content => controller.text;
 
-  var controller = WNEditingController();
+  var controller = WNEditingController(text: editingValue);
 
   bool isPublic = true;
 
@@ -172,6 +236,9 @@ class _WritingAreaState extends State<WritingArea> {
             controller: controller,
             singleLine: false,
             style: ts.s16,
+            onChanged: (value) {
+              editingValue = value;
+            },
           ).fixWidth(double.infinity).paddingVertical(8),
           Container(
             height: 0.4,
@@ -260,6 +327,7 @@ class _WritingAreaState extends State<WritingArea> {
         controller.clear();
         context.showMessage("Post success".tl);
         widget.onPost();
+        editingValue = "";
       }
       setState(() {
         isLoading = false;
@@ -337,6 +405,7 @@ class _WritingPageState extends State<WritingPage> {
             style: ts.s16,
             onChanged: (value) {
               widget.updateContent(value, isPublic);
+              editingValue = value;
               setState(() {});
             },
             singleLine: false,
@@ -424,6 +493,7 @@ class _WritingPageState extends State<WritingPage> {
         controller.clear();
         context.showMessage("Post success".tl);
         widget.onPost();
+        editingValue = "";
         context.pop();
       }
     }

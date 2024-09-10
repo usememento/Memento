@@ -50,8 +50,10 @@ Future<ServerFile?> uploadFile(
                         builder: (context, snapshot) {
                           if (snapshot.hasError) {
                             Future.microtask(() {
-                              context.pop();
-                              context.showMessage(snapshot.error.toString());
+                              if(context.mounted) {
+                                context.pop();
+                                context.showMessage(snapshot.error.toString());
+                              }
                             });
                             return const SizedBox();
                           }
