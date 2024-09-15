@@ -63,6 +63,8 @@ func main() {
 	e.Use(service.SEOFrontEndMiddleware)
 	e.Use(middleware.CORS())
 
+	e.GET("/rss/:username", service.HandleRss)
+
 	api := e.Group("/api")
 	{
 		api.Use(memento.TokenValidator(AuthServer))

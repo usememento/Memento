@@ -37,6 +37,9 @@ func SEOFrontEndMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		if strings.HasPrefix(c.Request().RequestURI, "/public") {
 			return next(c)
 		}
+		if strings.HasPrefix(c.Request().RequestURI, "/rss") {
+			return next(c)
+		}
 		reqPath := c.Request().URL.Path
 		if reqPath == "/robots.txt" {
 			return handleRobotsTxt(c)
@@ -240,7 +243,13 @@ func findTitleInMd(md string) string {
 			return strings.TrimPrefix(line, "# ")
 		}
 	}
-	return ""
+	htmlContent := string(mdToHTML([]byte(md)))
+	plain := html2text.HTML2Text(htmlContent)
+	firstLine := strings.Split(plain, "\n")[0]
+	if len([]rune(firstLine)) > 25 {
+		firstLine = string([]rune(firstLine)[:25])
+	}
+	return firstLine
 }
 
 func userToSEOArticle(user *model.User) string {

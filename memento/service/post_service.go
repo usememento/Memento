@@ -130,7 +130,7 @@ func HandlePostCreate(c echo.Context) error {
 		log.Errorf(err.Error())
 		return utils.RespondInternalError(c, "index failed")
 	}
-	defer GenerateSiteMap()
+	defer onPostsChanged(username.(string))
 	return c.JSON(http.StatusOK, *pv)
 }
 func HandlePostDelete(c echo.Context) error {
@@ -196,7 +196,7 @@ func HandlePostDelete(c echo.Context) error {
 	if err != nil {
 		log.Errorf(err.Error())
 	}
-	defer GenerateSiteMap()
+	defer onPostsChanged(username.(string))
 	return c.NoContent(http.StatusOK)
 }
 func HandlePostEdit(c echo.Context) error {
@@ -305,7 +305,7 @@ func HandlePostEdit(c echo.Context) error {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown query error")
 	}
-	defer GenerateSiteMap()
+	defer onPostsChanged(username.(string))
 	return c.NoContent(http.StatusOK)
 }
 func HandleGetPost(c echo.Context) error {
@@ -845,4 +845,12 @@ func HandleGetFollowingPosts(c echo.Context) error {
 		"posts":   result,
 		"maxPage": utils.MaxPage(total),
 	})
+}
+
+func onPostsChanged(username string) {
+	GenerateSiteMap()
+	_, err := cacheRss(username)
+	if err != nil {
+		log.Errorf("Error caching RSS: %s\n", err.Error())
+	}
 }
