@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/golang-jwt/jwt/v5"
-	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	"os"
 	"path"
@@ -252,18 +251,24 @@ func isPublicPath(path string) bool {
 }
 
 func TokenValidator() echo.MiddlewareFunc {
-	config := echojwt.Config{
-		NewClaimsFunc: func(c echo.Context) jwt.Claims {
-			return new(model.JwtUserClaims)
-		},
-		SigningKey: []byte(memento.Config.AccessTokenSigningKey),
-		Skipper: func(c echo.Context) bool {
-			fmt.Println(c.Path())
-			if isPublicPath(c.Request().URL.Path) {
-				return true
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			accessToken := c.Request().Header.Get("Authorization")
+			if accessToken == "" && isPublicPath(c.Request().URL.Path) {
+				return next(c)
 			}
-			return false
-		},
+			token, err := jwt.ParseWithClaims(accessToken, &model.JwtUserClaims{}, func(token *jwt.Token) (interface{}, error) {
+				return []byte(memento.Config.AccessTokenSigningKey), nil
+			})
+			if err != nil || !token.Valid {
+				return utils.RespondError(c, "Invalid JWT Token")
+			}
+			claims, ok := token.Claims.(*model.JwtUserClaims)
+			if !ok {
+				return utils.RespondError(c, "Unable to Parse JWT Claims")
+			}
+			c.Set("username", claims.Username)
+			return next(c)
+		}
 	}
-	return echojwt.WithConfig(config)
 }
