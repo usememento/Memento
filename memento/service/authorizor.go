@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"strings"
 	"time"
+	"unicode"
 )
 
 func HandleLogin(c echo.Context) error {
@@ -57,6 +58,9 @@ func HandleCreate(c echo.Context) error {
 	//if !VerifyCaptchaToken(captchaToken) {
 	//	return utils.RespondError(c, "Invalid Captcha")
 	//}
+	if len(username) < 4 || len(username) > 20 {
+		return utils.RespondError(c, "invalid username length")
+	}
 	notAllowedChars := []string{" ", "\t", "\n", "\r", "\\", "/", ":", "*", "?", "\"", "<", ">", "|"}
 	for _, char := range notAllowedChars {
 		if strings.Contains(username, char) {
@@ -64,6 +68,9 @@ func HandleCreate(c echo.Context) error {
 		}
 	}
 	password := c.FormValue("password")
+	if !verifyPassword(password) {
+		return utils.RespondError(c, "invalid password")
+	}
 	hashedPassword := utils.Md5string(password)
 	var totalUsers int64
 	err := memento.GetDbConnection().Model(&model.User{}).Count(&totalUsers).Error
@@ -93,6 +100,26 @@ func HandleCreate(c echo.Context) error {
 		return utils.RespondError(c, "unknown insertion error")
 	}
 	return authOk(c, &user)
+}
+
+func verifyPassword(password string) bool {
+	if len(password) < 6 || len(password) > 30 {
+		return false
+	}
+	hasDigit := false
+	hasLetter := false
+	for _, r := range password {
+		if r > unicode.MaxASCII {
+			return false
+		}
+		if unicode.IsDigit(r) {
+			hasDigit = true
+		}
+		if unicode.IsLetter(r) {
+			hasLetter = true
+		}
+	}
+	return hasDigit && hasLetter
 }
 
 func authOk(c echo.Context, user *model.User) error {
