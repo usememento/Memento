@@ -41,3 +41,7 @@ body {
 .no-select {
     user-select: none !important;
 }
+
+button:focus {
+    outline: none;
+}

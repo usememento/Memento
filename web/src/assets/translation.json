@@ -9,7 +9,14 @@
     "Already have an account? Login": "已有账号？登录",
     "Confirm": "确认",
     "Confirm Password": "确认密码",
-    "Passwords do not match": "密码不匹配"
+    "Passwords do not match": "密码不匹配",
+    "Home": "首页",
+    "Explore": "探索",
+    "Following": "关注",
+    "Resources": "资源",
+    "Settings": "设置",
+    "My Profile": "我的资料",
+    "Log out": "登出"
   },
   "zh-TW": {
     "Login": "登錄",
@@ -21,6 +28,13 @@
     "Already have an account? Login": "已有賬號？登錄",
     "Confirm": "確認",
     "Confirm Password": "確認密碼",
-    "Passwords do not match": "密碼不匹配"
+    "Passwords do not match": "密碼不匹配",
+    "Home": "首頁",
+    "Explore": "探索",
+    "Following": "關注",
+    "Resources": "資源",
+    "Settings": "設置",
+    "My Profile": "我的資料",
+    "Log out": "登出"
   }
 }
