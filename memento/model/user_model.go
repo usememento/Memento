@@ -32,17 +32,17 @@ type User struct {
 }
 
 type UserViewModel struct {
-	Username      string
-	Nickname      string
-	Bio           string
-	TotalLiked    int64
-	TotalComment  int64
-	TotalPosts    int64
-	TotalFiles    int64
-	TotalFollower int64
-	TotalFollows  int64
-	RegisteredAt  time.Time
-	Avatar        string
-	IsFollowed    bool
-	IsAdmin       bool
+	Username      string    `json:"username"`
+	Nickname      string    `json:"nickname"`
+	Bio           string    `json:"bio"`
+	TotalLiked    int64     `json:"totalLiked"`
+	TotalComment  int64     `json:"totalComment"`
+	TotalPosts    int64     `json:"totalPosts"`
+	TotalFiles    int64     `json:"totalFiles"`
+	TotalFollower int64     `json:"totalFollower"`
+	TotalFollows  int64     `json:"totalFollows"`
+	RegisteredAt  time.Time `json:"registeredAt"`
+	Avatar        string    `json:"avatar"`
+	IsFollowed    bool      `json:"isFollowed"`
+	IsAdmin       bool      `json:"isAdmin"`
 }

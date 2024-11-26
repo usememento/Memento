@@ -14,7 +14,7 @@ type File struct {
 }
 
 type FileViewModel struct {
-	ID       uint
-	Filename string
-	Time     time.Time
+	ID       uint      `json:"id"`
+	Filename string    `json:"filename"`
+	Time     time.Time `json:"time"`
 }

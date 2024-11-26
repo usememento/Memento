@@ -19,13 +19,13 @@ type Post struct {
 }
 
 type PostViewModel struct {
-	IsLiked      bool
-	IsPrivate    bool
-	PostID       uint
-	User         UserViewModel
-	TotalLiked   int64
-	TotalComment int64
-	CreatedAt    time.Time
-	EditedAt     time.Time
-	Content      string
+	IsLiked      bool          `json:"isLiked"`
+	IsPrivate    bool          `json:"isPrivate"`
+	PostID       uint          `json:"postID"`
+	User         UserViewModel `json:"user"`
+	TotalLiked   int64         `json:"totalLiked"`
+	TotalComment int64         `json:"totalComment"`
+	CreatedAt    time.Time     `json:"createdAt"`
+	EditedAt     time.Time     `json:"editedAt"`
+	Content      string        `json:"content"`
 }
