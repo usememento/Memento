@@ -156,7 +156,6 @@ func Init() error {
 		log.Errorf("Error establishing database connection: %s\n", err.Error())
 		return err
 	}
-
 	err = initSearchEngine()
 	if err != nil {
 		log.Errorf("Error initializing bleve search: %s\n", err.Error())

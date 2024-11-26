@@ -3,6 +3,7 @@ package service
 import (
 	"Memento/memento"
 	"Memento/memento/model"
+	"Memento/memento/query"
 	"Memento/memento/utils"
 	"errors"
 	"github.com/golang-jwt/jwt/v5"
@@ -19,8 +20,7 @@ func HandleLogin(c echo.Context) error {
 	username := c.FormValue("username")
 	password := c.FormValue("password")
 
-	var user model.User
-	err := memento.Db().First(&user, "username=?", username).Error
+	user, err := query.User.Where(query.User.Username.Eq(username)).First()
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return utils.RespondError(c, "username not exists")
@@ -38,7 +38,7 @@ func HandleLogin(c echo.Context) error {
 			user.LockUntil = time.Now().Add(time.Minute * 5)
 			user.PasswordRetry = 0
 		}
-		err := memento.Db().Save(&user).Error
+		err = query.User.Save(user)
 		if err != nil {
 			log.Errorf(err.Error())
 			return utils.RespondError(c, "unknown update error")
@@ -46,7 +46,7 @@ func HandleLogin(c echo.Context) error {
 		return utils.RespondError(c, "incorrect password")
 	}
 
-	return authOk(c, &user)
+	return authOk(c, user)
 }
 
 func HandleCreate(c echo.Context) error {
@@ -58,22 +58,15 @@ func HandleCreate(c echo.Context) error {
 	//if !VerifyCaptchaToken(captchaToken) {
 	//	return utils.RespondError(c, "Invalid Captcha")
 	//}
-	if len(username) < 4 || len(username) > 20 {
-		return utils.RespondError(c, "invalid username length")
-	}
-	notAllowedChars := []string{" ", "\t", "\n", "\r", "\\", "/", ":", "*", "?", "\"", "<", ">", "|"}
-	for _, char := range notAllowedChars {
-		if strings.Contains(username, char) {
-			return utils.RespondError(c, "Invalid username: username contains invalid character "+char)
-		}
+	if !verifyUsername(username) {
+		return utils.RespondError(c, "Invalid username")
 	}
 	password := c.FormValue("password")
 	if !verifyPassword(password) {
 		return utils.RespondError(c, "invalid password")
 	}
 	hashedPassword := utils.Md5string(password)
-	var totalUsers int64
-	err := memento.Db().Model(&model.User{}).Count(&totalUsers).Error
+	totalUsers, err := query.User.Count()
 	if err != nil {
 		totalUsers = 0
 	}
@@ -89,7 +82,7 @@ func HandleCreate(c echo.Context) error {
 		RegisteredAt: time.Now(),
 		IsAdmin:      totalUsers == 0,
 	}
-	err = memento.Db().Create(&user).Error
+	err = query.User.Create(&user)
 	if err != nil {
 		// Check if the error is due to a unique constraint violation
 		if errors.Is(err, gorm.ErrDuplicatedKey) {
@@ -100,6 +93,18 @@ func HandleCreate(c echo.Context) error {
 		return utils.RespondError(c, "unknown insertion error")
 	}
 	return authOk(c, &user)
+}
+func verifyUsername(username string) bool {
+	if len(username) < 4 || len(username) > 20 {
+		return false
+	}
+	notAllowedChars := []string{" ", "\t", "\n", "\r", "\\", "/", ":", "*", "?", "\"", "<", ">", "|"}
+	for _, char := range notAllowedChars {
+		if strings.Contains(username, char) {
+			return false
+		}
+	}
+	return true
 }
 
 func verifyPassword(password string) bool {
@@ -171,10 +176,9 @@ func HandleRefreshToken(c echo.Context) error {
 		return utils.RespondError(c, "can not extract claims")
 	}
 
-	var user model.User
-	err = memento.Db().First(&user, "username=?", claims.Username).Error
+	user, err := query.User.Where(query.User.Username.Eq(claims.Username)).First()
 	if err != nil {
 		return utils.RespondError(c, "user not found")
 	}
-	return authOk(c, &user)
+	return authOk(c, user)
 }

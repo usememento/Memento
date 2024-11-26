@@ -3,6 +3,7 @@ package service
 import (
 	"Memento/memento"
 	"Memento/memento/model"
+	"Memento/memento/query"
 	"Memento/memento/utils"
 	"errors"
 	"github.com/labstack/echo/v4"
@@ -14,15 +15,14 @@ import (
 )
 
 func HandleCommentCreate(c echo.Context) error {
-	username := c.Get("username")
+	username := c.Get("username").(string)
 	if username == "" {
 		return utils.RespondUnauthorized(c)
 	}
 	postId := c.FormValue("id")
 	content := c.FormValue("content")
 
-	var user model.User
-	err := memento.Db().First(&user, "username=?", username).Error
+	user, err := query.User.Where(query.User.Username.Eq(username)).First()
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return utils.RespondError(c, "username not exists")
@@ -30,8 +30,11 @@ func HandleCommentCreate(c echo.Context) error {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown query error")
 	}
-	var post model.Post
-	err = memento.Db().First(&post, "id=?", postId).Error
+	id, err := strconv.ParseUint(postId, 10, 64)
+	if err != nil {
+		return utils.RespondError(c, "Invalid post id")
+	}
+	post, err := query.Post.Where(query.Post.ID.Eq(uint(id))).First()
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return utils.RespondError(c, "username not exists")
@@ -68,7 +71,7 @@ func HandleCommentCreate(c echo.Context) error {
 	if err != nil {
 		return utils.RespondError(c, "unknown query error")
 	}
-	return c.JSON(http.StatusOK, utils.CommentToView(&comment, utils.UserToView(&user, false), false))
+	return c.JSON(http.StatusOK, utils.CommentToView(&comment, utils.UserToView(user, false), false))
 }
 
 func HandleCommentEdit(c echo.Context) error {
@@ -78,8 +81,11 @@ func HandleCommentEdit(c echo.Context) error {
 	}
 	commentId := c.FormValue("id")
 	content := c.FormValue("content")
-	var comment model.Comment
-	memento.Db().First(&comment, "id=?", commentId)
+	id, err := strconv.ParseUint(commentId, 10, 64)
+	if err != nil {
+		return utils.RespondError(c, "Invalid post id")
+	}
+	comment, err := query.Comment.Where(query.Comment.ID.Eq(uint(id))).First()
 	if comment.Username != username {
 		return utils.RespondError(c, "permission denied")
 	}
@@ -90,7 +96,7 @@ func HandleCommentEdit(c echo.Context) error {
 }
 
 func HandleCommentDelete(c echo.Context) error {
-	username := c.Get("username")
+	username := c.Get("username").(string)
 	if username == "" {
 		return utils.RespondUnauthorized(c)
 	}
@@ -107,8 +113,7 @@ func HandleCommentDelete(c echo.Context) error {
 	if comment.Username != username {
 		return utils.RespondError(c, "permission denied")
 	}
-	var user model.User
-	err = memento.Db().First(&user, "username=?", comment.Username).Error
+	user, err := query.User.Where(query.User.Username.Eq(username)).First()
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return utils.RespondError(c, "username not exists")
@@ -148,11 +153,13 @@ func HandleCommentDelete(c echo.Context) error {
 
 func HandleCommentLike(c echo.Context) error {
 	commentId := c.FormValue("id")
-	username := c.Get("username")
-	var user model.User
-	memento.Db().First(&user, "username=?", username)
+	username := c.Get("username").(string)
+	user, err := query.User.Where(query.User.Username.Eq(username)).First()
+	if err != nil {
+		return utils.RespondError(c, "user not exists")
+	}
 	var likedComments []model.Comment
-	err := memento.Db().Model(&user).Association("LikedComments").Find(&likedComments)
+	err = memento.Db().Model(&user).Association("LikedComments").Find(&likedComments)
 	if err != nil {
 		return utils.RespondError(c, "unknown query error")
 	}
