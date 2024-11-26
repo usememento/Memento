@@ -49,11 +49,6 @@ func HandleLogin(c echo.Context) error {
 	return authOk(c, &user)
 }
 
-func HandleRefreshToken(c echo.Context) error {
-
-	return nil
-}
-
 func HandleCreate(c echo.Context) error {
 	if !memento.GetConfig().EnableRegister {
 		return utils.RespondError(c, "Registration Disabled")
@@ -102,27 +97,59 @@ func HandleCreate(c echo.Context) error {
 }
 
 func authOk(c echo.Context, user *model.User) error {
-	fmt.Printf("user: %s\n", user.Username)
-	// Set custom claims
-	claims := &model.JwtCustomClaims{
-		Name:  user.Username,
-		Admin: user.IsAdmin,
+	claims := &model.JwtUserClaims{
+		Username: user.Username,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 72)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 6)),
 		},
 	}
 	// Create token with claims
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	// Generate encoded token and send it as response.
-	t, err := token.SignedString([]byte("secret"))
+	t, err := token.SignedString([]byte(memento.GetConfig().AccessTokenSigningKey))
+	refreshToken, err := generateRefreshToken(user)
 	if err != nil {
 		return err
 	}
 	return c.JSON(http.StatusOK, echo.Map{
-		"token":     t,
-		"isAdmin":   user.IsAdmin,
-		"expiredAt": claims.ExpiresAt.Format(time.RFC3339),
-		"user":      utils.UserToView(user, false),
+		"accessToken":  t,
+		"refreshToken": refreshToken,
+		"isAdmin":      user.IsAdmin,
+		"expiredAt":    claims.ExpiresAt.Format(time.RFC3339),
+		"user":         utils.UserToView(user, false),
 	})
+}
+
+func generateRefreshToken(user *model.User) (string, error) {
+	claims := &model.JwtUserClaims{
+		Username: user.Username,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 6)),
+		},
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString([]byte(memento.GetConfig().RefreshTokenSigningKey))
+}
+
+func HandleRefreshToken(c echo.Context) error {
+	refreshToken := c.FormValue("refreshToken")
+	fmt.Println("token: ", refreshToken)
+	token, err := jwt.ParseWithClaims(refreshToken, &model.JwtUserClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(memento.GetConfig().RefreshTokenSigningKey), nil
+	})
+	if err != nil || !token.Valid {
+		return utils.RespondError(c, "can not parse token")
+	}
+	claims, ok := token.Claims.(*model.JwtUserClaims)
+	if !ok {
+		return utils.RespondError(c, "can not extract claims")
+	}
+
+	var user model.User
+	err = memento.GetDbConnection().First(&user, "username=?", claims.Username).Error
+	if err != nil {
+		return utils.RespondError(c, "user not found")
+	}
+	return authOk(c, &user)
 }

@@ -225,9 +225,9 @@ func isPublicPath(path string) bool {
 func TokenValidator() echo.MiddlewareFunc {
 	config := echojwt.Config{
 		NewClaimsFunc: func(c echo.Context) jwt.Claims {
-			return new(model.JwtCustomClaims)
+			return new(model.JwtUserClaims)
 		},
-		SigningKey: []byte("secret"),
+		SigningKey: []byte(memento.Config.AccessTokenSigningKey),
 		Skipper: func(c echo.Context) bool {
 			fmt.Println(c.Path())
 			if isPublicPath(c.Request().URL.Path) {
