@@ -12,3 +12,11 @@ export function TapRegion({onPress, children, borderRadius = 0}: TapRegionProps)
         {children}
     </div>
 }
+
+export function IconButton({onPress, children}: { onPress: () => void, children: ReactNode }) {
+    return <TapRegion onPress={onPress} borderRadius={9999}>
+        <div className={"w-8 h-8 flex flex-row items-center justify-center text-primary text-2xl"}>
+            {children}
+        </div>
+    </TapRegion>
+}

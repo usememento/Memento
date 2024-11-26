@@ -42,7 +42,7 @@ export default function NaviBar() {
     }, []);
 
     let pageName = ''
-    switch(window.location.pathname) {
+    switch (window.location.pathname) {
         case '/':
             pageName = 'Home'
             break
@@ -61,10 +61,12 @@ export default function NaviBar() {
     }
 
     if (naviType === NaviType.top) {
-        return <div className={"w-full h-full"}>
-            <div className={`z-20 fixed left-0 right-0 top-0 bottom-0 bg-black bg-opacity-20 ${isOpen ? "" : "hidden"} animate-appearance-in`} onClick={() => {
-                setIsOpen(false)
-            }}/>
+        return <div className={"w-full h-full no-select"}>
+            <div
+                className={`z-20 fixed left-0 right-0 top-0 bottom-0 bg-black bg-opacity-20 ${isOpen ? "" : "hidden"} animate-appearance-in`}
+                onClick={() => {
+                    setIsOpen(false)
+                }}/>
             <div className={"fixed top-0 bottom-0 w-64 z-50 bg-background duration-200 px-2"} style={{
                 left: isOpen ? "0" : "-256px",
             }}>

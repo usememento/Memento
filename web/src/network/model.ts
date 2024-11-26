@@ -13,3 +13,15 @@ export interface User {
     isFollowed: boolean;
     isAdmin: boolean;
 }
+
+export interface Post {
+    isLiked: boolean;
+    isPrivate: boolean;
+    postID: number;
+    user: User;
+    totalLiked: number;
+    totalComment: number;
+    createdAt: Date;
+    editedAt: Date;
+    content: string;
+}
