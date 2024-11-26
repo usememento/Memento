@@ -5,7 +5,6 @@ import (
 	"Memento/memento/model"
 	"Memento/memento/utils"
 	"errors"
-	"fmt"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
@@ -134,7 +133,6 @@ func generateRefreshToken(user *model.User) (string, error) {
 
 func HandleRefreshToken(c echo.Context) error {
 	refreshToken := c.FormValue("refreshToken")
-	fmt.Println("token: ", refreshToken)
 	token, err := jwt.ParseWithClaims(refreshToken, &model.JwtUserClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(memento.GetConfig().RefreshTokenSigningKey), nil
 	})
