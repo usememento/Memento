@@ -33,7 +33,7 @@ func HandlePostCreate(c echo.Context) error {
 		return utils.RespondError(c, "invalid permission level")
 	}
 	var user model.User
-	err := memento.GetDbConnection().First(&user, "username=?", username).Error
+	err := memento.Db().First(&user, "username=?", username).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return utils.RespondError(c, "username not exists")
@@ -82,7 +82,7 @@ func HandlePostCreate(c echo.Context) error {
 
 	post.ContentUrl = contentFilepath
 	contentTags := utils.GetTags(content)
-	err = memento.GetDbConnection().Transaction(
+	err = memento.Db().Transaction(
 		func(tx *gorm.DB) error {
 			tx.Save(&post)
 			// add all non-existing tags to database
@@ -143,7 +143,7 @@ func HandlePostDelete(c echo.Context) error {
 		return utils.RespondError(c, "invalid post id")
 	}
 	var post model.Post
-	if err := memento.GetDbConnection().First(&post, "id=?", id).Error; err != nil {
+	if err := memento.Db().First(&post, "id=?", id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return utils.RespondError(c, "post not exists")
 		}
@@ -153,7 +153,7 @@ func HandlePostDelete(c echo.Context) error {
 	if post.Username != username {
 		return utils.RespondError(c, "permission denied")
 	}
-	err := memento.GetDbConnection().Transaction(
+	err := memento.Db().Transaction(
 		func(tx *gorm.DB) error {
 			var user model.User
 			err := tx.First(&user, "username=?", post.Username).Error
@@ -205,7 +205,7 @@ func HandlePostEdit(c echo.Context) error {
 		return utils.RespondUnauthorized(c)
 	}
 	var user model.User
-	err := memento.GetDbConnection().First(&user, "username=?", username).Error
+	err := memento.Db().First(&user, "username=?", username).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return utils.RespondError(c, "username not exists")
@@ -224,7 +224,7 @@ func HandlePostEdit(c echo.Context) error {
 		return utils.RespondError(c, "invalid permission level")
 	}
 	var post model.Post
-	err = memento.GetDbConnection().First(&post, "id=?", id).Error
+	err = memento.Db().First(&post, "id=?", id).Error
 	post.IsPrivate = private
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -237,7 +237,7 @@ func HandlePostEdit(c echo.Context) error {
 		return utils.RespondError(c, "permission denied")
 	}
 	var oldTags1 []model.Tag
-	err = memento.GetDbConnection().Model(&post).Association("Tags").Find(&oldTags1)
+	err = memento.Db().Model(&post).Association("Tags").Find(&oldTags1)
 	oldTags := make([]string, len(oldTags1))
 	for i, t := range oldTags1 {
 		oldTags[i] = t.Name
@@ -267,7 +267,7 @@ func HandlePostEdit(c echo.Context) error {
 	}
 	newTags := utils.GetTags(content)
 	tagsToAdd, tagsToDel := utils.CalcTagsDiff(oldTags, newTags)
-	err = memento.GetDbConnection().Transaction(
+	err = memento.Db().Transaction(
 		func(tx *gorm.DB) error {
 			for _, t := range tagsToAdd {
 				var tag model.Tag
@@ -311,7 +311,7 @@ func HandlePostEdit(c echo.Context) error {
 func HandleGetPost(c echo.Context) error {
 	id := c.QueryParam("id")
 	var post model.Post
-	err := memento.GetDbConnection().First(&post, "id=?", id).Error
+	err := memento.Db().First(&post, "id=?", id).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return utils.RespondError(c, "post not exists")
@@ -320,9 +320,9 @@ func HandleGetPost(c echo.Context) error {
 		return utils.RespondError(c, "unknown query error")
 	}
 	var user model.User
-	memento.GetDbConnection().First(&user, "username=?", post.Username)
+	memento.Db().First(&user, "username=?", post.Username)
 	var likePosts []model.Post
-	err = memento.GetDbConnection().
+	err = memento.Db().
 		Model(&user).
 		Association("Likes").
 		Find(&likePosts, "id=?", post.ID)
@@ -348,14 +348,14 @@ func HandleGetUserPosts(c echo.Context) error {
 		return utils.RespondError(c, "invalid page")
 	}
 	var user model.User
-	err = memento.GetDbConnection().First(&user, "username=?", username).Error
+	err = memento.Db().First(&user, "username=?", username).Error
 	if err != nil {
 		return utils.RespondError(c, "username not exists")
 	}
 	posts := make([]model.Post, 0, memento.PageSize)
 	var total int64
 	if userself == username {
-		err = memento.GetDbConnection().
+		err = memento.Db().
 			Where("username=?", username).
 			Order("created_at desc").
 			Offset(page * memento.PageSize).
@@ -365,12 +365,12 @@ func HandleGetUserPosts(c echo.Context) error {
 		if err != nil {
 			return utils.RespondError(c, "unknown query error")
 		}
-		err = memento.GetDbConnection().Model(&model.Post{}).Where("username=?", username).Count(&total).Error
+		err = memento.Db().Model(&model.Post{}).Where("username=?", username).Count(&total).Error
 		if err != nil {
 			return utils.RespondError(c, "unknown query error")
 		}
 	} else {
-		err = memento.GetDbConnection().
+		err = memento.Db().
 			Where("username=? and is_private=?", username, false).
 			Order("created_at desc").Offset(page * memento.PageSize).
 			Limit(memento.PageSize).
@@ -379,7 +379,7 @@ func HandleGetUserPosts(c echo.Context) error {
 		if err != nil {
 			return utils.RespondError(c, "unknown query error")
 		}
-		err = memento.GetDbConnection().
+		err = memento.Db().
 			Model(&model.Post{}).
 			Where("username=? and is_private=?", username, false).
 			Count(&total).
@@ -392,7 +392,7 @@ func HandleGetUserPosts(c echo.Context) error {
 	result := make([]model.PostViewModel, 0, memento.PageSize)
 	for _, post := range posts {
 		var likePosts []model.Post
-		err = memento.GetDbConnection().
+		err = memento.Db().
 			Model(&user).
 			Association("Likes").
 			Find(&likePosts, "id=?", post.ID)
@@ -423,7 +423,7 @@ func HandlePostLike(c echo.Context) error {
 	}
 	postId := c.FormValue("id")
 	var user model.User
-	err := memento.GetDbConnection().First(&user, "username=?", username).Error
+	err := memento.Db().First(&user, "username=?", username).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return utils.RespondError(c, "username not exists")
@@ -432,7 +432,7 @@ func HandlePostLike(c echo.Context) error {
 		return utils.RespondError(c, "unknown query error")
 	}
 	var post model.Post
-	err = memento.GetDbConnection().First(&post, "id=?", postId).Error
+	err = memento.Db().First(&post, "id=?", postId).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return utils.RespondError(c, "post not exists")
@@ -441,7 +441,7 @@ func HandlePostLike(c echo.Context) error {
 		return utils.RespondError(c, "unknown query error")
 	}
 	var likedPost []model.Post
-	err = memento.GetDbConnection().
+	err = memento.Db().
 		Model(&user).
 		Association("Likes").
 		Find(&likedPost, "id=?", post.ID)
@@ -454,7 +454,7 @@ func HandlePostLike(c echo.Context) error {
 		return utils.RespondError(c, "already liked")
 	}
 	var author model.User
-	err = memento.GetDbConnection().First(&author, "username=?", post.Username).Error
+	err = memento.Db().First(&author, "username=?", post.Username).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return utils.RespondError(c, "post not exists")
@@ -462,7 +462,7 @@ func HandlePostLike(c echo.Context) error {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown query error")
 	}
-	err = memento.GetDbConnection().Transaction(
+	err = memento.Db().Transaction(
 		func(tx *gorm.DB) error {
 			err := tx.Model(&user).Association("Likes").Append(&post)
 			if err != nil {
@@ -487,7 +487,7 @@ func HandlePostCancelLike(c echo.Context) error {
 	}
 	postId := c.FormValue("id")
 	var user model.User
-	err := memento.GetDbConnection().First(&user, "username=?", username).Error
+	err := memento.Db().First(&user, "username=?", username).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return utils.RespondError(c, "username not exists")
@@ -496,7 +496,7 @@ func HandlePostCancelLike(c echo.Context) error {
 		return utils.RespondError(c, "unknown query error")
 	}
 	var post model.Post
-	err = memento.GetDbConnection().First(&post, "id=?", postId).Error
+	err = memento.Db().First(&post, "id=?", postId).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return utils.RespondError(c, "post not exists")
@@ -505,7 +505,7 @@ func HandlePostCancelLike(c echo.Context) error {
 		return utils.RespondError(c, "unknown query error")
 	}
 	var likedPost model.Post
-	err = memento.GetDbConnection().Model(&user).Association("Likes").Find(&likedPost, "id=?", post.ID)
+	err = memento.Db().Model(&user).Association("Likes").Find(&likedPost, "id=?", post.ID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return utils.RespondError(c, "not liked yet")
@@ -514,7 +514,7 @@ func HandlePostCancelLike(c echo.Context) error {
 		return utils.RespondError(c, "unknown query error")
 	}
 	var author model.User
-	err = memento.GetDbConnection().First(&author, "username=?", post.Username).Error
+	err = memento.Db().First(&author, "username=?", post.Username).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return utils.RespondError(c, "post not exists")
@@ -522,7 +522,7 @@ func HandlePostCancelLike(c echo.Context) error {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown query error")
 	}
-	err = memento.GetDbConnection().Transaction(
+	err = memento.Db().Transaction(
 		func(tx *gorm.DB) error {
 			err := tx.Model(&user).Association("Likes").Delete(&post)
 			if err != nil {
@@ -544,7 +544,7 @@ func HandleGetTaggedPost(c echo.Context) error {
 	username := c.Get("username").(string)
 	var user model.User
 	if username != "" {
-		err := memento.GetDbConnection().First(&user, "username=?", username).Error
+		err := memento.Db().First(&user, "username=?", username).Error
 		if err != nil {
 			return utils.RespondError(c, "username not exists")
 		}
@@ -558,7 +558,7 @@ func HandleGetTaggedPost(c echo.Context) error {
 		return utils.RespondError(c, "invalid page")
 	}
 	var tag model.Tag
-	err = memento.GetDbConnection().First(&tag, "name=?", t).Error
+	err = memento.Db().First(&tag, "name=?", t).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return utils.RespondError(c, "tag not exists")
@@ -567,7 +567,7 @@ func HandleGetTaggedPost(c echo.Context) error {
 		return utils.RespondError(c, "unknown query error")
 	}
 	posts := make([]model.Post, 0, memento.PageSize)
-	err = memento.GetDbConnection().Model(&tag).Order("created_at desc").
+	err = memento.Db().Model(&tag).Order("created_at desc").
 		Offset(page*memento.PageSize).
 		Limit(memento.PageSize).
 		Association("Posts").
@@ -575,13 +575,13 @@ func HandleGetTaggedPost(c echo.Context) error {
 	if err != nil {
 		return utils.RespondError(c, "unknown query error")
 	}
-	total := memento.GetDbConnection().Model(&tag).Association("Posts").Count()
+	total := memento.Db().Model(&tag).Association("Posts").Count()
 	result := make([]model.PostViewModel, 0, memento.PageSize)
 	for _, p := range posts {
 		var user model.User
-		memento.GetDbConnection().First(&user, "username=?", p.Username)
+		memento.Db().First(&user, "username=?", p.Username)
 		var likePosts []model.Post
-		err = memento.GetDbConnection().
+		err = memento.Db().
 			Model(&user).
 			Association("Likes").
 			Find(&likePosts, "id=?", p.ID)
@@ -609,7 +609,7 @@ func HandleGetAllPosts(c echo.Context) error {
 	username := c.Get("username")
 	var currentUser model.User
 	if username != "" {
-		err := memento.GetDbConnection().First(&currentUser, "username=?", username).Error
+		err := memento.Db().First(&currentUser, "username=?", username).Error
 		if err != nil {
 			return utils.RespondError(c, "username not exists")
 		}
@@ -619,7 +619,7 @@ func HandleGetAllPosts(c echo.Context) error {
 		return utils.RespondError(c, "invalid page")
 	}
 	posts := make([]model.Post, 0, memento.PageSize)
-	err = memento.GetDbConnection().
+	err = memento.Db().
 		Order("created_at desc").
 		Offset(page*memento.PageSize).
 		Limit(memento.PageSize).
@@ -629,18 +629,18 @@ func HandleGetAllPosts(c echo.Context) error {
 		return utils.RespondError(c, "unknown query error")
 	}
 	var total int64
-	err = memento.GetDbConnection().Model(&model.Post{}).Where("is_private=?", false).Count(&total).Error
+	err = memento.Db().Model(&model.Post{}).Where("is_private=?", false).Count(&total).Error
 	if err != nil {
 		return utils.RespondError(c, "unknown query error")
 	}
 	result := make([]model.PostViewModel, 0, memento.PageSize)
 	for _, p := range posts {
 		var user model.User
-		memento.GetDbConnection().First(&user, "username=?", p.Username)
+		memento.Db().First(&user, "username=?", p.Username)
 		isLiked := false
 		if username != "" {
 			var likePosts []model.Post
-			err = memento.GetDbConnection().
+			err = memento.Db().
 				Model(&currentUser).
 				Association("Likes").
 				Find(&likePosts, "id=?", p.ID)
@@ -670,7 +670,7 @@ func HandleGetLikedPosts(c echo.Context) error {
 	username := c.QueryParam("username")
 	var currentUser model.User
 	if currentUserName != "" {
-		err := memento.GetDbConnection().First(&currentUser, "username=?", currentUserName).Error
+		err := memento.Db().First(&currentUser, "username=?", currentUserName).Error
 		if err != nil {
 			return utils.RespondError(c, "username not exists")
 		}
@@ -680,12 +680,12 @@ func HandleGetLikedPosts(c echo.Context) error {
 		return utils.RespondError(c, "invalid page")
 	}
 	var user model.User
-	err = memento.GetDbConnection().First(&user, "username=?", username).Error
+	err = memento.Db().First(&user, "username=?", username).Error
 	if err != nil {
 		return utils.RespondError(c, "username not exists")
 	}
 	posts := make([]model.Post, 0, memento.PageSize)
-	err = memento.GetDbConnection().Model(&user).
+	err = memento.Db().Model(&user).
 		Order("created_at desc").
 		Offset(page*memento.PageSize).
 		Limit(memento.PageSize).
@@ -695,7 +695,7 @@ func HandleGetLikedPosts(c echo.Context) error {
 		return utils.RespondError(c, "unknown query error")
 	}
 	var totalLikes int64
-	err = memento.GetDbConnection().Model(&model.Post{}).
+	err = memento.Db().Model(&model.Post{}).
 		Joins("JOIN user_liked_posts ON user_liked_posts.post_id = posts.id").
 		Where("posts.is_private = ? OR posts.username = ?", false, currentUserName).
 		Count(&totalLikes).Error
@@ -705,11 +705,11 @@ func HandleGetLikedPosts(c echo.Context) error {
 	result := make([]model.PostViewModel, 0, memento.PageSize)
 	for _, p := range posts {
 		var author model.User
-		memento.GetDbConnection().First(&author, "username=?", p.Username)
+		memento.Db().First(&author, "username=?", p.Username)
 		isLiked := currentUserName == username
 		if !isLiked && currentUserName != "" {
 			var likePosts []model.Post
-			err = memento.GetDbConnection().
+			err = memento.Db().
 				Model(&currentUser).
 				Association("Likes").
 				Find(&likePosts, "id=?", p.ID)
@@ -738,13 +738,13 @@ func HandleGetTags(c echo.Context) error {
 	var tags []model.Tag
 	t := c.QueryParam("type")
 	if t == "all" {
-		err := memento.GetDbConnection().Find(&tags).Error
+		err := memento.Db().Find(&tags).Error
 		if err != nil {
 			return utils.RespondError(c, "unknown query error")
 		}
 		tags1 := make([]model.Tag, 0, len(tags))
 		for _, t := range tags {
-			count := memento.GetDbConnection().Model(&t).Association("Posts").Count()
+			count := memento.Db().Model(&t).Association("Posts").Count()
 			if count != 0 {
 				tags1 = append(tags1, t)
 			}
@@ -756,12 +756,12 @@ func HandleGetTags(c echo.Context) error {
 			return utils.RespondUnauthorized(c)
 		}
 		var user model.User
-		err := memento.GetDbConnection().First(&user, "username=?", username).Error
+		err := memento.Db().First(&user, "username=?", username).Error
 		if err != nil {
 			return utils.RespondError(c, "username not exists")
 		}
 		var posts []model.Post
-		err = memento.GetDbConnection().Preload("Tags").Model(&user).Association("Posts").Find(&posts)
+		err = memento.Db().Preload("Tags").Model(&user).Association("Posts").Find(&posts)
 		if err != nil {
 			return utils.RespondError(c, "unknown query error")
 		}
@@ -785,7 +785,7 @@ func HandleGetTags(c echo.Context) error {
 func HandleGetFollowingPosts(c echo.Context) error {
 	username := c.Get("username").(string)
 	var user model.User
-	err := memento.GetDbConnection().Preload("Follows").First(&user, "username=?", username).Error
+	err := memento.Db().Preload("Follows").First(&user, "username=?", username).Error
 	if err != nil {
 		return utils.RespondError(c, "username not exists")
 	}
@@ -800,7 +800,7 @@ func HandleGetFollowingPosts(c echo.Context) error {
 	}
 	// Get the posts of followed users
 	var posts []model.Post
-	err = memento.GetDbConnection().
+	err = memento.Db().
 		Limit(memento.PageSize).
 		Offset(memento.PageSize*page).
 		Where("username IN ?", followedUsernames).
@@ -810,7 +810,7 @@ func HandleGetFollowingPosts(c echo.Context) error {
 		return utils.RespondError(c, "unknown query error")
 	}
 	var total int64
-	err = memento.GetDbConnection().
+	err = memento.Db().
 		Model(&model.Post{}).
 		Where("username IN ?", followedUsernames).
 		Count(&total).
@@ -821,11 +821,11 @@ func HandleGetFollowingPosts(c echo.Context) error {
 	result := make([]model.PostViewModel, 0, memento.PageSize)
 	for _, p := range posts {
 		var author model.User
-		memento.GetDbConnection().First(&author, "username=?", p.Username)
+		memento.Db().First(&author, "username=?", p.Username)
 		isLiked := false
 		if username != "" {
 			var likePosts []model.Post
-			err = memento.GetDbConnection().
+			err = memento.Db().
 				Model(&user).
 				Association("Likes").
 				Find(&likePosts, "id=?", p.ID)

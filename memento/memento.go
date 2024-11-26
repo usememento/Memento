@@ -54,12 +54,11 @@ func WriteConfig() error {
 	}
 	return nil
 }
-
-func Init() (*Server, error) {
+func initConfig() error {
 	home, err := os.UserHomeDir()
 	if err != nil {
 		log.Errorf("Error getting home directory: %s\n", err.Error())
-		return nil, err
+		return err
 	}
 	data, err := os.ReadFile(filepath.Join(home, ".memento", ConfigFileName))
 	if err != nil {
@@ -68,71 +67,102 @@ func Init() (*Server, error) {
 			memento.Config.BasePath = filepath.Join(home, ".memento")
 			if err = os.MkdirAll(GetBasePath(), 0777); err != nil {
 				log.Errorf("Error creating base folder: %s\n", err.Error())
-				return nil, err
+				return err
 			}
 			f, err := os.Create(path.Join(memento.Config.BasePath, ConfigFileName))
 			if err != nil {
 				log.Errorf("Error creating configuration file: %s\n", err.Error())
-				return nil, err
+				return err
 			}
 			data, err := yaml.Marshal(memento.Config)
 			if err != nil {
 				log.Errorf("Error marshalling configuration: %s\n", err.Error())
-				return nil, err
+				return err
 			}
 			_, err = f.Write(data)
 			if err != nil {
 				log.Errorf("Error writing configuration to file: %s\n", err.Error())
-				return nil, err
+				return err
 			}
 		} else {
 			log.Errorf("Error opening configuration file: %s\n", err.Error())
-			return nil, err
+			return err
 		}
 	} else {
 		err = yaml.Unmarshal(data, &memento.Config)
 		if err != nil {
 			log.Errorf("Error unmarshalling yaml file: %s\n", err.Error())
-			return nil, err
+			return err
 		}
 	}
-	if err = os.MkdirAll(GetUploadPath(), 0777); err != nil {
-		log.Errorf("Error creating upload file folder: %s\n", err.Error())
-		return nil, err
-	}
-	if err = os.MkdirAll(GetPostPath(), 0777); err != nil {
-		log.Errorf("Error creating post folder: %s\n", err.Error())
-		return nil, err
-	}
-	if err = os.MkdirAll(GetAvatarPath(), 0777); err != nil {
-		log.Errorf("Error creating avatar folder: %s\n", err.Error())
-		return nil, err
-	}
-	memento.DbConn, err = gorm.Open(sqlite.Open(path.Join(GetBasePath(), GetConfig().DbConfig.Database)), &gorm.Config{
+	return nil
+}
+func initDbConnection() error {
+	db, err := gorm.Open(sqlite.Open(path.Join(GetBasePath(), GetConfig().DbConfig.Database)), &gorm.Config{
 		TranslateError:                           true,
 		DisableForeignKeyConstraintWhenMigrating: true,
 		//SkipDefaultTransaction:                   true,
 	})
 	if err != nil {
 		log.Errorf("Error establishing database connection: %s\n", err.Error())
-		return nil, err
+		return err
 	}
-	_ = memento.DbConn.AutoMigrate(&model.Tag{})
-	_ = memento.DbConn.AutoMigrate(&model.File{})
-	_ = memento.DbConn.AutoMigrate(&model.Comment{})
-	_ = memento.DbConn.AutoMigrate(&model.Post{})
-	_ = memento.DbConn.AutoMigrate(&model.User{})
-	//memento.DbConn.AutoMigrate(&model.PostTag{})
-	memento.PostIndex, err = bleve.Open(path.Join(GetBasePath(), "post_index.bleve"))
+	memento.DbConn = db
+	return nil
+}
+func initFolder() error {
+	if err := os.MkdirAll(GetUploadPath(), 0777); err != nil {
+		log.Errorf("Error creating upload file folder: %s\n", err.Error())
+		return err
+	}
+	if err := os.MkdirAll(GetPostPath(), 0777); err != nil {
+		log.Errorf("Error creating post folder: %s\n", err.Error())
+		return err
+	}
+	if err := os.MkdirAll(GetAvatarPath(), 0777); err != nil {
+		log.Errorf("Error creating avatar folder: %s\n", err.Error())
+		return err
+	}
+	return nil
+}
+
+func initSearchEngine() error {
+	idx, err := bleve.Open(path.Join(GetBasePath(), "post_index.bleve"))
 	if err != nil {
 		mapping := bleve.NewIndexMapping()
 		memento.PostIndex, err = bleve.New(path.Join(GetBasePath(), "post_index.bleve"), mapping)
 		if err != nil {
 			log.Errorf("Error creating post index: %s\n", err.Error())
-			return nil, err
+			return err
 		}
 	}
-	return &memento, nil
+	memento.PostIndex = idx
+	return nil
+}
+
+func Init() error {
+	err := initConfig()
+	if err != nil {
+		log.Errorf("Error reading config file: %s\n", err.Error())
+		return err
+	}
+	err = initFolder()
+	if err != nil {
+		log.Errorf("Error initializing sub-folders: %s\n", err.Error())
+		return err
+	}
+	err = initDbConnection()
+	if err != nil {
+		log.Errorf("Error establishing database connection: %s\n", err.Error())
+		return err
+	}
+
+	err = initSearchEngine()
+	if err != nil {
+		log.Errorf("Error initializing bleve search: %s\n", err.Error())
+		return err
+	}
+	return nil
 }
 func GetBasePath() string {
 	return memento.Config.BasePath
@@ -154,7 +184,7 @@ func GetConfig() *utils.MementoConfig {
 	return &memento.Config
 }
 
-func GetDbConnection() *gorm.DB {
+func Db() *gorm.DB {
 	return memento.DbConn
 }
 

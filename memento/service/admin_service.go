@@ -29,7 +29,7 @@ func AdminCheck(next echo.HandlerFunc) echo.HandlerFunc {
 			})
 		}
 		var user model.User
-		err := memento.GetDbConnection().First(&user, "username=?", username).Error
+		err := memento.Db().First(&user, "username=?", username).Error
 		if err != nil {
 			return c.JSON(401, echo.Map{
 				"error": "User not found",
@@ -80,7 +80,7 @@ func HandleListUsers(c echo.Context) error {
 		return utils.RespondError(c, "Invalid page")
 	}
 	users := make([]model.User, 0, memento.PageSize)
-	err = memento.GetDbConnection().
+	err = memento.Db().
 		Offset(page * memento.PageSize).
 		Limit(memento.PageSize).
 		Find(&users).
@@ -89,7 +89,7 @@ func HandleListUsers(c echo.Context) error {
 		return utils.RespondError(c, "Failed")
 	}
 	var total int64
-	err = memento.GetDbConnection().
+	err = memento.Db().
 		Model(&model.User{}).
 		Count(&total).
 		Error
@@ -110,7 +110,7 @@ func HandleListUsers(c echo.Context) error {
 func HandleAdminDeleteUser(c echo.Context) error {
 	username := c.Param("username")
 	var user model.User
-	err := memento.GetDbConnection().First(&user, "username=?", username).Error
+	err := memento.Db().First(&user, "username=?", username).Error
 	if err != nil {
 		return utils.RespondError(c, "User not found")
 	}
@@ -118,7 +118,7 @@ func HandleAdminDeleteUser(c echo.Context) error {
 	if err != nil {
 		log.Errorf(err.Error())
 	}
-	err = memento.GetDbConnection().Delete(&user).Error
+	err = memento.Db().Delete(&user).Error
 	if err != nil {
 		return utils.RespondError(c, "Failed")
 	}
@@ -128,7 +128,7 @@ func HandleAdminDeleteUser(c echo.Context) error {
 func HandleSetUserPermission(c echo.Context) error {
 	isAdmin := c.FormValue("is_admin") == "true"
 	username := c.FormValue("username")
-	err := memento.GetDbConnection().
+	err := memento.Db().
 		Model(&model.User{}).
 		Where("username = ?", username).
 		Update("is_admin", isAdmin).

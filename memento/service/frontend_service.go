@@ -165,13 +165,13 @@ func seoHtml(html string, reqPath string) string {
 				return
 			}
 			var post model.Post
-			err = memento.GetDbConnection().Model(&post).Where("id = ?", id).First(&post).Error
+			err = memento.Db().Model(&post).Where("id = ?", id).First(&post).Error
 			if err != nil || post.IsPrivate {
 				return
 			}
 			postView, err := utils.PostToView(&post, &model.UserViewModel{}, false)
 			var author model.User
-			err = memento.GetDbConnection().Model(&author).Where("username = ?", post.Username).First(&author).Error
+			err = memento.Db().Model(&author).Where("username = ?", post.Username).First(&author).Error
 			if err != nil {
 				return
 			}
@@ -194,7 +194,7 @@ func seoHtml(html string, reqPath string) string {
 				return
 			}
 			var user model.User
-			err := memento.GetDbConnection().Model(&user).Where("username = ?", username).First(&user).Error
+			err := memento.Db().Model(&user).Where("username = ?", username).First(&user).Error
 			if err != nil {
 				return
 			}
@@ -272,7 +272,7 @@ Sitemap: https://`+domain+`/sitemap.xml
 
 func GenerateSiteMap() {
 	var posts []model.Post
-	err := memento.GetDbConnection().Model(&posts).Where("is_private = ?", false).Find(&posts).Error
+	err := memento.Db().Model(&posts).Where("is_private = ?", false).Find(&posts).Error
 	if err != nil {
 		return
 	}

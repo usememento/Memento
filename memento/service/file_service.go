@@ -26,7 +26,7 @@ func HandleFileUpload(c echo.Context) error {
 		return utils.RespondError(c, "invalid token")
 	}
 	var user model.User
-	if err := memento.GetDbConnection().First(&user, "username=?", username).Error; err != nil {
+	if err := memento.Db().First(&user, "username=?", username).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return utils.RespondError(c, "username not exists")
 		}
@@ -75,7 +75,7 @@ func HandleFileUpload(c echo.Context) error {
 		Filename:   file.Filename,
 		ContentUrl: filepath,
 	}
-	err = memento.GetDbConnection().Transaction(
+	err = memento.Db().Transaction(
 		func(tx *gorm.DB) error {
 			err := tx.Model(&user).Association("Files").Append(&file0)
 			if err != nil {
@@ -102,7 +102,7 @@ func HandleFileDelete(c echo.Context) error {
 	}
 	id := c.Param("id")
 	var user model.User
-	err := memento.GetDbConnection().First(&user, "username=?", username).Error
+	err := memento.Db().First(&user, "username=?", username).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return utils.RespondError(c, "username not exists")
@@ -111,7 +111,7 @@ func HandleFileDelete(c echo.Context) error {
 		return utils.RespondError(c, "unknown query error")
 	}
 	var file model.File
-	err = memento.GetDbConnection().First(&file, "id=?", id).Error
+	err = memento.Db().First(&file, "id=?", id).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return utils.RespondError(c, "url not exists")
@@ -119,7 +119,7 @@ func HandleFileDelete(c echo.Context) error {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown query error")
 	}
-	err = memento.GetDbConnection().Transaction(
+	err = memento.Db().Transaction(
 		func(tx *gorm.DB) error {
 			err := tx.Model(&user).Association("Files").Delete(&file)
 			if err != nil {
@@ -139,7 +139,7 @@ func HandleFileDelete(c echo.Context) error {
 func HandleGetFile(c echo.Context) error {
 	id := c.Param("id")
 	var file model.File
-	err := memento.GetDbConnection().First(&file, "id=?", id).Error
+	err := memento.Db().First(&file, "id=?", id).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return utils.RespondError(c, "file not exists")
@@ -158,18 +158,18 @@ func HandleGetResourcesList(c echo.Context) error {
 		return utils.RespondError(c, "Invalid page")
 	}
 	var user model.User
-	err = memento.GetDbConnection().First(&user, "username=?", username).Error
+	err = memento.Db().First(&user, "username=?", username).Error
 	if err != nil {
 		return utils.RespondError(c, "User not found")
 	}
 	var files []model.File
-	err = memento.GetDbConnection().Order("created_at DESC").Offset(page*memento.PageSize).Limit(memento.PageSize).Find(&files, "username=?", username).Error
+	err = memento.Db().Order("created_at DESC").Offset(page*memento.PageSize).Limit(memento.PageSize).Find(&files, "username=?", username).Error
 	if err != nil {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "Failed to find files")
 	}
 	var total int64
-	err = memento.GetDbConnection().Table("files").Select("username=?", username).Count(&total).Error
+	err = memento.Db().Table("files").Select("username=?", username).Count(&total).Error
 	if err != nil {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "Failed to find files")

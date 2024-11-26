@@ -10,12 +10,12 @@ import (
 )
 
 func main() {
-	mServer, err := memento.Init()
+	err := memento.Init()
 	if err != nil {
 		log.Errorf("Error initializing memento server: %s\n", err.Error())
 		return
 	}
-	fmt.Println(mServer.Config.ServerConfig)
+	fmt.Println(memento.GetConfig().ServerConfig)
 	e := echo.New()
 	// Middleware
 	e.Use(middleware.Logger())
@@ -103,5 +103,5 @@ func main() {
 		public.GET("/article/:id", service.HandlePublicArticle)
 	}
 
-	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", mServer.Config.ServerConfig.Port)))
+	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", memento.GetConfig().ServerConfig.Port)))
 }

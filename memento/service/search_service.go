@@ -24,7 +24,7 @@ func HandleUserSearch(c echo.Context) error {
 	var users []model.User
 	var total int64
 	if strings.HasPrefix(keyword, "@") {
-		err = memento.GetDbConnection().
+		err = memento.Db().
 			Limit(memento.PageSize).
 			Offset(page*memento.PageSize).
 			Where("username LIKE ?", keyword[1:]+"%").
@@ -33,7 +33,7 @@ func HandleUserSearch(c echo.Context) error {
 		if err != nil {
 			return utils.RespondInternalError(c, "search failed")
 		}
-		err = memento.GetDbConnection().
+		err = memento.Db().
 			Model(&model.User{}).
 			Where("username LIKE ?", "%"+keyword[1:]+"%").
 			Count(&total).
@@ -42,7 +42,7 @@ func HandleUserSearch(c echo.Context) error {
 			return utils.RespondInternalError(c, "search failed")
 		}
 	} else {
-		err = memento.GetDbConnection().
+		err = memento.Db().
 			Limit(memento.PageSize).
 			Offset(page*memento.PageSize).
 			Where("username LIKE ? OR nickname LIKE ? OR bio LIKE ?", "%"+keyword+"%", "%"+keyword+"%", "%"+keyword+"%").
@@ -51,7 +51,7 @@ func HandleUserSearch(c echo.Context) error {
 		if err != nil {
 			return utils.RespondInternalError(c, "search failed")
 		}
-		err = memento.GetDbConnection().
+		err = memento.Db().
 			Model(&model.User{}).
 			Where("username LIKE ? OR nickname LIKE ? OR bio LIKE ?", "%"+keyword+"%", "%"+keyword+"%", "%"+keyword+"%").
 			Count(&total).
@@ -120,7 +120,7 @@ func HandlePostSearch(c echo.Context) error {
 			break
 		}
 		var author model.User
-		err = memento.GetDbConnection().
+		err = memento.Db().
 			Where("username=?", post.Username).
 			First(&author).
 			Error
@@ -131,7 +131,7 @@ func HandlePostSearch(c echo.Context) error {
 		isLiked := false
 		if username != "" {
 			var user model.User
-			err = memento.GetDbConnection().
+			err = memento.Db().
 				Where("username=?", username).
 				First(&user).
 				Error
@@ -140,7 +140,7 @@ func HandlePostSearch(c echo.Context) error {
 				return utils.RespondInternalError(c, "search failed")
 			}
 			var likedPosts []model.Post
-			err = memento.GetDbConnection().
+			err = memento.Db().
 				Model(&user).
 				Association("Likes").
 				Find(&likedPosts, "id=?", post.ID)
@@ -173,14 +173,14 @@ func doSearch(keyword string) ([]model.Post, error) {
 		// search tag
 		var posts []model.Post
 		var tag model.Tag
-		err := memento.GetDbConnection().
+		err := memento.Db().
 			Where("name=?", keyword).
 			First(&tag).
 			Error
 		if err != nil {
 			return make([]model.Post, 0), nil
 		}
-		err = memento.GetDbConnection().
+		err = memento.Db().
 			Model(&tag).
 			Association("Posts").
 			Find(&posts)
@@ -192,14 +192,14 @@ func doSearch(keyword string) ([]model.Post, error) {
 		// search user
 		var posts []model.Post
 		var user model.User
-		err := memento.GetDbConnection().
+		err := memento.Db().
 			Where("username=?", keyword[1:]).
 			First(&user).
 			Error
 		if err != nil {
 			return make([]model.Post, 0), nil
 		}
-		err = memento.GetDbConnection().
+		err = memento.Db().
 			Model(&user).
 			Association("Posts").
 			Find(&posts)
@@ -216,7 +216,7 @@ func doSearch(keyword string) ([]model.Post, error) {
 		posts := make([]model.Post, 0, len(sr.Hits))
 		for _, hit := range sr.Hits {
 			var post model.Post
-			memento.GetDbConnection().First(&post, "id=?", hit.Fields["ID"])
+			memento.Db().First(&post, "id=?", hit.Fields["ID"])
 			posts = append(posts, post)
 		}
 		return posts, nil

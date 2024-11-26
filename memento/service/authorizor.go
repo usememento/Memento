@@ -20,7 +20,7 @@ func HandleLogin(c echo.Context) error {
 	password := c.FormValue("password")
 
 	var user model.User
-	err := memento.GetDbConnection().First(&user, "username=?", username).Error
+	err := memento.Db().First(&user, "username=?", username).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return utils.RespondError(c, "username not exists")
@@ -38,7 +38,7 @@ func HandleLogin(c echo.Context) error {
 			user.LockUntil = time.Now().Add(time.Minute * 5)
 			user.PasswordRetry = 0
 		}
-		err := memento.GetDbConnection().Save(&user).Error
+		err := memento.Db().Save(&user).Error
 		if err != nil {
 			log.Errorf(err.Error())
 			return utils.RespondError(c, "unknown update error")
@@ -73,7 +73,7 @@ func HandleCreate(c echo.Context) error {
 	}
 	hashedPassword := utils.Md5string(password)
 	var totalUsers int64
-	err := memento.GetDbConnection().Model(&model.User{}).Count(&totalUsers).Error
+	err := memento.Db().Model(&model.User{}).Count(&totalUsers).Error
 	if err != nil {
 		totalUsers = 0
 	}
@@ -89,7 +89,7 @@ func HandleCreate(c echo.Context) error {
 		RegisteredAt: time.Now(),
 		IsAdmin:      totalUsers == 0,
 	}
-	err = memento.GetDbConnection().Create(&user).Error
+	err = memento.Db().Create(&user).Error
 	if err != nil {
 		// Check if the error is due to a unique constraint violation
 		if errors.Is(err, gorm.ErrDuplicatedKey) {
@@ -172,7 +172,7 @@ func HandleRefreshToken(c echo.Context) error {
 	}
 
 	var user model.User
-	err = memento.GetDbConnection().First(&user, "username=?", claims.Username).Error
+	err = memento.Db().First(&user, "username=?", claims.Username).Error
 	if err != nil {
 		return utils.RespondError(c, "user not found")
 	}

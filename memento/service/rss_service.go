@@ -71,11 +71,11 @@ func cacheRss(username string) (string, error) {
 // / buildRss generates an RSS feed for a user
 func buildRss(username string) (string, error) {
 	var user model.User
-	if err := memento.GetDbConnection().Where("username = ?", username).First(&user).Error; err != nil {
+	if err := memento.Db().Where("username = ?", username).First(&user).Error; err != nil {
 		return "", errors.New("user not found")
 	}
 	var posts []model.Post
-	if err := memento.GetDbConnection().Where(&model.Post{Username: username, IsPrivate: false}).Order("created_at desc").Limit(10).Find(&posts).Error; err != nil {
+	if err := memento.Db().Where(&model.Post{Username: username, IsPrivate: false}).Order("created_at desc").Limit(10).Find(&posts).Error; err != nil {
 		return "", errors.New("error fetching posts")
 	}
 	rss := strings.Builder{}

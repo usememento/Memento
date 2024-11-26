@@ -42,7 +42,7 @@ func HandleUserCreateWrapper(c echo.Context, s *server.Server) error {
 	password := c.FormValue("password")
 	hashedPassword := utils.Md5string(password)
 	var totalUsers int64
-	err := memento.GetDbConnection().Model(&model.User{}).Count(&totalUsers).Error
+	err := memento.Db().Model(&model.User{}).Count(&totalUsers).Error
 	if err != nil {
 		totalUsers = 0
 	}
@@ -58,7 +58,7 @@ func HandleUserCreateWrapper(c echo.Context, s *server.Server) error {
 		RegisteredAt: time.Now(),
 		IsAdmin:      totalUsers == 0,
 	}
-	err = memento.GetDbConnection().Create(&user).Error
+	err = memento.Db().Create(&user).Error
 	if err != nil {
 		// Check if the error is due to a unique constraint violation
 		if errors.Is(err, gorm.ErrDuplicatedKey) {
@@ -94,7 +94,7 @@ func HandleUserRefreshToken(c echo.Context, s *server.Server) error {
 		return utils.RespondError(c, err.Error())
 	}
 	var user model.User
-	memento.GetDbConnection().First(&user, "username=?", ti.GetUserID())
+	memento.Db().First(&user, "username=?", ti.GetUserID())
 	return c.JSON(http.StatusOK, echo.Map{
 		"token": s.GetTokenData(ti),
 		"user":  *utils.UserToView(&user, false),
@@ -108,7 +108,7 @@ func HandleUserDelete(c echo.Context) error {
 	}
 	password := c.FormValue("password")
 	var user model.User
-	err := memento.GetDbConnection().First(&user, "username=?", username).Error
+	err := memento.Db().First(&user, "username=?", username).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return utils.RespondError(c, "username not exists")
@@ -119,7 +119,7 @@ func HandleUserDelete(c echo.Context) error {
 	if utils.Md5string(password) != user.PasswordHash {
 		return utils.RespondError(c, "incorrect username or password")
 	}
-	memento.GetDbConnection().Delete(&user)
+	memento.Db().Delete(&user)
 	return c.NoContent(http.StatusOK)
 }
 
@@ -137,7 +137,7 @@ func HandleUserEdit(c echo.Context) error {
 		hasAvatar = false
 	}
 	var user model.User
-	err = memento.GetDbConnection().First(&user, "username=?", username).Error
+	err = memento.Db().First(&user, "username=?", username).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return utils.RespondError(c, "username not exists")
@@ -206,7 +206,7 @@ func HandleUserEdit(c echo.Context) error {
 		}
 		user.AvatarUrl = filepath
 	}
-	if err := memento.GetDbConnection().Save(&user).Error; err != nil {
+	if err := memento.Db().Save(&user).Error; err != nil {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown save error")
 	}
@@ -218,13 +218,13 @@ func checkIsFollowed(selfUsername string, username string) bool {
 		return false
 	}
 	var user model.User
-	err := memento.GetDbConnection().First(&user, "username=?", selfUsername).Error
+	err := memento.Db().First(&user, "username=?", selfUsername).Error
 	if err != nil {
 		log.Errorf(err.Error())
 		return false
 	}
 	var follows []model.User
-	err = memento.GetDbConnection().Model(&user).Association("Follows").Find(&follows, "username=?", username)
+	err = memento.Db().Model(&user).Association("Follows").Find(&follows, "username=?", username)
 	if err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			log.Errorf(err.Error())
@@ -237,7 +237,7 @@ func checkIsFollowed(selfUsername string, username string) bool {
 func HandleGetUser(c echo.Context) error {
 	username := c.QueryParam("username")
 	var user model.User
-	err := memento.GetDbConnection().First(&user, "username=?", username).Error
+	err := memento.Db().First(&user, "username=?", username).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return utils.RespondError(c, "username not exists")
@@ -249,7 +249,7 @@ func HandleGetUser(c echo.Context) error {
 	var currentUser model.User
 	isFollowed := false
 	if uName != "" {
-		err = memento.GetDbConnection().First(&currentUser, "username=?", uName).Error
+		err = memento.Db().First(&currentUser, "username=?", uName).Error
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return utils.RespondError(c, "username not exists")
@@ -265,7 +265,7 @@ func HandleGetUser(c echo.Context) error {
 func PasswordAuthorizationHandler(ctx context.Context, clientID, username, password string) (userID string, err error) {
 	var user model.User
 	//log.Debugf("PasswordAuthorizationHandler: %s\n", username)
-	err = memento.GetDbConnection().First(&user, "username=?", username).Error
+	err = memento.Db().First(&user, "username=?", username).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return "", err
@@ -286,7 +286,7 @@ func HandleUserChangePwd(c echo.Context) error {
 	oldPassword := c.FormValue("oldPassword")
 	newPassword := c.FormValue("newPassword")
 	var user model.User
-	err := memento.GetDbConnection().First(&user, "username=?", username).Error
+	err := memento.Db().First(&user, "username=?", username).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return utils.RespondError(c, "username not exists")
@@ -297,7 +297,7 @@ func HandleUserChangePwd(c echo.Context) error {
 	if utils.Md5string(oldPassword) != user.PasswordHash {
 		return utils.RespondError(c, "incorrect old password")
 	}
-	if err := memento.GetDbConnection().Model(&user).Update("password_hash", utils.Md5string(newPassword)).Error; err != nil {
+	if err := memento.Db().Model(&user).Update("password_hash", utils.Md5string(newPassword)).Error; err != nil {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown update error")
 	}
@@ -307,7 +307,7 @@ func HandleUserChangePwd(c echo.Context) error {
 func HandleUserHeatMap(c echo.Context) error {
 	username := c.FormValue("username")
 	var user model.User
-	err := memento.GetDbConnection().First(&user, "username=?", username).Error
+	err := memento.Db().First(&user, "username=?", username).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return utils.RespondError(c, "username not exists")
@@ -318,7 +318,7 @@ func HandleUserHeatMap(c echo.Context) error {
 	sixMonthsAgo := time.Now().AddDate(0, -12, 0)
 	heatmap := make(map[string]int)
 	var posts []model.Post
-	err = memento.GetDbConnection().Model(&user).Association("Posts").Find(&posts)
+	err = memento.Db().Model(&user).Association("Posts").Find(&posts)
 	if err != nil {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown query error")
@@ -347,7 +347,7 @@ func HandleUserFollow(c echo.Context) error {
 	}
 	foUsername := c.FormValue("followee")
 	var user, followee model.User
-	err := memento.GetDbConnection().First(&user, "username=?", username).Error
+	err := memento.Db().First(&user, "username=?", username).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return utils.RespondError(c, "username not exists")
@@ -355,7 +355,7 @@ func HandleUserFollow(c echo.Context) error {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown query error")
 	}
-	err = memento.GetDbConnection().First(&followee, "username=?", foUsername).Error
+	err = memento.Db().First(&followee, "username=?", foUsername).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return utils.RespondError(c, "username not exists")
@@ -363,7 +363,7 @@ func HandleUserFollow(c echo.Context) error {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown query error")
 	}
-	err = memento.GetDbConnection().Transaction(
+	err = memento.Db().Transaction(
 		func(tx *gorm.DB) error {
 			err := tx.Model(&user).Association("Follows").Append(&followee)
 			if err != nil {
@@ -389,7 +389,7 @@ func HandleUserUnfollow(c echo.Context) error {
 	}
 	foUsername := c.FormValue("followee")
 	var user, followee model.User
-	err := memento.GetDbConnection().First(&user, "username=?", username).Error
+	err := memento.Db().First(&user, "username=?", username).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return utils.RespondError(c, "username not exists")
@@ -397,7 +397,7 @@ func HandleUserUnfollow(c echo.Context) error {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown query error")
 	}
-	err = memento.GetDbConnection().First(&followee, "username=?", foUsername).Error
+	err = memento.Db().First(&followee, "username=?", foUsername).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return utils.RespondError(c, "username not exists")
@@ -405,7 +405,7 @@ func HandleUserUnfollow(c echo.Context) error {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown query error")
 	}
-	err = memento.GetDbConnection().Transaction(
+	err = memento.Db().Transaction(
 		func(tx *gorm.DB) error {
 			err := tx.Model(&user).Association("Follows").Delete(&followee)
 			if err != nil {
@@ -427,14 +427,14 @@ func HandleUserUnfollow(c echo.Context) error {
 func HandlerGetUserFollower(c echo.Context) error {
 	username := c.QueryParam("username")
 	var user model.User
-	memento.GetDbConnection().First(&user, "username=?", username)
+	memento.Db().First(&user, "username=?", username)
 	page, err := strconv.Atoi(c.QueryParam("page"))
 	if err != nil {
 		return utils.RespondError(c, "invalid page")
 	}
 	followers := make([]model.User, 0, memento.PageSize)
-	err = memento.GetDbConnection().Joins("JOIN user_follows ON user_follows.user_id = users.id").Limit(20).Offset(page*20).Where("user_follows.follow_id = ?", user.ID).Find(&followers).Error
-	total := memento.GetDbConnection().Model(&user).Association("Follows").Count()
+	err = memento.Db().Joins("JOIN user_follows ON user_follows.user_id = users.id").Limit(20).Offset(page*20).Where("user_follows.follow_id = ?", user.ID).Find(&followers).Error
+	total := memento.Db().Model(&user).Association("Follows").Count()
 	if err != nil {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown query error")
@@ -453,22 +453,22 @@ func HandlerGetUserFollower(c echo.Context) error {
 func HandlerGetUserFollowing(c echo.Context) error {
 	username := c.QueryParam("username")
 	var user model.User
-	memento.GetDbConnection().First(&user, "username=?", username)
+	memento.Db().First(&user, "username=?", username)
 	page, err := strconv.Atoi(c.QueryParam("page"))
 	if err != nil {
 		return utils.RespondError(c, "invalid page")
 	}
 	followers := make([]model.User, 0, memento.PageSize)
-	err = memento.GetDbConnection().
+	err = memento.Db().
 		Model(&user).
 		Association("Follows").
-		Find(&followers, memento.GetDbConnection().Offset(page*memento.PageSize).
+		Find(&followers, memento.Db().Offset(page*memento.PageSize).
 			Limit(memento.PageSize))
 	if err != nil {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "unknown query error")
 	}
-	total := memento.GetDbConnection().Model(&user).Association("Follows").Count()
+	total := memento.Db().Model(&user).Association("Follows").Count()
 	result := make([]model.UserViewModel, 0, memento.PageSize)
 	for _, f := range followers {
 		result = append(result, *utils.UserToView(&f, true))
