@@ -155,7 +155,7 @@ func UserToView(user *model.User, isFollowed bool) *model.UserViewModel {
 
 func MaxPage(total int64) int64 {
 	if total%pageSize == 0 {
-		return total/pageSize - 1
+		return max(total/pageSize-1, 0)
 	}
-	return total / pageSize
+	return total/pageSize + total%pageSize - 1
 }

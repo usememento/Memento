@@ -54,10 +54,10 @@ func HandleCreate(c echo.Context) error {
 		return utils.RespondError(c, "Registration Disabled")
 	}
 	username := c.FormValue("username")
-	//captchaToken := c.FormValue("captchaToken")
-	//if !VerifyCaptchaToken(captchaToken) {
-	//	return utils.RespondError(c, "Invalid Captcha")
-	//}
+	captchaToken := c.FormValue("captchaToken")
+	if !VerifyCaptchaToken(captchaToken) {
+		return utils.RespondError(c, "Invalid Captcha")
+	}
 	if !verifyUsername(username) {
 		return utils.RespondError(c, "Invalid Username")
 	}
