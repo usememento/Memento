@@ -16,7 +16,10 @@
     "Resources": "资源",
     "Settings": "设置",
     "My Profile": "我的资料",
-    "Log out": "登出"
+    "Log out": "登出",
+    "Public": "公开",
+    "Private": "私密",
+    "Write down your thoughts": "写下你的想法"
   },
   "zh-TW": {
     "Login": "登錄",
@@ -35,6 +38,9 @@
     "Resources": "資源",
     "Settings": "設置",
     "My Profile": "我的資料",
-    "Log out": "登出"
+    "Log out": "登出",
+    "Public": "公開",
+    "Private": "私密",
+    "Write down your thoughts": "寫下你的想法"
   }
 }

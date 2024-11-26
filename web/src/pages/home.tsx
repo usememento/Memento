@@ -2,7 +2,7 @@ import {useCallback, useEffect, useRef, useState} from "react";
 import {IconButton, TapRegion} from "../components/button.tsx";
 import {MdLock, MdOutlineFullscreen, MdOutlineImage, MdOutlineInfo, MdPublic} from "react-icons/md";
 import {Tr, translate} from "../components/translate.tsx";
-import {Button} from "@nextui-org/react";
+import {Button, Spinner} from "@nextui-org/react";
 import {Post} from "../network/model.ts";
 import {network} from "../network/network.ts";
 import app from "../app.ts";
@@ -33,6 +33,7 @@ function Editor({fullHeight}: { fullHeight?: boolean }) {
     }, []);
 
     const [data, setData] = useState<EditorData>({text: "", isPublic: true});
+    const [isUploading, setIsUploading] = useState(false);
 
     return <div className={`w-full ${fullHeight ? "h-full" : ""} border-b px-4 pt-4 pb-2`}>
         <textarea placeholder={translate("Write down your thoughts")} className={"w-full focus:outline-none min-h-6 max-h-screen resize-none"} id={"editor"}
@@ -65,7 +66,19 @@ function Editor({fullHeight}: { fullHeight?: boolean }) {
                 <MdOutlineInfo/>
             </IconButton>
             <div className={"flex-grow"}></div>
-            <Button className={"h-8 rounded-2xl"} color={"primary"}><Tr>Post</Tr></Button>
+            <Button className={"h-8 rounded-2xl"} color={"primary"} onClick={async () => {
+                if(isUploading) return;
+                setIsUploading(true);
+                try {
+                    await network.createPost(data.text, data.isPublic);
+                    setData({text: "", isPublic: true});
+                    showMessage({text: translate("Post created")});
+                } catch (e: any) {
+                    showMessage({text: e.toString()});
+                } finally {
+                    setIsUploading(false);
+                }
+            }}>{isUploading ? <Spinner color={"default"} size={"sm"}></Spinner> : <Tr>Post</Tr>}</Button>
         </div>
     </div>
 }
@@ -81,7 +94,7 @@ function UserPosts() {
 
     const loadPosts = useCallback(async () => {
         try {
-            if (isLoading.current) return;
+            if (isLoading.current || pageRef.current > maxPageRef.current) return;
             isLoading.current = true;
 
             const [posts, maxPage] = await network.getPosts(app.user!.username, pageRef.current);
@@ -95,7 +108,7 @@ function UserPosts() {
             pageRef.current += 1;
         }
         catch (e: any) {
-            showMessage(e.toString());
+            showMessage({text: e.toString()});
         } finally {
             isLoading.current = false;
         }
