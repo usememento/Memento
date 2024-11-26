@@ -8,21 +8,24 @@ import {NextUIProvider} from "@nextui-org/react";
 import app from "./app.ts";
 import LoginPage from "./pages/login_page.tsx";
 import RegisterPage from "./pages/register_page.tsx";
+import Theme from "./components/theme.tsx";
 
 app.init()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <NextUIProvider>
-        <BrowserRouter>
-            <Routes>
-                <Route path={"/login"} element={<LoginPage></LoginPage>}/>
-                <Route path={"/register"} element={<RegisterPage></RegisterPage>}/>
-                <Route element={<NaviBar />}>
-                    <Route path={"/"} element={HomePage()}/>
-                </Route>
-            </Routes>
-        </BrowserRouter>
+        <Theme>
+            <BrowserRouter>
+                <Routes>
+                    <Route path={"/login"} element={<LoginPage></LoginPage>}/>
+                    <Route path={"/register"} element={<RegisterPage></RegisterPage>}/>
+                    <Route element={<NaviBar />}>
+                        <Route path={"/"} element={HomePage()}/>
+                    </Route>
+                </Routes>
+            </BrowserRouter>
+        </Theme>
     </NextUIProvider>
   </StrictMode>,
 )

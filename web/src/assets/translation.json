@@ -8,7 +8,8 @@
     "Password": "密码",
     "Already have an account? Login": "已有账号？登录",
     "Confirm": "确认",
-    "Confirm Password": "确认密码"
+    "Confirm Password": "确认密码",
+    "Passwords do not match": "密码不匹配"
   },
   "zh-TW": {
     "Login": "登錄",
@@ -19,6 +20,7 @@
     "Password": "密碼",
     "Already have an account? Login": "已有賬號？登錄",
     "Confirm": "確認",
-    "Confirm Password": "確認密碼"
+    "Confirm Password": "確認密碼",
+    "Passwords do not match": "密碼不匹配"
   }
 }
