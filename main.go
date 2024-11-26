@@ -4,21 +4,10 @@ import (
 	"Memento/memento"
 	"Memento/memento/service"
 	"fmt"
-	"github.com/go-oauth2/oauth2/v4/models"
-	"net/http"
-	"path"
-	"time"
-
-	"github.com/go-oauth2/oauth2/v4"
-	"github.com/go-oauth2/oauth2/v4/manage"
-	"github.com/go-oauth2/oauth2/v4/server"
-	"github.com/go-oauth2/oauth2/v4/store"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/log"
 )
-
-var AuthServer *server.Server
 
 func main() {
 	mServer, err := memento.Init()
@@ -27,35 +16,6 @@ func main() {
 		return
 	}
 	fmt.Println(mServer.Config.ServerConfig)
-	manager := manage.NewDefaultManager()
-
-	// token store
-	manager.MustTokenStorage(store.NewFileTokenStore(path.Join(memento.GetBasePath(), "token.db")))
-	config := manage.DefaultRefreshTokenCfg
-	config.RefreshTokenExp = 30 * 24 * time.Hour
-	manager.SetRefreshTokenCfg(config)
-
-	// client store
-	clientStore := store.NewClientStore()
-	clientStore.Set("000000", &models.Client{
-		ID:     "000000",
-		Secret: "999999",
-		Domain: "http://localhost",
-	})
-	manager.MapClientStorage(clientStore)
-	// Initialize the oauth2 service
-	AuthServer = server.NewDefaultServer(manager)
-	AuthServer.SetAllowedGrantType(oauth2.Refreshing, oauth2.PasswordCredentials)
-	AuthServer.SetClientInfoHandler(func(r *http.Request) (clientID, clientSecret string, err error) {
-		clientID = r.FormValue("client_id")
-		clientSecret = r.FormValue("client_secret")
-		if clientID == "" || clientSecret == "" {
-			// use the default client
-			return "000000", "999999", nil
-		}
-		return clientID, clientSecret, nil
-	})
-	AuthServer.SetPasswordAuthorizationHandler(service.PasswordAuthorizationHandler)
 	e := echo.New()
 	// Middleware
 	e.Use(middleware.Logger())
@@ -67,7 +27,7 @@ func main() {
 
 	api := e.Group("/api")
 	{
-		api.Use(memento.TokenValidator(AuthServer))
+		api.Use(memento.TokenValidator())
 		postApi := api.Group("/post")
 		{
 			postApi.GET("/all", service.HandleGetAllPosts)
@@ -85,15 +45,9 @@ func main() {
 		}
 		userApi := api.Group("/user")
 		{
-			userApi.POST("/refresh", func(c echo.Context) error {
-				return service.HandleUserRefreshToken(c, AuthServer)
-			})
-			userApi.POST("/login", func(c echo.Context) error {
-				return service.HandleUserLoginWrapper(c, AuthServer)
-			})
-			userApi.POST("/create", func(c echo.Context) error {
-				return service.HandleUserCreateWrapper(c, AuthServer)
-			})
+			userApi.POST("/refresh", service.HandleRefreshToken)
+			userApi.POST("/login", service.HandleLogin)
+			userApi.POST("/create", service.HandleCreate)
 			userApi.GET("/get", service.HandleGetUser)
 			userApi.POST("/changePwd", service.HandleUserChangePwd)
 			userApi.POST("/edit", service.HandleUserEdit)

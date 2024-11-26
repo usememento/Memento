@@ -84,53 +84,6 @@ func HandleUserCreateWrapper(c echo.Context, s *server.Server) error {
 	})
 }
 
-func HandleUserLoginWrapper(c echo.Context, s *server.Server) error {
-	username := c.FormValue("username")
-	password := c.FormValue("password")
-	var user model.User
-	err := memento.GetDbConnection().First(&user, "username=?", username).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return utils.RespondError(c, "username not exists")
-		}
-		log.Errorf(err.Error())
-		return utils.RespondError(c, "unknown query error")
-	}
-	if user.LockUntil.After(time.Now()) {
-		return utils.RespondError(c, "Too many login attempts, please try again later")
-	}
-	if utils.Md5string(password) != user.PasswordHash {
-		user.PasswordRetry += 1
-		if user.PasswordRetry >= 5 {
-			log.Infof("User %s has been locked due to too many login attempts", user.Username)
-			user.LockUntil = time.Now().Add(time.Minute * 5)
-			user.PasswordRetry = 0
-		}
-		err := memento.GetDbConnection().Save(&user).Error
-		if err != nil {
-			log.Errorf(err.Error())
-			return utils.RespondError(c, "unknown update error")
-		}
-		return utils.RespondError(c, "incorrect password")
-	}
-
-	gt, tgr, err := s.ValidationTokenRequest(c.Request())
-	if err != nil {
-		log.Errorf(err.Error())
-		return utils.RespondError(c, err.Error())
-	}
-
-	ti, err := s.GetAccessToken(c.Request().Context(), gt, tgr)
-	if err != nil {
-		log.Errorf(err.Error())
-		return utils.RespondError(c, err.Error())
-	}
-	return c.JSON(http.StatusOK, echo.Map{
-		"token": s.GetTokenData(ti),
-		"user":  utils.UserToView(&user, false),
-	})
-}
-
 func HandleUserRefreshToken(c echo.Context, s *server.Server) error {
 	gt, tgr, err := s.ValidationTokenRequest(c.Request())
 	if err != nil {

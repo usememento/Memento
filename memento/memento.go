@@ -5,7 +5,9 @@ import (
 	"Memento/memento/utils"
 	"errors"
 	"fmt"
-	"net/http"
+	"github.com/golang-jwt/jwt/v5"
+	echojwt "github.com/labstack/echo-jwt/v4"
+	"github.com/labstack/echo/v4"
 	"os"
 	"path"
 	"path/filepath"
@@ -14,9 +16,6 @@ import (
 	"sync"
 
 	"github.com/blevesearch/bleve/v2"
-	"github.com/go-oauth2/oauth2/v4"
-	"github.com/go-oauth2/oauth2/v4/server"
-	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
 	"gopkg.in/yaml.v3"
 	"gorm.io/driver/sqlite"
@@ -223,39 +222,19 @@ func isPublicPath(path string) bool {
 	return false
 }
 
-// TokenValidator middleware
-func TokenValidator(eServer *server.Server) echo.MiddlewareFunc {
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			ti, err := eServer.ValidationBearerToken(c.Request())
-			if err != nil {
-				p := c.Request().URL.Path
-				if isPublicPath(p) {
-					c.Set("username", "")
-					return next(c)
-				}
-				return c.JSON(http.StatusUnauthorized, map[string]string{
-					"message": "invalid token",
-				})
+func TokenValidator() echo.MiddlewareFunc {
+	config := echojwt.Config{
+		NewClaimsFunc: func(c echo.Context) jwt.Claims {
+			return new(model.JwtCustomClaims)
+		},
+		SigningKey: []byte("secret"),
+		Skipper: func(c echo.Context) bool {
+			fmt.Println(c.Path())
+			if isPublicPath(c.Request().URL.Path) {
+				return true
 			}
-			//fmt.Printf("token validator: %s\n", ti.GetUserID())
-			c.Set("token", ti)
-			c.Set("username", ti.GetUserID())
-			return next(c)
-		}
+			return false
+		},
 	}
-}
-
-func AllowAuthorizedHandler(clientID string, grant oauth2.GrantType) (allowed bool, err error) {
-	if grant.String() == "password" || grant.String() == "refresh_token" {
-		return true, nil
-	}
-	return false, nil
-}
-
-type Token struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-	TokenType    string `json:"token_type"`
-	Expiry       int64  `json:"expiry"`
+	return echojwt.WithConfig(config)
 }
