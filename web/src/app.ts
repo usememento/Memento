@@ -9,7 +9,9 @@ class _App {
     refreshToken: string | null = null;
 
     // Only for development, replace to empty string for production
-    server = "https://note.nyne.dev"
+    get server() {
+        return "http://localhost:1323";
+    }
 
     locale = "en"
 
@@ -17,7 +19,7 @@ class _App {
         const data = localStorage.getItem("data");
         if (data) {
             const json = JSON.parse(data);
-            this.user = new User(json.user);
+            this.user = json.user;
             this.token = json.token;
             this.refreshToken = json.refreshToken;
         }
@@ -26,7 +28,7 @@ class _App {
 
     writeData() {
         const data = {
-            user: this.user?.toJson(),
+            user: this.user,
             token: this.token,
             refreshToken: this.refreshToken,
         }

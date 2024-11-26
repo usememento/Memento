@@ -9,6 +9,7 @@ import app from "../app.ts";
 import {TapRegion} from "./button.tsx";
 import {Avatar} from "@nextui-org/react";
 import {useNavigate} from "react-router";
+import {translate} from "./translate.tsx";
 
 enum NaviType {
     top,
@@ -87,7 +88,7 @@ function UserPart() {
     const navigate = useNavigate()
 
     let avatar = user?.avatar
-    if(avatar) {
+    if(avatar && avatar !== "user.png") {
         avatar = `${app.server}/api/user/avatar/${avatar}`
     } else {
         avatar = '/user.png'
@@ -101,7 +102,7 @@ function UserPart() {
         }}>
             <div className={"w-full h-14 flex flex-row justify-center items-center px-4"}>
                 <Avatar src={avatar}></Avatar>
-                <div className={"flex-grow pl-3"}>{user?.username ?? "Login"}</div>
+                <div className={"flex-grow pl-3"}>{user?.username ?? translate("Login")}</div>
             </div>
         </TapRegion>
     </div>

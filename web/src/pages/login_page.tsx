@@ -1,7 +1,6 @@
 import {Button, Input, Spinner} from "@nextui-org/react";
 import {useState} from "react";
 import app from "../app.ts";
-import {User} from "../network/model.ts";
 import showMessage from "../components/message.tsx";
 import {useNavigate} from "react-router";
 import {Tr, translate} from "../components/translate.tsx";
@@ -30,7 +29,7 @@ export default function LoginPage() {
                     setIsLoading(false);
                     if(res.ok) {
                         const json = await res.json();
-                        app.user = new User(json.user)
+                        app.user = json.user;
                         app.token = json.token.access_token;
                         app.refreshToken = json.token.refresh_token;
                         app.writeData();
