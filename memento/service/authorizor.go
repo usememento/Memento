@@ -59,11 +59,11 @@ func HandleCreate(c echo.Context) error {
 	//	return utils.RespondError(c, "Invalid Captcha")
 	//}
 	if !verifyUsername(username) {
-		return utils.RespondError(c, "Invalid username")
+		return utils.RespondError(c, "Invalid Username")
 	}
 	password := c.FormValue("password")
 	if !verifyPassword(password) {
-		return utils.RespondError(c, "invalid password")
+		return utils.RespondError(c, "Invalid Password")
 	}
 	hashedPassword := utils.Md5string(password)
 	totalUsers, err := query.User.Count()
@@ -90,7 +90,7 @@ func HandleCreate(c echo.Context) error {
 			return utils.RespondError(c, "username already exists")
 		}
 		log.Errorf(err.Error())
-		return utils.RespondError(c, "unknown insertion error")
+		return utils.RespondInternalError(c, "unknown insertion error")
 	}
 	return authOk(c, &user)
 }

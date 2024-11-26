@@ -3,6 +3,7 @@ package service
 import (
 	"Memento/memento"
 	"Memento/memento/model"
+	"Memento/memento/query"
 	"Memento/memento/utils"
 	"errors"
 	"fmt"
@@ -21,12 +22,12 @@ import (
 
 func HandleFileUpload(c echo.Context) error {
 	now := time.Now()
-	username := c.Get("username")
+	username := c.Get("username").(string)
 	if username == "" {
 		return utils.RespondError(c, "invalid token")
 	}
-	var user model.User
-	if err := memento.Db().First(&user, "username=?", username).Error; err != nil {
+	user, err := query.User.Where(query.User.Username.Eq(username)).First()
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return utils.RespondError(c, "username not exists")
 		}
@@ -38,7 +39,6 @@ func HandleFileUpload(c echo.Context) error {
 		log.Errorf(err.Error())
 		return utils.RespondError(c, "can not read form file")
 	}
-
 	src, err := file.Open()
 	if err != nil {
 		log.Errorf(err.Error())
@@ -130,7 +130,7 @@ func HandleFileDelete(c echo.Context) error {
 			return nil
 		})
 	if err != nil {
-		return utils.RespondError(c, "unknown transaction error")
+		return utils.RespondInternalError(c, "unknown transaction error")
 	}
 	_ = os.Remove(file.ContentUrl)
 	return c.NoContent(http.StatusOK)

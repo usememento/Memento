@@ -2,6 +2,7 @@ package main
 
 import (
 	"Memento/memento"
+	"Memento/memento/query"
 	"Memento/memento/service"
 	"fmt"
 	"github.com/labstack/echo/v4"
@@ -11,6 +12,7 @@ import (
 
 func main() {
 	err := memento.Init()
+	query.SetDefault(memento.Db())
 	if err != nil {
 		log.Errorf("Error initializing memento server: %s\n", err.Error())
 		return
