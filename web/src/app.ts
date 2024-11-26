@@ -34,6 +34,13 @@ class _App {
         }
         localStorage.setItem("data", JSON.stringify(data));
     }
+
+    clearData() {
+        localStorage.removeItem("data");
+        this.user = null;
+        this.token = null;
+        this.refreshToken = null;
+    }
 }
 
 const app = new _App();
