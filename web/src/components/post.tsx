@@ -15,7 +15,11 @@ import app from "../app.ts";
 import {Avatar} from "@nextui-org/react";
 
 export default function PostWidget({post, showUser}: { post: Post, showUser?: boolean }) {
-    const [ref, entry] = useIntersectionObserver();
+    const [ref, entry] = useIntersectionObserver({
+        root: null,
+        rootMargin: "0px",
+        threshold: 0.1,
+    });
 
     const [state, setState] = useState({
         isLiked: post.isLiked,

@@ -14,7 +14,7 @@ import {
     DropdownMenu,
     DropdownTrigger,
 } from "@nextui-org/react";
-import {Outlet, useNavigate} from "react-router";
+import {Outlet, useLocation, useNavigate} from "react-router";
 import {Tr, translate} from "./translate.tsx";
 import {getAvatar} from "../network/model.ts";
 
@@ -37,29 +37,37 @@ export default function NaviBar() {
     const [isOpen, setIsOpen] = useState(false)
 
     useEffect(() => {
-        window.addEventListener("resize", () => {
+        const updater = () => {
             setNaviType(getNaviType());
-        });
+        };
+        window.addEventListener("resize", updater);
+        return () => {
+            window.removeEventListener("resize", updater);
+        };
     }, []);
 
-    let pageName = ''
-    switch (window.location.pathname) {
-        case '/':
-            pageName = 'Home'
-            break
-        case '/explore':
-            pageName = 'Explore'
-            break
-        case '/following':
-            pageName = 'Following'
-            break
-        case '/resources':
-            pageName = 'Resources'
-            break
-        case '/settings':
-            pageName = 'Settings'
-            break
+    const location = useLocation()
+    function getPageName() {
+        switch (window.location.pathname) {
+            case '/':
+                return 'Home'
+            case '/explore':
+                return 'Explore'
+            case '/following':
+                return 'Following'
+            case '/resources':
+                return 'Resources'
+            case '/settings':
+                return 'Settings'
+            default:
+                return ''
+        }
     }
+    const [pageName, setPageName] = useState(getPageName())
+
+    useEffect(() => {
+        setPageName(getPageName())
+    }, [location]);
 
     if (naviType === NaviType.top) {
         return <div className={"w-full h-full no-select"}>
@@ -72,7 +80,7 @@ export default function NaviBar() {
                 left: isOpen ? "0" : "-256px",
             }}>
                 <UserPart></UserPart>
-                <NaviList/>
+                <NaviList link={window.location.pathname}/>
             </div>
             <div className={"h-14 w-full fixed flex flex-row top-0 left-0 right-0 items-center px-4 border-b"}>
                 <TapRegion onPress={() => {
@@ -90,7 +98,7 @@ export default function NaviBar() {
         return <div className={"w-full h-full flex flex-row no-select max-w-screen-xl m-auto"}>
             <div className={"h-full w-64 px-4 border-r"}>
                 <UserPart></UserPart>
-                <NaviList/>
+                <NaviList link={window.location.pathname}/>
             </div>
             <div className={"flex-grow"}>
                 <Outlet></Outlet>
@@ -118,19 +126,7 @@ function NaviItem({icon, text, link, current}: { icon: ReactNode, text: string, 
     </TapRegion>
 }
 
-function NaviList() {
-    const [link, setLink] = useState(window.location.pathname)
-
-    useEffect(() => {
-        const updater = () => {
-            setLink(window.location.pathname)
-        }
-        window.addEventListener("popstate", updater)
-        return () => {
-            window.removeEventListener("popstate", updater)
-        }
-    }, []);
-
+function NaviList({link}: { link: string }) {
     return <>
         <NaviItem icon={<MdOutlineHome size={24}/>} text={"Home"} link={"/"} current={link}></NaviItem>
         <NaviItem icon={<MdOutlineExplore size={24}/>} text={"Explore"} link={"/explore"} current={link}></NaviItem>

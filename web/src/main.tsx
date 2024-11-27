@@ -9,6 +9,7 @@ import app from "./app.ts";
 import LoginPage from "./pages/login_page.tsx";
 import RegisterPage from "./pages/register_page.tsx";
 import Theme from "./components/theme.tsx";
+import ExplorePage from "./pages/explore_page.tsx";
 
 app.init()
 
@@ -21,7 +22,8 @@ createRoot(document.getElementById('root')!).render(
                     <Route path={"/login"} element={<LoginPage></LoginPage>}/>
                     <Route path={"/register"} element={<RegisterPage></RegisterPage>}/>
                     <Route element={<NaviBar />}>
-                        <Route path={"/"} element={HomePage()}/>
+                        <Route path={"/"} element={<HomePage/>}/>
+                        <Route path={"/explore"} element={<ExplorePage/>}/>
                     </Route>
                 </Routes>
             </BrowserRouter>

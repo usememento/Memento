@@ -10,9 +10,16 @@ import showMessage from "../components/message.tsx";
 import PostWidget from "../components/post.tsx";
 
 export default function HomePage() {
+    const [postsKey, setPostsKey] = useState(0);
+
+    const updatePosts = useCallback(() => {
+        console.log("updatePosts");
+        setPostsKey(prev => prev + 1);
+    }, []);
+
     return <div>
-        <Editor></Editor>
-        <UserPosts></UserPosts>
+        <Editor updatePosts={updatePosts}></Editor>
+        <UserPosts key={postsKey}></UserPosts>
     </div>
 }
 
@@ -21,7 +28,7 @@ interface EditorData {
     isPublic: boolean;
 }
 
-function Editor({fullHeight}: { fullHeight?: boolean }) {
+function Editor({fullHeight, updatePosts}: { fullHeight?: boolean, updatePosts: () => void }) {
     useEffect(() => {
         const editor = document.getElementById("editor")!;
         const listener = () => {
@@ -73,6 +80,7 @@ function Editor({fullHeight}: { fullHeight?: boolean }) {
                     await network.createPost(data.text, data.isPublic);
                     setData({text: "", isPublic: true});
                     showMessage({text: translate("Post created")});
+                    updatePosts();
                 } catch (e: any) {
                     showMessage({text: e.toString()});
                 } finally {
@@ -86,6 +94,7 @@ function Editor({fullHeight}: { fullHeight?: boolean }) {
 function UserPosts() {
     const [state, setState] = useState({
         posts: [] as Post[],
+        isLoading: false,
     });
 
     const isLoading = useRef(false);
@@ -96,6 +105,7 @@ function UserPosts() {
         try {
             if (isLoading.current || pageRef.current > maxPageRef.current) return;
             isLoading.current = true;
+            setState(prev => ({...prev, isLoading: true}));
 
             const [posts, maxPage] = await network.getPosts(app.user!.username, pageRef.current);
 
@@ -103,6 +113,7 @@ function UserPosts() {
 
             setState(prevState => ({
                 posts: [...prevState.posts, ...(posts as Post[])],
+                isLoading: false,
             }));
 
             pageRef.current += 1;
@@ -135,5 +146,8 @@ function UserPosts() {
         {state.posts.map((post, index) => {
             return <PostWidget key={index} post={post}></PostWidget>
         })}
+        {state.isLoading && <div className={"h-10 w-full flex flex-row items-center justify-center"}>
+            <Spinner size={"md"}/>
+        </div>}
     </div>
 }
