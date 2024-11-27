@@ -8,18 +8,35 @@ import {network} from "../network/network.ts";
 import app from "../app.ts";
 import showMessage from "../components/message.tsx";
 import PostWidget from "../components/post.tsx";
+import HeatMapWidget from "../components/heat_map.tsx";
 
 export default function HomePage() {
     const [postsKey, setPostsKey] = useState(0);
+
+    const [showSidebar, setShowSidebar] = useState(window.innerWidth > 768);
 
     const updatePosts = useCallback(() => {
         console.log("updatePosts");
         setPostsKey(prev => prev + 1);
     }, []);
 
-    return <div>
-        <Editor updatePosts={updatePosts}></Editor>
-        <UserPosts key={postsKey}></UserPosts>
+    useEffect(() => {
+        window.addEventListener("resize", () => {
+            setShowSidebar(window.innerWidth > 768);
+        });
+        return () => window.removeEventListener("resize", () => {
+            setShowSidebar(window.innerWidth > 768);
+        });
+    }, []);
+
+    return <div className={"flex flex-row w-full h-full"}>
+        <div className={"flex-grow h-full overflow-y-scroll"}>
+            <Editor updatePosts={updatePosts}></Editor>
+            <UserPosts key={postsKey}></UserPosts>
+        </div>
+        {showSidebar && <div className={"w-64 h-full border-l"}>
+            <HeatMapWidget username={app.user!.username}></HeatMapWidget>
+        </div>}
     </div>
 }
 

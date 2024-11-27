@@ -37,3 +37,9 @@ export function getAvatar(user: User | null) {
     }
     return avatar
 }
+
+export interface HeatMapData {
+    memos: number;
+    likes: number;
+    map: { [key: string]: number }
+}

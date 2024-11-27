@@ -105,7 +105,7 @@ export default function NaviBar() {
                 <UserPart></UserPart>
                 <NaviList onTap={onNaviTap} link={window.location.pathname}/>
             </div>
-            <div className={"flex-grow overflow-y-scroll"}>
+            <div className={"flex-grow h-full"}>
                 <AnimatedOutlet></AnimatedOutlet>
             </div>
         </div>
@@ -124,7 +124,7 @@ const AnimatedOutlet = () => {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.2 }}
-                    className='container'
+                    className='container h-full'
                 >
                     {element}
                 </motion.div>

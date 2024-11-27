@@ -19,7 +19,8 @@
     "Log out": "登出",
     "Public": "公开",
     "Private": "私密",
-    "Write down your thoughts": "写下你的想法"
+    "Write down your thoughts": "写下你的想法",
+    "Just now": "刚刚"
   },
   "zh-TW": {
     "Login": "登錄",
@@ -41,6 +42,7 @@
     "Log out": "登出",
     "Public": "公開",
     "Private": "私密",
-    "Write down your thoughts": "寫下你的想法"
+    "Write down your thoughts": "寫下你的想法",
+    "Just now": "剛剛"
   }
 }

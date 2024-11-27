@@ -1,6 +1,6 @@
 import app from "../app.ts";
 import axios from 'axios';
-import {Post} from "./model.ts";
+import {HeatMapData, Post} from "./model.ts";
 
 export const network = {
     isRefreshing: false,
@@ -75,6 +75,10 @@ export const network = {
             id: postId,
         });
     },
+    getHeatMap: async (username: string) => {
+        const res = await axios.get(`${app.server}/api/user/heatmap?username=${username}`);
+        return res.data as HeatMapData;
+    }
 }
 
 network.init();

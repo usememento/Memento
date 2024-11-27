@@ -12,6 +12,7 @@ import {network} from "../network/network.ts";
 import showMessage from "./message.tsx";
 import app from "../app.ts";
 import {Avatar} from "@nextui-org/react";
+import {translate} from "./translate.tsx";
 
 export default function PostWidget({post, showUser}: { post: Post, showUser?: boolean }) {
 
@@ -73,11 +74,11 @@ export default function PostWidget({post, showUser}: { post: Post, showUser?: bo
                         <MdOutlineComment/>
                     </IconButton>
                     <span className={"pl-1 text-sm"}>{post.totalComment}</span>
-                    <span className={"w-4"}></span>
-                    <IconButton onPress={openEdit} primary={false} isLoading={state.isLiking}>
-                        <MdOutlineEdit/>
-                    </IconButton>
                     {post.user.username === app.user?.username && <>
+                        <span className={"w-4"}></span>
+                        <IconButton onPress={openEdit} primary={false} isLoading={state.isLiking}>
+                            <MdOutlineEdit/>
+                        </IconButton>
                         <span className={"w-2"}></span>
                         <IconButton onPress={deletePost} primary={false} isLoading={state.isLiking}>
                             <MdOutlineDelete/>
@@ -91,5 +92,31 @@ export default function PostWidget({post, showUser}: { post: Post, showUser?: bo
 }
 
 function formatDate(date: Date) {
-    return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}`;
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    if (diff < 60 * 1000) {
+        return translate("Just now");
+    } else if (diff < 60 * 60 * 1000) {
+        switch(app.locale) {
+            case "zh-CN":
+                return `${Math.floor(diff / 1000 / 60)}分钟前`;
+            case "zh-TW":
+                return `${Math.floor(diff / 1000 / 60)}分鐘前`;
+            default:
+                return `${Math.floor(diff / 1000 / 60)}m ago`;
+        }
+    } else if (diff < 24 * 60 * 60 * 1000) {
+        switch(app.locale) {
+            case "zh-CN":
+                return `${Math.floor(diff / 1000 / 60 / 60)}小时前`;
+            case "zh-TW":
+                return `${Math.floor(diff / 1000 / 60 / 60)}小時前`;
+            default:
+                return `${Math.floor(diff / 1000 / 60 / 60)}h ago`;
+        }
+    } else if (now.getFullYear() === date.getFullYear()) {
+        return `${date.getMonth() + 1}-${date.getDate()}`;
+    } else {
+        return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+    }
 }
