@@ -82,9 +82,9 @@ func HandlePostCreate(c echo.Context) error {
 
 	post.ContentUrl = contentFilepath
 	contentTags := utils.GetTags(content)
-	q := query.Use(memento.Db())
-	err = q.Transaction(
+	err = query.Q.Transaction(
 		func(tx *query.Query) error {
+			tx.Post.Create(post)
 			// add all non-existing tags to database
 			for _, t := range contentTags {
 				tag, err := tx.Tag.Where(tx.Tag.Name.Eq(t)).FirstOrCreate()
@@ -105,7 +105,6 @@ func HandlePostCreate(c echo.Context) error {
 			}
 			user.TotalPosts += 1
 			tx.User.Save(user)
-			tx.Post.Save(post)
 			return nil
 		})
 	if err != nil {
