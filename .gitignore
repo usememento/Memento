@@ -2,3 +2,4 @@
 .vscode/
 build/
 memento/query
+go.sum
