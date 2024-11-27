@@ -1,6 +1,6 @@
 import app from "../app.ts";
-import {Post} from "./model.ts";
 import axios from 'axios';
+import {Post} from "./model.ts";
 
 export const network = {
     isRefreshing: false,
@@ -46,29 +46,25 @@ export const network = {
     },
     getPosts: async (username: string, page: number) => {
         const res = await axios.get(`${app.server}/api/post/userPosts?username=${username}&page=${page}`);
-        if(res.status === 200) {
-            const json = await res.data;
-            return [json.posts as Post[], json.maxPage as number];
-        } else {
-            const json = res.data;
-            throw new Error(json.message);
-        }
+        const json = res.data;
+        return [json.posts as Post[], json.maxPage as number];
     },
     createPost: async (content: string, isPublic: boolean) => {
-        const res = await axios.postForm(`${app.server}/api/post/create`, {
-            method: "POST",
-            body: {
-                content: content,
-                permission: isPublic ? "public" : "private",
-            },
+        await axios.postForm(`${app.server}/api/post/create`, {
+            content: content,
+            permission: isPublic ? "public" : "private",
         });
-        if(res.status === 200) {
-            return;
-        } else {
-            const json = res.data;
-            throw new Error(json.message);
-        }
-    }
+    },
+    likePost: async (postId: number) => {
+        await axios.postForm(`${app.server}/api/post/like`, {
+            id: postId,
+        });
+    },
+    unlikePost: async (postId: number) => {
+        await axios.postForm(`${app.server}/api/post/unlike`, {
+            id: postId,
+        });
+    },
 }
 
 network.init();

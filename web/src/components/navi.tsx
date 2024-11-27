@@ -16,6 +16,7 @@ import {
 } from "@nextui-org/react";
 import {Outlet, useNavigate} from "react-router";
 import {Tr, translate} from "./translate.tsx";
+import {getAvatar} from "../network/model.ts";
 
 enum NaviType {
     top,
@@ -77,7 +78,7 @@ export default function NaviBar() {
                 <TapRegion onPress={() => {
                     setIsOpen(!isOpen)
                 }} borderRadius={24}>
-                    <Avatar src={getAvatar()} className={"m-1"} size={"md"}></Avatar>
+                    <Avatar src={getAvatar(app.user)} className={"m-1"} size={"md"}></Avatar>
                 </TapRegion>
                 <div className={"flex-grow text-lg pl-4"}><Tr>{pageName}</Tr></div>
             </div>
@@ -162,7 +163,7 @@ function UserPart() {
             <DropdownTrigger>
                 <button className={"w-full text-start hover:bg-content2 active:bg-content3 duration-200 rounded-2xl"}>
                     <div className={"w-full h-14 flex flex-row justify-center items-center px-4"}>
-                        <Avatar src={getAvatar()}></Avatar>
+                        <Avatar src={getAvatar(app.user)}></Avatar>
                         <div className={"flex-grow pl-3"}>{user?.username ?? translate("Login")}</div>
                     </div>
                 </button>
@@ -182,15 +183,4 @@ function UserPart() {
             </DropdownMenu>
         </Dropdown>
     </div>
-}
-
-function getAvatar() {
-    const user = app.user
-    let avatar = user?.avatar
-    if (avatar && avatar !== "user.png") {
-        avatar = `${app.server}/api/user/avatar/${avatar}`
-    } else {
-        avatar = '/user.png'
-    }
-    return avatar
 }

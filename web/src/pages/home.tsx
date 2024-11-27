@@ -36,7 +36,7 @@ function Editor({fullHeight}: { fullHeight?: boolean }) {
     const [isUploading, setIsUploading] = useState(false);
 
     return <div className={`w-full ${fullHeight ? "h-full" : ""} border-b px-4 pt-4 pb-2`}>
-        <textarea placeholder={translate("Write down your thoughts")} className={"w-full focus:outline-none min-h-6 max-h-screen resize-none"} id={"editor"}
+        <textarea placeholder={translate("Write down your thoughts")} className={"w-full focus:outline-none min-h-6 max-h-screen resize-none px-2"} id={"editor"}
                   value={data.text} onChange={(v) => {
             setData({...data, text: v.target.value});
         }}></textarea>
@@ -44,8 +44,8 @@ function Editor({fullHeight}: { fullHeight?: boolean }) {
             <TapRegion onPress={() => {
                 setData({...data, isPublic: !data.isPublic});
             }} borderRadius={12}>
-                <div className={"w-20 h-8 flex flex-row items-center justify-center text-primary"}>
-                    {data.isPublic ? <MdPublic size={20}/> : <MdLock size={20}/>}
+                <div className={"h-8 flex flex-row items-center justify-center text-primary text-sm px-2"}>
+                    {data.isPublic ? <MdPublic size={18}/> : <MdLock size={18}/>}
                     <span className={"w-2"}></span>
                     <Tr>{data.isPublic ? "Public" : "Private"}</Tr>
                 </div>

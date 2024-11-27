@@ -1,3 +1,5 @@
+import app from "../app.ts";
+
 export interface User {
     username: string;
     nickname: string;
@@ -8,7 +10,7 @@ export interface User {
     totalFiles: number;
     totalFollowers: number;
     totalFollows: number;
-    registeredAt: Date;
+    registeredAt: string;
     avatar: string;
     isFollowed: boolean;
     isAdmin: boolean;
@@ -21,7 +23,17 @@ export interface Post {
     user: User;
     totalLiked: number;
     totalComment: number;
-    createdAt: Date;
-    editedAt: Date;
+    createdAt: string;
+    editedAt: string;
     content: string;
+}
+
+export function getAvatar(user: User | null) {
+    let avatar = user?.avatar
+    if (avatar && avatar !== "user.png") {
+        avatar = `${app.server}/api/user/avatar/${avatar}`
+    } else {
+        avatar = '/user.png'
+    }
+    return avatar
 }

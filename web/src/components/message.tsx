@@ -19,12 +19,12 @@ export default function showMessage({text}:{ text: string }) {
 
 export const dialogCanceler = createContext(() => {})
 
-export function showDialog({children, title}: {children: ReactNode, title: string}) {
+export function showDialog({children, title, fullscreen}: {children: ReactNode, title: string, fullscreen?: boolean}) {
     return new Promise<null>((resolve) => {
         const div = document.createElement("div");
         div.className = "fixed left-0 right-0 top-0 bottom-0 flex items-center justify-center z-50 bg-black bg-opacity-50";
         document.body.appendChild(div);
-        createRoot(div).render(<div className={"bg-background w-full max-w-sm p-4 shadow-md items-center justify-center rounded-md animate-appearance-in"}>
+        createRoot(div).render(<div className={`bg-background w-full ${(fullscreen??false ? "max-w-sm shadow-md rounded-md" : "h-full")} p-4 items-center justify-center animate-appearance-in`}>
             <div className={"w-full h-10 flex flex-row items-center"}>
                 <TapRegion borderRadius={24} onPress={() => {
                     resolve(null);
