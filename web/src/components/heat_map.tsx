@@ -44,12 +44,9 @@ function HeatMap({data, showStatistics = true}: HeatMapProps) {
         return () => window.removeEventListener('resize', updateMaxColumns);
     }, []);
 
-    let dayKey = 0;
-
     const buildOneDay = (time: string, count: number, primary: string) => {
         const opacity = clamp(count, 0, 5) * 0.16 + 0.2;
         const backgroundColor = count === 0 ? undefined : `${primary}${Math.round(opacity * 255).toString(16).padStart(2, '0')}`;
-        dayKey++;
         return (
             <div
                 className={"bg-content2 tooltip"}
@@ -60,7 +57,7 @@ function HeatMap({data, showStatistics = true}: HeatMapProps) {
                     borderRadius: 2,
                     margin: PADDING,
                 }}
-                key={dayKey}
+                key={time}
             >
                 <span className={"tooltipText"}>{`${time}\n${count} Posts`}</span>
             </div>
@@ -118,7 +115,7 @@ function HeatMap({data, showStatistics = true}: HeatMapProps) {
 
         return (
             <div className={"flex flex-row w-full"}>
-                {[<div className={"flex-grow"}/>, ...children.reverse(), <div style={{
+                {[<div className={"flex-grow"} key={"0"}/>, ...children.reverse(), <div key={"1"} style={{
                     width: (containerRef.current!.clientWidth-1 - (SQUARE_SIZE + PADDING * 2) * (maxColumns)) / 2 - PADDING,
                 }}/>]}
             </div>

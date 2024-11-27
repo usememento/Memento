@@ -6,7 +6,7 @@ import PostWidget from "../components/post.tsx";
 import {Spinner} from "@nextui-org/react";
 
 export default function FollowingPage() {
-    return <div>
+    return <div className={"overflow-y-scroll"}>
         <UserPosts></UserPosts>
     </div>
 }
