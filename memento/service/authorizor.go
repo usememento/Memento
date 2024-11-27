@@ -131,7 +131,7 @@ func authOk(c echo.Context, user *model.User) error {
 	claims := &model.JwtUserClaims{
 		Username: user.Username,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 6)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24 * 3)),
 		},
 	}
 	// Create token with claims
@@ -156,7 +156,7 @@ func generateRefreshToken(user *model.User) (string, error) {
 	claims := &model.JwtUserClaims{
 		Username: user.Username,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 6)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24 * 7)),
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
