@@ -305,7 +305,7 @@ func HandleUserChangePwd(c echo.Context) error {
 }
 
 func HandleUserHeatMap(c echo.Context) error {
-	username := c.FormValue("username")
+	username := c.QueryParam("username")
 	var user model.User
 	err := memento.Db().First(&user, "username=?", username).Error
 	if err != nil {
