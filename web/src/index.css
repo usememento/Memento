@@ -9,6 +9,8 @@
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    --scrollbar-color-thumb: #e4e7e7;
+    --scrollbar-color-track: #fff;
 }
 
 html {
@@ -44,4 +46,23 @@ body {
 
 button:focus {
     outline: none;
+}
+
+@supports (scrollbar-width: auto) {
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: var(--scrollbar-color-thumb) var(--scrollbar-color-track);
+    }
+}
+
+@supports selector(::-webkit-scrollbar) {
+    * ::-webkit-scrollbar-thumb {
+        background: var(--scrollbar-color-thumb);
+    }
+    * ::-webkit-scrollbar-track {
+        background: var(--scrollbar-color-track);
+    }
+    * ::-webkit-scrollbar {
+        width: 10px;
+    }
 }

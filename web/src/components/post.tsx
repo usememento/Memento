@@ -1,4 +1,3 @@
-import {useIntersectionObserver} from "@uidotdev/usehooks";
 import {getAvatar, Post} from "../network/model.ts";
 import {IconButton} from "./button.tsx";
 import {
@@ -15,11 +14,7 @@ import app from "../app.ts";
 import {Avatar} from "@nextui-org/react";
 
 export default function PostWidget({post, showUser}: { post: Post, showUser?: boolean }) {
-    const [ref, entry] = useIntersectionObserver({
-        root: null,
-        rootMargin: "0px",
-        threshold: 0.1,
-    });
+
 
     const [state, setState] = useState({
         isLiked: post.isLiked,
@@ -58,8 +53,8 @@ export default function PostWidget({post, showUser}: { post: Post, showUser?: bo
     const deletePost = useCallback(() => {
     }, []);
 
-    return <div ref={ref} className={"w-full flex flex-row border-b"}>
-        {entry?.isIntersecting && <>
+    return <div className={"w-full flex flex-row border-b"}>
+        {<>
             {showUser && <div className={"w-10 pt-4 pl-3"}>
                 <Avatar src={getAvatar(post.user)} size={"sm"}></Avatar>
             </div>}

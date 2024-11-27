@@ -1,4 +1,4 @@
-import {ReactNode, useEffect, useState} from "react";
+import {ReactNode, useCallback, useEffect, useState} from "react";
 import {
     MdOutlineExitToApp,
     MdOutlineExplore,
@@ -70,20 +70,24 @@ export default function NaviBar() {
         setPageName(getPageName())
     }, [location]);
 
+    const onNaviTap = useCallback(() => {
+        setIsOpen(false)
+    }, [])
+
     if (naviType === NaviType.top) {
         return <div className={"w-full h-full no-select"}>
             <div
-                className={`z-20 fixed left-0 right-0 top-0 bottom-0 bg-black bg-opacity-20 ${isOpen ? "" : "hidden"} animate-appearance-in`}
+                className={`z-20 fixed left-0 right-0 top-0 bottom-0 bg-primary-50 backdrop-blur bg-opacity-20 ${isOpen ? "" : "hidden"} animate-appearance-in`}
                 onClick={() => {
                     setIsOpen(false)
                 }}/>
-            <div className={"fixed top-0 bottom-0 w-64 z-50 bg-background duration-200 px-2"} style={{
+            <div className={"fixed top-0 bottom-0 w-64 z-50 bg-background duration-200 px-2 shadow-md"} style={{
                 left: isOpen ? "0" : "-256px",
             }}>
                 <UserPart></UserPart>
-                <NaviList link={window.location.pathname}/>
+                <NaviList onTap={onNaviTap} link={window.location.pathname}/>
             </div>
-            <div className={"h-14 w-full fixed flex flex-row top-0 left-0 right-0 items-center px-4 border-b"}>
+            <div className={"h-14 w-full fixed flex flex-row top-0 left-0 right-0 items-center px-4 border-b z-10 bg-background bg-opacity-60 backdrop-blur"}>
                 <TapRegion onPress={() => {
                     setIsOpen(!isOpen)
                 }} borderRadius={24}>
@@ -99,9 +103,9 @@ export default function NaviBar() {
         return <div className={"w-full h-full flex flex-row no-select max-w-screen-xl m-auto"}>
             <div className={"h-full w-64 px-4 border-r"}>
                 <UserPart></UserPart>
-                <NaviList link={window.location.pathname}/>
+                <NaviList onTap={onNaviTap} link={window.location.pathname}/>
             </div>
-            <div className={"flex-grow"}>
+            <div className={"flex-grow overflow-y-scroll"}>
                 <AnimatedOutlet></AnimatedOutlet>
             </div>
         </div>
@@ -129,13 +133,14 @@ const AnimatedOutlet = () => {
     );
 };
 
-function NaviItem({icon, text, link, current}: { icon: ReactNode, text: string, link: string, current: string }) {
+function NaviItem({icon, text, link, current, onTap}: { icon: ReactNode, text: string, link: string, current: string, onTap: () => void }) {
     const navigate = useNavigate()
 
     const isActivated = current === link
 
     return <TapRegion borderRadius={16} onPress={() => {
-        navigate(link)
+        navigate(link);
+        onTap();
     }}>
         <div className={`w-full h-12 flex flex-row text-lg  justify-center items-center px-4 duration-200
           ${isActivated ? "text-primary-500 font-bold" : "text-default-900"}`}>
@@ -148,15 +153,15 @@ function NaviItem({icon, text, link, current}: { icon: ReactNode, text: string, 
     </TapRegion>
 }
 
-function NaviList({link}: { link: string }) {
+function NaviList({link, onTap}: { link: string, onTap: () => void}) {
     return <>
-        <NaviItem icon={<MdOutlineHome size={24}/>} text={"Home"} link={"/"} current={link}></NaviItem>
-        <NaviItem icon={<MdOutlineExplore size={24}/>} text={"Explore"} link={"/explore"} current={link}></NaviItem>
-        <NaviItem icon={<MdOutlineSubscriptions size={24}/>} text={"Following"} link={"/following"}
+        <NaviItem onTap={onTap} icon={<MdOutlineHome size={24}/>} text={"Home"} link={"/"} current={link}></NaviItem>
+        <NaviItem onTap={onTap} icon={<MdOutlineExplore size={24}/>} text={"Explore"} link={"/explore"} current={link}></NaviItem>
+        <NaviItem onTap={onTap} icon={<MdOutlineSubscriptions size={24}/>} text={"Following"} link={"/following"}
                   current={link}></NaviItem>
-        <NaviItem icon={<MdOutlineLibraryBooks size={24}/>} text={"Resources"} link={"/resources"}
+        <NaviItem onTap={onTap} icon={<MdOutlineLibraryBooks size={24}/>} text={"Resources"} link={"/resources"}
                   current={link}></NaviItem>
-        <NaviItem icon={<MdOutlineSettings size={24}/>} text={"Settings"} link={"/settings"} current={link}></NaviItem>
+        <NaviItem onTap={onTap} icon={<MdOutlineSettings size={24}/>} text={"Settings"} link={"/settings"} current={link}></NaviItem>
     </>
 }
 

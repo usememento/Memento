@@ -64,7 +64,7 @@ function UserPosts() {
 
     return <div>
         {state.posts.map((post, index) => {
-            return <PostWidget key={index} post={post}></PostWidget>
+            return <PostWidget key={index} post={post} showUser={true}></PostWidget>
         })}
         {state.isLoading && <div className={"h-10 w-full flex flex-row items-center justify-center"}>
             <Spinner size={"md"}/>
