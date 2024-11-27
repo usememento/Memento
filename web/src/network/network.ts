@@ -54,6 +54,11 @@ export const network = {
         const json = res.data;
         return [json.posts as Post[], json.maxPage as number];
     },
+    getFollowPosts: async (page: number) => {
+        const res = await axios.get(`${app.server}/api/post/following?page=${page}`);
+        const json = res.data;
+        return [json.posts as Post[], json.maxPage as number];
+    },
     createPost: async (content: string, isPublic: boolean) => {
         await axios.postForm(`${app.server}/api/post/create`, {
             content: content,
