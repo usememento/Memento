@@ -3,6 +3,7 @@ package service
 import (
 	"Memento/memento"
 	"Memento/memento/model"
+	"Memento/memento/query"
 	"Memento/memento/utils"
 	"errors"
 	"fmt"
@@ -19,7 +20,7 @@ import (
 )
 
 func HandlePostCreate(c echo.Context) error {
-	username := c.Get("username")
+	username := c.Get("username").(string)
 	if username == "" {
 		return utils.RespondUnauthorized(c)
 	}
@@ -32,8 +33,7 @@ func HandlePostCreate(c echo.Context) error {
 	} else {
 		return utils.RespondError(c, "invalid permission level")
 	}
-	var user model.User
-	err := memento.Db().First(&user, "username=?", username).Error
+	user, err := query.User.Where(query.User.Username.Eq(username)).First()
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return utils.RespondError(c, "username not exists")
@@ -43,7 +43,7 @@ func HandlePostCreate(c echo.Context) error {
 	}
 
 	now := time.Now()
-	post := model.Post{
+	post := &model.Post{
 		IsPrivate:    private,
 		Username:     user.Username,
 		TotalLiked:   0,
@@ -82,36 +82,30 @@ func HandlePostCreate(c echo.Context) error {
 
 	post.ContentUrl = contentFilepath
 	contentTags := utils.GetTags(content)
-	err = memento.Db().Transaction(
-		func(tx *gorm.DB) error {
-			tx.Save(&post)
+	q := query.Use(memento.Db())
+	err = q.Transaction(
+		func(tx *query.Query) error {
 			// add all non-existing tags to database
 			for _, t := range contentTags {
-				var tag model.Tag
-				tag.Name = t
-				err := tx.First(&tag, "name=?", t).Error
+				tag, err := tx.Tag.Where(tx.Tag.Name.Eq(t)).FirstOrCreate()
 				if err != nil {
-					if errors.Is(err, gorm.ErrRecordNotFound) {
-						tx.Create(&tag)
-					} else {
-						log.Errorf(err.Error())
-						return utils.RespondError(c, "unknown insertion error")
-					}
+					log.Errorf(err.Error())
+					return err
 				}
-				err = tx.Model(&tag).Association("Posts").Append(&post)
+				tag.Posts = append(tag.Posts, post)
 				if err != nil {
 					log.Errorf(err.Error())
 					return err
 				}
 			}
-			err = tx.Model(&user).Association("Posts").Append(&post)
+			user.Posts = append(user.Posts, *post)
 			if err != nil {
 				log.Errorf(err.Error())
 				return err
 			}
 			user.TotalPosts += 1
-			tx.Save(&user)
-			tx.Save(&post)
+			tx.User.Save(user)
+			tx.Post.Save(post)
 			return nil
 		})
 	if err != nil {
@@ -119,18 +113,18 @@ func HandlePostCreate(c echo.Context) error {
 		return utils.RespondError(c, "unknown insertion error")
 	}
 	pv, err := utils.PostToView(
-		&post,
-		utils.UserToView(&user, checkIsFollowed(c.Get("username").(string), user.Username)),
+		post,
+		utils.UserToView(user, checkIsFollowed(c.Get("username").(string), user.Username)),
 		false)
 	if err != nil {
 		return utils.RespondError(c, "os open file error")
 	}
-	err = memento.IndexPost(&post)
+	err = memento.IndexPost(post)
 	if err != nil {
 		log.Errorf(err.Error())
 		return utils.RespondInternalError(c, "index failed")
 	}
-	defer onPostsChanged(username.(string))
+	defer onPostsChanged(username)
 	return c.JSON(http.StatusOK, *pv)
 }
 func HandlePostDelete(c echo.Context) error {

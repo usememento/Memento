@@ -100,6 +100,7 @@ func initDbConnection() error {
 	db, err := gorm.Open(sqlite.Open(path.Join(GetBasePath(), GetConfig().DbConfig.Database)), &gorm.Config{
 		TranslateError:                           true,
 		DisableForeignKeyConstraintWhenMigrating: true,
+		DisableNestedTransaction:                 true,
 		//SkipDefaultTransaction:                   true,
 	})
 	if err != nil {
