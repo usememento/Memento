@@ -14,9 +14,10 @@ import {
     DropdownMenu,
     DropdownTrigger,
 } from "@nextui-org/react";
-import {Outlet, useLocation, useNavigate} from "react-router";
+import {useLocation, useNavigate, useOutlet} from "react-router";
 import {Tr, translate} from "./translate.tsx";
 import {getAvatar} from "../network/model.ts";
+import {AnimatePresence, motion} from "framer-motion";
 
 enum NaviType {
     top,
@@ -91,7 +92,7 @@ export default function NaviBar() {
                 <div className={"flex-grow text-lg pl-4"}><Tr>{pageName}</Tr></div>
             </div>
             <div className={"w-full h-full pt-14"}>
-                <Outlet></Outlet>
+                <AnimatedOutlet></AnimatedOutlet>
             </div>
         </div>
     } else {
@@ -101,11 +102,32 @@ export default function NaviBar() {
                 <NaviList link={window.location.pathname}/>
             </div>
             <div className={"flex-grow"}>
-                <Outlet></Outlet>
+                <AnimatedOutlet></AnimatedOutlet>
             </div>
         </div>
     }
 }
+
+const AnimatedOutlet = () => {
+    const location = useLocation(); // provided by react-router-dom
+    const element = useOutlet(); // provided by react-router-dom
+
+    return (
+        <AnimatePresence key={location.pathname}>
+            {element && (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className='container'
+                >
+                    {element}
+                </motion.div>
+            )}
+        </AnimatePresence>
+    );
+};
 
 function NaviItem({icon, text, link, current}: { icon: ReactNode, text: string, link: string, current: string }) {
     const navigate = useNavigate()
