@@ -30,8 +30,8 @@ export default function LoginPage() {
                     if(res.ok) {
                         const json = await res.json();
                         app.user = json.user;
-                        app.token = json.token.access_token;
-                        app.refreshToken = json.token.refresh_token;
+                        app.token = json.accessToken;
+                        app.refreshToken = json.refreshToken;
                         app.writeData();
                         navigate('/');
                     } else {

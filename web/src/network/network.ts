@@ -8,6 +8,7 @@ export const network = {
         axios.interceptors.request.use((config) => {
             if(app.token)
                 config.headers.Authorization = app.token;
+            config.validateStatus = () => true;
             return config;
         });
         axios.interceptors.response.use(async (res) => {
@@ -25,6 +26,14 @@ export const network = {
                 finally {
                     network.isRefreshing = false;
                 }
+            }
+            if(res.status === 400) {
+                throw new Error(res.data.message);
+            }
+            else if (res.status === 401) {
+                throw new Error("Unauthorized");
+            } else if (res.status >= 400) {
+                throw new Error(`Invalid Status Code: ${res.status}`);
             }
             return res;
         });
