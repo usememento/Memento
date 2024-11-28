@@ -6,5 +6,9 @@ export function Tr({children}: {children: string}) {
 }
 
 export function translate(key: string) : string{
-    return (tr as any)[app.locale][key] || key;
+    let locale=app.locale
+    if(!["zh-CN","zh-TW","en-US"].includes(locale)){
+        locale="en-US"
+    }
+    return (tr as any)[locale][key] || key;
 }
