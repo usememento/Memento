@@ -16,6 +16,7 @@ import showMessage from "../components/message.tsx";
 import PostWidget from "../components/post.tsx";
 import HeatMapWidget from "../components/heat_map.tsx";
 import {router} from "../components/router.tsx";
+import SearchBar from "../components/search.tsx";
 
 export default function HomePage() {
     const [postsKey, setPostsKey] = useState(0);
@@ -51,7 +52,10 @@ export default function HomePage() {
             <UserPosts key={postsKey}></UserPosts>
         </div>
         {showSidebar&&app.user && <div className={"w-64 h-full border-l"}>
+            <SearchBar />
+            <div className={"h-2"}></div>
             <HeatMapWidget username={app.user!.username}></HeatMapWidget>
+            <TagList/>
         </div>}
     </div>
 }
@@ -183,4 +187,19 @@ function UserPosts() {
             <Spinner size={"md"}/>
         </div>}
     </div>
+}
+
+function TagList() {
+    const [tags, setTags] = useState<string[] | null>(null);
+
+    useEffect(() => {
+        network.getTags(false).then(setTags);
+    }, []);
+
+    return <div className={"w-full"}>
+        {tags === null ? <Spinner /> : tags.map((tag, index) => {
+            return <TapRegion onPress={() => {}} key={index}>
+                <div className={"h-10 w-full px-2 flex items-center text-primary"}>{tag}</div>
+            </TapRegion>
+        })} </div>
 }

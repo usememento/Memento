@@ -93,7 +93,11 @@ export const network = {
         const res = await axios.get(`${app.server}/api/search/post?keyword=${query}&page=${page}`);
         const json = res.data;
         return [json.posts as Post[], json.maxPage as number];
-    }
+    },
+    getTags: async (all: boolean) => {
+        const res = await axios.get(`${app.server}/api/post/tags?type=${all ? "all" : "user"}`);
+        return res.data as string[];
+    },
 }
 
 network.init();
