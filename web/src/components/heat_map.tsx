@@ -3,7 +3,7 @@ import {ReactNode, useEffect, useRef, useState} from "react";
 import {network} from "../network/network.ts";
 import {Spinner} from "@nextui-org/react";
 
-export default function HeatMapWidget({username, showStatistics}: { username: string, showStatistics: boolean }) {
+export default function HeatMapWidget({username, showStatistics}: { username: string, showStatistics?: boolean }) {
     const [data, setData] = useState<HeatMapData | null>(null)
 
     useEffect(() => {

@@ -2,7 +2,6 @@ import {useCallback, useEffect, useRef, useState} from "react";
 import {IconButton, TapRegion} from "../components/button.tsx";
 import {
     MdLock,
-    MdOutlineFullscreen,
     MdOutlineImage,
     MdOutlineInfo,
     MdPublic
@@ -17,6 +16,7 @@ import PostWidget from "../components/post.tsx";
 import HeatMapWidget from "../components/heat_map.tsx";
 import {router} from "../components/router.tsx";
 import SearchBar from "../components/search.tsx";
+import {useNavigate} from "react-router";
 
 export default function HomePage() {
     const [postsKey, setPostsKey] = useState(0);
@@ -97,11 +97,6 @@ function Editor({fullHeight, updatePosts}: { fullHeight?: boolean, updatePosts: 
                 // TODO: Upload image
             }}>
                 <MdOutlineImage/>
-            </IconButton>
-            <IconButton onPress={() => {
-                // TODO: Full screen
-            }}>
-                <MdOutlineFullscreen/>
             </IconButton>
             <IconButton onPress={() => {
                 window.open("https://github.com/usememento/Memento/blob/master/doc/ContentSyntax.md")
@@ -191,6 +186,8 @@ function UserPosts() {
 function TagList() {
     const [tags, setTags] = useState<string[] | null>(null);
 
+    const navigate = useNavigate();
+
     useEffect(() => {
         network.getTags(false).then(setTags);
     }, []);
@@ -201,7 +198,7 @@ function TagList() {
         </div>
         {tags === null ? <Spinner /> : tags.map((tag, index) => {
             return <TapRegion onPress={() => {
-                router.navigate(`/tag/${tag}`);
+                navigate(`/tag/${tag.replace('#', '')}`);
             }} key={index}>
                 <div className={"h-10 w-full px-4 flex items-center text-primary"}>{tag}</div>
             </TapRegion>

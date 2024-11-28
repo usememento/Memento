@@ -106,6 +106,11 @@ export const network = {
         const res = await axios.get(`${app.server}/api/post/likedPosts?username=${username}&page=${page}`);
         const json = res.data;
         return [json.posts as Post[], json.maxPage as number];
+    },
+    getTaggedPosts: async (tag: string, page: number) => {
+        const res = await axios.get(`${app.server}/api/post/taggedPosts?tag=${tag}&page=${page}`);
+        const json = res.data;
+        return [json.posts as Post[], json.maxPage as number];
     }
 }
 

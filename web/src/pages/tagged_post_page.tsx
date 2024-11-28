@@ -4,35 +4,11 @@ import {network} from "../network/network.ts";
 import showMessage from "../components/message.tsx";
 import PostWidget from "../components/post.tsx";
 import {Spinner} from "@nextui-org/react";
-import SearchBar from "../components/search.tsx";
-import {TapRegion} from "../components/button.tsx";
-import {Tr} from "../components/translate.tsx";
-import {useNavigate} from "react-router";
+import {useParams} from "react-router";
 
-export default function ExplorePage() {
-    const [showSidebar, setShowSidebar] = useState(window.innerWidth > 768);
+export default function TaggedPostsPage() {
+    const {tag} = useParams()
 
-    useEffect(() => {
-        const listener = () => {
-            setShowSidebar(window.innerWidth > 768);
-        };
-        window.addEventListener("resize", listener);
-        return () => window.removeEventListener("resize", listener);
-    }, []);
-
-    return <div className={"flex flex-row w-full h-full"}>
-        <div className={"overflow-y-scroll h-full flex-grow"}>
-            <UserPosts></UserPosts>
-        </div>
-        {showSidebar && <div className={"w-64 h-full border-l"}>
-            <SearchBar />
-            <div className={"h-4"}></div>
-            <TagList/>
-        </div>}
-    </div>
-}
-
-function UserPosts() {
     const [state, setState] = useState({
         posts: [] as Post[],
         isLoading: false,
@@ -48,7 +24,7 @@ function UserPosts() {
             isLoading.current = true;
             setState(prev => ({...prev, isLoading: true}));
 
-            const [posts, maxPage] = await network.getAllPosts(pageRef.current);
+            const [posts, maxPage] = await network.getTaggedPosts(tag!, pageRef.current);
 
             maxPageRef.current = maxPage as number;
 
@@ -91,26 +67,4 @@ function UserPosts() {
             <Spinner size={"md"}/>
         </div>}
     </div>
-}
-
-function TagList() {
-    const [tags, setTags] = useState<string[] | null>(null);
-
-    const navigate = useNavigate();
-
-    useEffect(() => {
-        network.getTags(true).then(setTags);
-    }, []);
-
-    return <div className={"w-full"}>
-        <div className={"h-8 flex flex-row items-center  font-bold ml-2  text-lg px-2 "}>
-            <Tr>Tags</Tr>
-        </div>
-        {tags === null ? <Spinner/> : tags.map((tag, index) => {
-            return <TapRegion onPress={() => {
-                navigate(`/tag/${tag.replace('#', '')}`);
-            }} key={index}>
-                <div className={"h-10 w-full px-4 flex items-center text-primary"}>{tag}</div>
-            </TapRegion>
-        })} </div>
 }
