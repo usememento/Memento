@@ -4,10 +4,31 @@ import {network} from "../network/network.ts";
 import showMessage from "../components/message.tsx";
 import PostWidget from "../components/post.tsx";
 import {Spinner} from "@nextui-org/react";
+import SearchBar from "../components/search.tsx";
+import {TapRegion} from "../components/button.tsx";
+import {router} from "../components/router.tsx";
 
 export default function ExplorePage() {
-    return <div className={"overflow-y-scroll h-full"}>
-        <UserPosts></UserPosts>
+    const [showSidebar, setShowSidebar] = useState(window.innerWidth > 768);
+
+    useEffect(() => {
+        window.addEventListener("resize", () => {
+            setShowSidebar(window.innerWidth > 768);
+        });
+        return () => window.removeEventListener("resize", () => {
+            setShowSidebar(window.innerWidth > 768);
+        });
+    }, []);
+
+    return <div className={"flex flex-row w-full h-full"}>
+        <div className={"overflow-y-scroll h-full flex-grow"}>
+            <UserPosts></UserPosts>
+        </div>
+        {showSidebar && <div className={"w-64 h-full border-l"}>
+            <SearchBar />
+            <div className={"h-4"}></div>
+            <TagList/>
+        </div>}
     </div>
 }
 
@@ -70,4 +91,21 @@ function UserPosts() {
             <Spinner size={"md"}/>
         </div>}
     </div>
+}
+
+function TagList() {
+    const [tags, setTags] = useState<string[] | null>(null);
+
+    useEffect(() => {
+        network.getTags(true).then(setTags);
+    }, []);
+
+    return <div className={"w-full"}>
+        {tags === null ? <Spinner /> : tags.map((tag, index) => {
+            return <TapRegion onPress={() => {
+                router.navigate(`/tag/${tag}`);
+            }} key={index}>
+                <div className={"h-10 w-full px-4 flex items-center text-primary"}>{tag}</div>
+            </TapRegion>
+        })} </div>
 }

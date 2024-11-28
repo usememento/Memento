@@ -51,7 +51,7 @@ export default function HomePage() {
             <Editor updatePosts={updatePosts}></Editor>
             <UserPosts key={postsKey}></UserPosts>
         </div>
-        {showSidebar&&app.user && <div className={"w-64 h-full border-l"}>
+        {showSidebar&&app.user && <div className={"w-64 h-full border-l"} key={postsKey}>
             <SearchBar />
             <div className={"h-2"}></div>
             <HeatMapWidget username={app.user!.username}></HeatMapWidget>
@@ -198,8 +198,10 @@ function TagList() {
 
     return <div className={"w-full"}>
         {tags === null ? <Spinner /> : tags.map((tag, index) => {
-            return <TapRegion onPress={() => {}} key={index}>
-                <div className={"h-10 w-full px-2 flex items-center text-primary"}>{tag}</div>
+            return <TapRegion onPress={() => {
+                router.navigate(`/tag/${tag}`);
+            }} key={index}>
+                <div className={"h-10 w-full px-4 flex items-center text-primary"}>{tag}</div>
             </TapRegion>
         })} </div>
 }
