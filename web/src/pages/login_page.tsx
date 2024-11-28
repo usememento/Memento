@@ -17,7 +17,7 @@ export default function LoginPage() {
             <div className={"h-4"}></div>
             <form className={"py-4"} id={"login"} onSubmit={(event) => {
                 event.preventDefault();
-                if(isLoading)  return;
+                if (isLoading) return;
                 setIsLoading(true);
                 fetch(`${app.server}/api/user/login`, {
                     method: "POST",
@@ -27,25 +27,35 @@ export default function LoginPage() {
                     }
                 }).then(async (res) => {
                     setIsLoading(false);
-                    if(res.ok) {
+                    if (res.ok) {
                         const json = await res.json();
                         app.user = json.user;
                         app.token = json.accessToken;
                         app.refreshToken = json.refreshToken;
                         app.writeData();
-                        navigate('/');
+                        navigate('/', {replace: true});
                     } else {
                         showMessage({text: "Login failed"})
                     }
                 })
             }}>
-                <Input type={"text"} label={translate("Username")} variant={"bordered"} value={username} onChange={(v) => setUsername(v.target.value)}></Input>
+                <Input type={"text"} label={translate("Username")} variant={"bordered"} value={username}
+                       onChange={(v) => setUsername(v.target.value)}></Input>
                 <div className={"h-4"}></div>
-                <Input type={"password"} label={translate("Password")} variant={"bordered"} value={password} onChange={(v) => setPassword(v.target.value)}></Input>
+                <Input type={"password"} label={translate("Password")} variant={"bordered"} value={password}
+                       onChange={(v) => setPassword(v.target.value)}></Input>
                 <div className={"h-6"}></div>
                 <div className={"flex w-full"}>
                     <Button disabled={isLoading} type={"submit"} color={"primary"} fullWidth={true}>
                         {isLoading ? <Spinner color={"default"} size={"sm"}></Spinner> : translate("Continue")}
+                    </Button>
+                </div>
+                <div className={"h-2"}></div>
+                <div className={"flex w-full justify-center"}>
+                    <Button variant={"light"} color={"primary"} onClick={() => {
+                        navigate("/explore");
+                    }}>
+                        <Tr>Continue without login</Tr>
                     </Button>
                 </div>
                 <div className={"h-2"}></div>

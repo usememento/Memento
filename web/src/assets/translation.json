@@ -20,7 +20,9 @@
     "Public": "公开",
     "Private": "私密",
     "Write down your thoughts": "写下你的想法",
-    "Just now": "刚刚"
+    "Just now": "刚刚",
+    "Session expired, please login again": "会话已过期，请重新登录",
+    "Continue without login": "以未登录继续"
   },
   "zh-TW": {
     "Login": "登錄",
@@ -43,6 +45,8 @@
     "Public": "公開",
     "Private": "私密",
     "Write down your thoughts": "寫下你的想法",
-    "Just now": "剛剛"
+    "Just now": "剛剛",
+    "Session expired, please login again": "會話已過期，請重新登錄",
+    "Continue without login": "以未登錄繼續"
   }
 }

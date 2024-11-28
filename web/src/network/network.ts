@@ -1,18 +1,21 @@
 import app from "../app.ts";
 import axios from 'axios';
 import {HeatMapData, Post} from "./model.ts";
+import {router} from "../components/router.tsx";
+import showMessage from "../components/message.tsx";
+import {translate} from "../components/translate.tsx";
 
 export const network = {
     isRefreshing: false,
     init: () => {
         axios.interceptors.request.use((config) => {
-            if(app.token)
+            if(app.token && !config.url!.includes("/refresh"))
                 config.headers.Authorization = app.token;
             config.validateStatus = () => true;
             return config;
         });
         axios.interceptors.response.use(async (res) => {
-            if(res.status === 401 && !network.isRefreshing) {
+            if(res.status === 401 && !network.isRefreshing && app.token) {
                 try {
                     network.isRefreshing = true;
                     await network.refreshToken();
@@ -21,13 +24,20 @@ export const network = {
                 }
                 catch (e) {
                     console.error("Failed to refresh token: ", e);
-                    return res;
+                    throw new Error("Failed to refresh token");
                 }
                 finally {
                     network.isRefreshing = false;
                 }
             }
             if(res.status === 400) {
+                if(res.config.url!.includes("/refresh")) {
+                    setTimeout(() => {
+                        app.clearData();
+                        router.navigate("/login");
+                        showMessage({text: translate("Session expired, please login again")});
+                    }, 200);
+                }
                 throw new Error(res.data.message);
             }
             else if (res.status === 401) {
@@ -39,7 +49,7 @@ export const network = {
         });
     },
     refreshToken: async () => {
-        const res = await axios.postForm(`${app.server}/api/auth/refresh`, {
+        const res = await axios.postForm(`${app.server}/api/user/refresh`, {
             refreshToken: app.refreshToken,
         });
         app.token = res.data.token;

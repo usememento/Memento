@@ -65,7 +65,7 @@ export default function RegisterPage() {
                         app.token = json.accessToken;
                         app.refreshToken = json.refreshToken;
                         app.writeData();
-                        navigate("/");
+                        navigate('/', {replace: true});
                     } else {
                         const json = await res.json();
                         showMessage({text: json.message})

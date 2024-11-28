@@ -3,9 +3,21 @@ import {Post} from "../network/model.ts";
 import {network} from "../network/network.ts";
 import showMessage from "../components/message.tsx";
 import PostWidget from "../components/post.tsx";
-import {Spinner} from "@nextui-org/react";
+import {Button, Spinner} from "@nextui-org/react";
+import app from "../app.ts";
+import {Tr} from "../components/translate.tsx";
+import {router} from "../components/router.tsx";
 
 export default function FollowingPage() {
+    if(!app.user) {
+        return <div className={"h-full w-full flex flex-col items-center justify-center"}>
+            <Tr>Login required</Tr>
+            <Button color={"primary"} className={"mt-2 h-8"} onClick={() => {
+                router.navigate("/login");
+            }}>Login</Button>
+        </div>
+    }
+
     return <div className={"overflow-y-scroll"}>
         <UserPosts></UserPosts>
     </div>

@@ -1,6 +1,12 @@
 import {useCallback, useEffect, useRef, useState} from "react";
 import {IconButton, TapRegion} from "../components/button.tsx";
-import {MdLock, MdOutlineFullscreen, MdOutlineImage, MdOutlineInfo, MdPublic} from "react-icons/md";
+import {
+    MdLock,
+    MdOutlineFullscreen,
+    MdOutlineImage,
+    MdOutlineInfo,
+    MdPublic
+} from "react-icons/md";
 import {Tr, translate} from "../components/translate.tsx";
 import {Button, Spinner} from "@nextui-org/react";
 import {Post} from "../network/model.ts";
@@ -9,6 +15,7 @@ import app from "../app.ts";
 import showMessage from "../components/message.tsx";
 import PostWidget from "../components/post.tsx";
 import HeatMapWidget from "../components/heat_map.tsx";
+import {router} from "../components/router.tsx";
 
 export default function HomePage() {
     const [postsKey, setPostsKey] = useState(0);
@@ -29,12 +36,21 @@ export default function HomePage() {
         });
     }, []);
 
+    if(!app.user) {
+        return <div className={"h-full w-full flex flex-col items-center justify-center"}>
+            <Tr>Login required</Tr>
+            <Button color={"primary"} className={"mt-2 h-8"} onClick={() => {
+                router.navigate("/login");
+            }}>Login</Button>
+        </div>
+    }
+
     return <div className={"flex flex-row w-full h-full"}>
         <div className={"flex-grow h-full overflow-y-scroll"}>
             <Editor updatePosts={updatePosts}></Editor>
             <UserPosts key={postsKey}></UserPosts>
         </div>
-        {showSidebar && <div className={"w-64 h-full border-l"}>
+        {showSidebar&&app.user && <div className={"w-64 h-full border-l"}>
             <HeatMapWidget username={app.user!.username}></HeatMapWidget>
         </div>}
     </div>
