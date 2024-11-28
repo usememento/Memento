@@ -262,11 +262,11 @@ func TokenValidator() echo.MiddlewareFunc {
 				return []byte(memento.Config.AccessTokenSigningKey), nil
 			})
 			if err != nil || !token.Valid {
-				return utils.RespondError(c, "Invalid JWT Token")
+				return utils.RespondUnauthorized(c)
 			}
 			claims, ok := token.Claims.(*model.JwtUserClaims)
 			if !ok {
-				return utils.RespondError(c, "Unable to Parse JWT Claims")
+				return utils.RespondUnauthorized(c)
 			}
 			c.Set("username", claims.Username)
 			return next(c)
