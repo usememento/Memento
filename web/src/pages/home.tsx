@@ -29,12 +29,11 @@ export default function HomePage() {
     }, []);
 
     useEffect(() => {
-        window.addEventListener("resize", () => {
+        const listener = () => {
             setShowSidebar(window.innerWidth > 768);
-        });
-        return () => window.removeEventListener("resize", () => {
-            setShowSidebar(window.innerWidth > 768);
-        });
+        };
+        window.addEventListener("resize", listener);
+        return () => window.removeEventListener("resize", listener);
     }, []);
 
     if(!app.user) {

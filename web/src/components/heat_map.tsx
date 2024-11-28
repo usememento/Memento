@@ -3,7 +3,7 @@ import {ReactNode, useEffect, useRef, useState} from "react";
 import {network} from "../network/network.ts";
 import {Spinner} from "@nextui-org/react";
 
-export default function HeatMapWidget({username}: { username: string }) {
+export default function HeatMapWidget({username, showStatistics}: { username: string, showStatistics: boolean }) {
     const [data, setData] = useState<HeatMapData | null>(null)
 
     useEffect(() => {
@@ -13,7 +13,7 @@ export default function HeatMapWidget({username}: { username: string }) {
     if (!data) {
         return <div><Spinner/></div>
     } else {
-        return <HeatMap data={data}/>
+        return <HeatMap data={data} showStatistics={showStatistics}/>
     }
 }
 
@@ -35,7 +35,7 @@ function HeatMap({data, showStatistics = true}: HeatMapProps) {
         const updateMaxColumns = () => {
             if (containerRef.current) {
                 const width = containerRef.current.offsetWidth;
-                setMaxColumns(Math.floor(width / (SQUARE_SIZE + PADDING * 2)));
+                setMaxColumns(Math.min(Math.floor(width / (SQUARE_SIZE + PADDING * 2)), 52));
             }
         };
 
@@ -92,6 +92,8 @@ function HeatMap({data, showStatistics = true}: HeatMapProps) {
     const buildMonthInfo = (monthInfo: Map<number, number>) => {
         const children: ReactNode[] = [];
         let lastIndex = -1;
+
+        console.log(monthInfo);
 
         Array.from(monthInfo.entries()).sort((a, b) => b[0] - a[0]).forEach(([month, columnIndex]) => {
             const monthName = MONTHS[month - 1];

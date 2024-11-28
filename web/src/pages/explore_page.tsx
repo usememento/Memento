@@ -13,12 +13,11 @@ export default function ExplorePage() {
     const [showSidebar, setShowSidebar] = useState(window.innerWidth > 768);
 
     useEffect(() => {
-        window.addEventListener("resize", () => {
+        const listener = () => {
             setShowSidebar(window.innerWidth > 768);
-        });
-        return () => window.removeEventListener("resize", () => {
-            setShowSidebar(window.innerWidth > 768);
-        });
+        };
+        window.addEventListener("resize", listener);
+        return () => window.removeEventListener("resize", listener);
     }, []);
 
     return <div className={"flex flex-row w-full h-full"}>

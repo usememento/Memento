@@ -62,7 +62,7 @@ export default function PostWidget({post, showUser}: { post: Post, showUser?: bo
             <div className={"flex-grow"}>
                 {showUser && <div className={"font-bold p-4"}>{post.user.nickname}</div>}
                 {!showUser && <div className={"p-2"}></div>}
-                <div className={"max-h-64 overflow-clip px-4 pb-2"}>{post.content}</div>
+                <div className={"max-h-64 overflow-clip px-4 pb-2 select"}>{post.content}</div>
                 <div className={"h-10 w-full flex flex-row px-2 items-center text-default-700"}>
                     <IconButton onPress={likeOrUnlike} primary={false} isLoading={state.isLiking}>
                         {state.isLiked ? <MdFavorite className={"text-red-500 dark:text-red-400"}/> :

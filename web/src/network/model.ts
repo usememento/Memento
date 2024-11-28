@@ -4,11 +4,11 @@ export interface User {
     username: string;
     nickname: string;
     bio: string;
-    totalLikes: number;
-    totalComments: number;
+    totalLiked: number;
+    totalComment: number;
     totalPosts: number;
     totalFiles: number;
-    totalFollowers: number;
+    totalFollower: number;
     totalFollows: number;
     registeredAt: string;
     avatar: string;

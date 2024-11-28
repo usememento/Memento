@@ -96,3 +96,7 @@ button:focus {
     visibility: visible;
     opacity: 0.72;
 }
+
+.select {
+    user-select: text !important;
+}

@@ -6,6 +6,7 @@ import HomePage from "../pages/home.tsx";
 import ExplorePage from "../pages/explore_page.tsx";
 import FollowingPage from "../pages/following.tsx";
 import SearchPage from "../pages/search_page.tsx";
+import UserPage from "../pages/user_page.tsx";
 
 export const router = createBrowserRouter([
     {
@@ -34,6 +35,10 @@ export const router = createBrowserRouter([
             {
                 path: "/search",
                 element: <SearchPage />,
+            },
+            {
+                path: "/user/:username",
+                element: <UserPage />,
             },
         ]
     }

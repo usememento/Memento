@@ -1,6 +1,6 @@
 import app from "../app.ts";
 import axios from 'axios';
-import {HeatMapData, Post} from "./model.ts";
+import {HeatMapData, Post, User} from "./model.ts";
 import {router} from "../components/router.tsx";
 import showMessage from "../components/message.tsx";
 import {translate} from "../components/translate.tsx";
@@ -98,6 +98,15 @@ export const network = {
         const res = await axios.get(`${app.server}/api/post/tags?type=${all ? "all" : "user"}`);
         return res.data as string[];
     },
+    getUser: async (username: string) => {
+        const res = await axios.get(`${app.server}/api/user/get?username=${username}`);
+        return res.data as User;
+    },
+    getUserLikes: async (username: string, page: number) => {
+        const res = await axios.get(`${app.server}/api/post/likedPosts?username=${username}&page=${page}`);
+        const json = res.data;
+        return [json.posts as Post[], json.maxPage as number];
+    }
 }
 
 network.init();
