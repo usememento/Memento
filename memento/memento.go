@@ -256,6 +256,7 @@ func TokenValidator() echo.MiddlewareFunc {
 		return func(c echo.Context) error {
 			accessToken := c.Request().Header.Get("Authorization")
 			if accessToken == "" && isPublicPath(c.Request().URL.Path) {
+				c.Set("username", "")
 				return next(c)
 			}
 			token, err := jwt.ParseWithClaims(accessToken, &model.JwtUserClaims{}, func(token *jwt.Token) (interface{}, error) {
