@@ -4,7 +4,7 @@ import {
     MdOutlineExplore,
     MdOutlineHome,
     MdOutlineLibraryBooks, MdOutlinePerson, MdOutlineSettings,
-    MdOutlineSubscriptions
+    MdOutlineSubscriptions, MdSearch
 } from "react-icons/md";
 import app from "../app.ts";
 import {TapRegion} from "./button.tsx";
@@ -161,6 +161,7 @@ function NaviList({link, onTap}: { link: string, onTap: () => void}) {
                   current={link}></NaviItem>
         <NaviItem onTap={onTap} icon={<MdOutlineLibraryBooks size={24}/>} text={"Resources"} link={"/resources"}
                   current={link}></NaviItem>
+        <NaviItem onTap={onTap} icon={<MdSearch size={24}/>} text={"Search"} link={"/search"} current={link}></NaviItem>
         <NaviItem onTap={onTap} icon={<MdOutlineSettings size={24}/>} text={"Settings"} link={"/settings"} current={link}></NaviItem>
     </>
 }

@@ -88,6 +88,11 @@ export const network = {
     getHeatMap: async (username: string) => {
         const res = await axios.get(`${app.server}/api/user/heatmap?username=${username}`);
         return res.data as HeatMapData;
+    },
+    searchPosts: async (query: string, page: number) => {
+        const res = await axios.get(`${app.server}/api/search/post?keyword=${query}&page=${page}`);
+        const json = res.data;
+        return [json.posts as Post[], json.maxPage as number];
     }
 }
 
