@@ -6,7 +6,6 @@ import showMessage from "../components/message.tsx";
 import PostWidget from "../components/post.tsx";
 import {Spinner} from "@nextui-org/react";
 import {MdSearch} from "react-icons/md";
-
 export default function SearchPage() {
     const [searchParams] = useSearchParams();
 
@@ -21,14 +20,14 @@ export default function SearchPage() {
                     const value = (event.target as any).elements[0].value;
                     if (value && text !== value) {
                         setText(value);
-                        window.location.href = `/search?keyword=${value}`;
+                        window.history.pushState({}, "", `/search?keyword=${value}`);
                     }
                 }}>
                     <input defaultValue={text} className={"w-full h-10 focus:outline-none text-lg"}/>
                 </form>
             </div>
         </div>
-        {text && <SearchResult text={text}></SearchResult>}
+        {text && <SearchResult text={text} key={text}></SearchResult>}
     </div>
 }
 
