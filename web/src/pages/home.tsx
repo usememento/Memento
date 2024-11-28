@@ -197,6 +197,9 @@ function TagList() {
     }, []);
 
     return <div className={"w-full"}>
+        <div className={"h-8 flex flex-row items-center  font-bold ml-2  text-lg px-2 "}>
+            <Tr>Tags</Tr>
+        </div>
         {tags === null ? <Spinner /> : tags.map((tag, index) => {
             return <TapRegion onPress={() => {
                 router.navigate(`/tag/${tag}`);

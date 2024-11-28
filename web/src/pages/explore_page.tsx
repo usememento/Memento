@@ -7,6 +7,7 @@ import {Spinner} from "@nextui-org/react";
 import SearchBar from "../components/search.tsx";
 import {TapRegion} from "../components/button.tsx";
 import {router} from "../components/router.tsx";
+import {Tr} from "../components/translate.tsx";
 
 export default function ExplorePage() {
     const [showSidebar, setShowSidebar] = useState(window.innerWidth > 768);
@@ -101,7 +102,10 @@ function TagList() {
     }, []);
 
     return <div className={"w-full"}>
-        {tags === null ? <Spinner /> : tags.map((tag, index) => {
+        <div className={"h-8 flex flex-row items-center  font-bold ml-2  text-lg px-2 "}>
+            <Tr>Tags</Tr>
+        </div>
+        {tags === null ? <Spinner/> : tags.map((tag, index) => {
             return <TapRegion onPress={() => {
                 router.navigate(`/tag/${tag}`);
             }} key={index}>
