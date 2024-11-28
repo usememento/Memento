@@ -97,6 +97,7 @@ func HandlePostCreate(c echo.Context) error {
 					log.Errorf(err.Error())
 					return err
 				}
+				tx.Tag.Updates(tag)
 			}
 			user.Posts = append(user.Posts, *post)
 			if err != nil {
@@ -104,7 +105,8 @@ func HandlePostCreate(c echo.Context) error {
 				return err
 			}
 			user.TotalPosts += 1
-			tx.User.Save(user)
+			tx.User.Updates(user)
+
 			return nil
 		})
 	if err != nil {
