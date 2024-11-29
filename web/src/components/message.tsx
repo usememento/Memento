@@ -5,7 +5,7 @@ import {MdClose} from "react-icons/md";
 
 export default function showMessage({text}:{ text: string }) {
     const div = document.createElement("div");
-    div.className = "fixed left-0 right-0 bottom-4 flex items-center justify-center";
+    div.className = "fixed left-0 right-0 bottom-4 flex items-center justify-center z-50";
     div.innerHTML = `
         <div class="w-full h-12 bg-default-800 text-white p-4 rounded-md shadow-lg max-w-sm flex items-center justify-center animate-appearance-in">
             <div class="flex-grow">${text}</div>

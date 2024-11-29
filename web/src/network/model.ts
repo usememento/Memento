@@ -43,3 +43,19 @@ export interface HeatMapData {
     likes: number;
     map: { [key: string]: number }
 }
+
+export interface Comment {
+    commentId: number;
+    postId: number;
+    user: User;
+    createdAt: string;
+    editedAt: string;
+    content: string;
+    liked: number;
+    isLiked: boolean;
+}
+
+export interface CommentWithPost {
+    comment: Comment;
+    post: Post;
+}

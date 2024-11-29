@@ -1,6 +1,6 @@
 import app from "../app.ts";
 import axios from 'axios';
-import {HeatMapData, Post, User} from "./model.ts";
+import {CommentWithPost, HeatMapData, Post, User, Comment} from "./model.ts";
 import {router} from "../components/router.tsx";
 import showMessage from "../components/message.tsx";
 import {translate} from "../components/translate.tsx";
@@ -111,7 +111,33 @@ export const network = {
         const res = await axios.get(`${app.server}/api/post/taggedPosts?tag=${tag}&page=${page}`);
         const json = res.data;
         return [json.posts as Post[], json.maxPage as number];
-    }
+    },
+    getComments: async (postId: number, page: number) => {
+        const res = await axios.get(`${app.server}/api/comment/postComments?id=${postId}&page=${page}`);
+        const json = res.data;
+        return [json.comments as Comment[], json.maxPage as number];
+    },
+    getUserComments: async (username: string, page: number) => {
+        const res = await axios.get(`${app.server}/api/comment/userComments?username=${username}&page=${page}`);
+        const json = res.data;
+        return [json.comments as CommentWithPost[], json.maxPage as number];
+    },
+    sendComment: async (postId: number, content: string) => {
+        await axios.postForm(`${app.server}/api/comment/create`, {
+            id: postId,
+            content: content,
+        });
+    },
+    likeComment: async (commentId: number) => {
+        await axios.postForm(`${app.server}/api/comment/like`, {
+            id: commentId,
+        });
+    },
+    unlikeComment: async (commentId: number) => {
+        await axios.postForm(`${app.server}/api/comment/unlike`, {
+            id: commentId,
+        });
+    },
 }
 
 network.init();

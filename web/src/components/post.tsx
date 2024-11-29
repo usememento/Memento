@@ -7,12 +7,14 @@ import {
     MdOutlineDelete,
     MdOutlineEdit
 } from "react-icons/md";
-import {useCallback, useState} from "react";
+import {ReactNode, useCallback, useEffect, useState} from "react";
 import {network} from "../network/network.ts";
 import showMessage from "./message.tsx";
 import app from "../app.ts";
 import {Avatar} from "@nextui-org/react";
 import {translate} from "./translate.tsx";
+import CommentsPage from "../pages/comments_page.tsx";
+import Appbar from "./appbar.tsx";
 
 export default function PostWidget({post, showUser}: { post: Post, showUser?: boolean }) {
 
@@ -45,7 +47,11 @@ export default function PostWidget({post, showUser}: { post: Post, showUser?: bo
         }
     }, [post.postID, state.isLiked, state.isLiking, state.totalLiked])
 
+    const [showComments, setShowComments] = useState(false);
+
     const openComments = useCallback(() => {
+        console.log("Open comments");
+        setShowComments(prevState => !prevState);
     }, []);
 
     const openEdit = useCallback(() => {
@@ -56,6 +62,12 @@ export default function PostWidget({post, showUser}: { post: Post, showUser?: bo
 
     return <div className={"w-full flex flex-row border-b"}>
         {<>
+            {showComments && <div className={"fixed z-20 left-0 top-0 bottom-0 right-0 flex items-center justify-center " +
+                "bg-primary-50 backdrop-blur bg-opacity-20 animate-appearance-in"} onClick={openComments}>
+                <PopUpWindow title={translate("Comments")} onBack={openComments}>
+                    <CommentsPage postId={post.postID}></CommentsPage>
+                </PopUpWindow>
+            </div>}
             {showUser && <div className={"w-10 pt-4 pl-3"}>
                 <Avatar src={getAvatar(post.user)} size={"sm"}></Avatar>
             </div>}
@@ -119,4 +131,31 @@ function formatDate(date: Date) {
     } else {
         return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
     }
+}
+
+function PopUpWindow({children, title, onBack}: { children: ReactNode, title: string, onBack: () => void }) {
+    const [showPopUp, setShowPopUp] = useState(window.innerWidth > 600);
+
+    useEffect(() => {
+        const listener = () => {
+            setShowPopUp(window.innerWidth > 600);
+        }
+
+        window.addEventListener("resize", listener);
+        return () => window.removeEventListener("resize", listener);
+    }, []);
+
+    return <div className={`${showPopUp ? "shadow-md rounded-xl" : ""} w-full bg-background flex flex-col`} onClick={(e) => {
+        e.stopPropagation();
+    }} style={{
+        height: showPopUp ? "calc(100% - 4rem)" : "100%",
+        maxWidth: showPopUp ? "420px" : undefined,
+    }}>
+        <Appbar title={title} onBack={onBack} />
+        <div className={"w-full"} style={{
+            height: "calc(100% - 3rem)",
+        }}>
+            {children}
+        </div>
+    </div>
 }
