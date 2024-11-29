@@ -183,6 +183,7 @@ func HandleCommentLike(c echo.Context) error {
 			}
 			comment.Liked += 1
 			tx.Save(&comment)
+			tx.Save(&user)
 			return nil
 		})
 	if err != nil {
