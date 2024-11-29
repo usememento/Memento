@@ -1,5 +1,6 @@
 import {ReactNode, useCallback, useEffect, useState} from "react";
 import {
+    MdMenu,
     MdOutlineExitToApp,
     MdOutlineExplore,
     MdOutlineHome,
@@ -58,6 +59,8 @@ export default function NaviBar() {
                 return 'Following'
             case '/resources':
                 return 'Resources'
+            case '/search':
+                return 'Search'
             case '/settings':
                 return 'Settings'
             default:
@@ -84,18 +87,22 @@ export default function NaviBar() {
             <div className={"fixed top-0 bottom-0 w-64 z-50 bg-background duration-200 px-2 shadow-md"} style={{
                 left: isOpen ? "0" : "-256px",
             }}>
-                <UserPart></UserPart>
+                <UserPart onTap={onNaviTap}></UserPart>
                 <NaviList onTap={onNaviTap} link={window.location.pathname}/>
             </div>
-            <div className={"h-14 w-full fixed flex flex-row top-0 left-0 right-0 items-center px-4 border-b z-10 bg-background bg-opacity-60 backdrop-blur"}>
+            {pageName !== "" && <div
+                className={"h-14 w-full fixed flex flex-row top-0 left-0 right-0 items-center px-4 border-b z-10 bg-background bg-opacity-60 backdrop-blur"}>
                 <TapRegion onPress={() => {
                     setIsOpen(!isOpen)
-                }} borderRadius={24}>
-                    <Avatar src={getAvatar(app.user)} className={"m-1"} size={"md"}></Avatar>
+                }} borderRadius={9999}>
+                    <div
+                        className={`w-9 h-9 flex flex-row items-center justify-center text-lg`}>
+                        <MdMenu size={24}/>
+                    </div>
                 </TapRegion>
                 <div className={"flex-grow text-lg pl-4"}><Tr>{pageName}</Tr></div>
-            </div>
-            <div className={"w-full h-full pt-14"}>
+            </div>}
+            <div className={`w-full h-full ${pageName === "" ? "" : "pt-14"}`}>
                 <AnimatedOutlet></AnimatedOutlet>
             </div>
         </div>
@@ -106,7 +113,7 @@ export default function NaviBar() {
                 <NaviList onTap={onNaviTap} link={window.location.pathname}/>
             </div>
             <div className={"flex-grow h-full"}>
-                <AnimatedOutlet></AnimatedOutlet>
+            <AnimatedOutlet></AnimatedOutlet>
             </div>
         </div>
     }
@@ -166,7 +173,7 @@ function NaviList({link, onTap}: { link: string, onTap: () => void}) {
     </>
 }
 
-function UserPart() {
+function UserPart({onTap}: { onTap?: () => void }) {
     const user = app.user
     const navigate = useNavigate()
 
@@ -193,6 +200,7 @@ function UserPart() {
                 </button>
             </DropdownTrigger>
             <DropdownMenu className={"py-2"} onAction={(key) => {
+                onTap?.()
                 if (key === "me") {
                     navigate(`/user/${app.user?.username}`)
                 } else if (key === "exit") {

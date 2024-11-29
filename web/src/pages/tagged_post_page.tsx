@@ -5,6 +5,7 @@ import showMessage from "../components/message.tsx";
 import PostWidget from "../components/post.tsx";
 import {Spinner} from "@nextui-org/react";
 import {useParams} from "react-router";
+import Appbar from "../components/appbar.tsx";
 
 export default function TaggedPostsPage() {
     const {tag} = useParams()
@@ -40,7 +41,7 @@ export default function TaggedPostsPage() {
         } finally {
             isLoading.current = false;
         }
-    }, []);
+    }, [tag]);
 
     useEffect(() => {
         loadPosts();
@@ -60,6 +61,7 @@ export default function TaggedPostsPage() {
     }, [loadPosts]);
 
     return <div>
+        <Appbar title={`#${tag}`}/>
         {state.posts.map((post, index) => {
             return <PostWidget key={index} post={post} showUser={true}></PostWidget>
         })}
