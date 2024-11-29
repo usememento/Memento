@@ -140,6 +140,12 @@ export const network = {
     },
     deletePost: async (postId: number) => {
         await axios.delete(`${app.server}/api/post/delete/${postId}`);
+    },
+    uploadFile: async (file: File) => {
+        const formData = new FormData();
+        formData.append("file", file);
+        const res = await axios.post(`${app.server}/api/file/upload`, formData);
+        return res.data.ID as string;
     }
 }
 

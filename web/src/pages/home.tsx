@@ -77,6 +77,35 @@ function Editor({fullHeight, updatePosts}: { fullHeight?: boolean, updatePosts: 
 
     const [data, setData] = useState<EditorData>({text: "", isPublic: true});
     const [isUploading, setIsUploading] = useState(false);
+    const [isUploadingImage, setIsUploadingImage] = useState(false);
+
+    const uploadImage = useCallback(async () => {
+        setIsUploadingImage(true);
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = "image/*";
+        let isClicked = false;
+        input.onchange = async () => {
+            if(isClicked) return;
+            isClicked = true;
+            try {
+                const file = input.files?.item(0);
+                const id = await network.uploadFile(file!);
+                setData(prev => ({
+                    ...prev,
+                    text: prev.text + `![image](${app.server}/api/file/download/${id})`
+                }))
+            }
+            catch (e: any) {
+                showMessage({text: e.toString()});
+            }
+            finally {
+                setIsUploadingImage(false);
+            }
+        }
+        input.click();
+        input.oncancel = () => setIsUploadingImage(false);
+    }, []);
 
     return <div className={`w-full ${fullHeight ? "h-full" : ""} border-b px-4 pt-4 pb-2`}>
         <textarea placeholder={translate("Write down your thoughts")} className={"w-full focus:outline-none min-h-6 max-h-screen resize-none px-2"} id={"editor"}
@@ -93,9 +122,7 @@ function Editor({fullHeight, updatePosts}: { fullHeight?: boolean, updatePosts: 
                     <Tr>{data.isPublic ? "Public" : "Private"}</Tr>
                 </div>
             </TapRegion>
-            <IconButton onPress={() => {
-                // TODO: Upload image
-            }}>
+            <IconButton onPress={uploadImage} isLoading={isUploadingImage}>
                 <MdOutlineImage/>
             </IconButton>
             <IconButton onPress={() => {
