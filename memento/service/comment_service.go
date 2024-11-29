@@ -193,14 +193,23 @@ func HandleCommentLike(c echo.Context) error {
 }
 func HandleCommentCancelLike(c echo.Context) error {
 	commentId := c.FormValue("id")
+	username := c.Get("username").(string)
 	var comment model.Comment
 	memento.Db().First(&comment, "id=?", commentId)
-	err := memento.Db().Transaction(
-		func(tx *gorm.DB) error {
-			comment.Liked -= 1
-			tx.Save(&comment)
-			return nil
-		})
+	user, err := query.User.Where(query.User.Username.Eq(username)).First()
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "invalid username")
+	}
+	err = query.Q.Transaction(func(tx *query.Query) error {
+		err := tx.User.LikedComments.Model(user).Delete(&comment)
+		if err != nil {
+			return err
+		}
+		comment.Liked -= 1
+		tx.User.Save(user)
+		tx.Comment.Save(&comment)
+		return nil
+	})
 	if err != nil {
 		return utils.RespondError(c, "unknown query error")
 	}
