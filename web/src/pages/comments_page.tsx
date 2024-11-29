@@ -3,8 +3,9 @@ import showMessage from "../components/message.tsx";
 import {network} from "../network/network.ts";
 import {Avatar, Spinner} from "@nextui-org/react";
 import {Comment, getAvatar} from "../network/model.ts";
-import {IconButton} from "../components/button.tsx";
+import {IconButton, TapRegion} from "../components/button.tsx";
 import {MdFavorite, MdFavoriteBorder, MdSend} from "react-icons/md";
+import {useNavigate} from "react-router";
 
 export default function CommentsPage({postId}: { postId: number }) {
     const [state, setState] = useState({
@@ -86,6 +87,8 @@ function CommentWidget({comment}: { comment: Comment }) {
         isLiking: false,
         likes: comment.liked,
     })
+
+    const navigate = useNavigate()
     
     const likeOrUnlike = useCallback(async () => {
         setState(prev => ({...prev, isLiking: true}));
@@ -109,7 +112,13 @@ function CommentWidget({comment}: { comment: Comment }) {
 
     return <div className={"w-full p-4 border-b border-content2"}>
         <div className={"flex flex-row items-center"}>
-            <Avatar src={getAvatar(comment.user)} size={"sm"}/>
+            <TapRegion borderRadius={9999} onPress={() => {
+                navigate(`/user/${comment.user.username}`, {
+                    replace: false,
+                });
+            }}>
+                <Avatar src={getAvatar(comment.user)} size={"sm"}/>
+            </TapRegion>
             <div className={"ml-2"}>
                 <div className={"text-sm font-semibold"}>{comment.user.nickname}</div>
                 <div className={"text-xs text-default-700"}>{(new Date(comment.createdAt).toLocaleString())}</div>

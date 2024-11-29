@@ -155,6 +155,14 @@ function UserPosts() {
             isLoading.current = false;
         }
     }, []);
+    
+    const onDeletePost = useCallback(() => {
+        isLoading.current = false;
+        pageRef.current = 0;
+        maxPageRef.current = 0;
+        setState({posts: [], isLoading: false});
+        loadPosts();
+    }, [loadPosts]);
 
     useEffect(() => {
         loadPosts();
@@ -175,7 +183,7 @@ function UserPosts() {
 
     return <div>
         {state.posts.map((post, index) => {
-            return <PostWidget key={index} post={post}></PostWidget>
+            return <PostWidget key={index} post={post} onDelete={onDeletePost}></PostWidget>
         })}
         {state.isLoading && <div className={"h-10 w-full flex flex-row items-center justify-center"}>
             <Spinner size={"md"}/>

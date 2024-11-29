@@ -23,7 +23,12 @@
     "Just now": "刚刚",
     "Session expired, please login again": "会话已过期，请重新登录",
     "Continue without login": "以未登录继续",
-    "Search": "搜索"
+    "Search": "搜索",
+    "Post deleted": "帖子已删除",
+    "Failed to delete post": "删除帖子失败",
+    "Delete": "删除",
+    "Are you sure you want to delete this post?": "确定要删除这篇帖子吗？",
+    "Delete post": "删除帖子"
   },
   "zh-TW": {
     "Login": "登錄",
@@ -49,7 +54,12 @@
     "Just now": "剛剛",
     "Session expired, please login again": "會話已過期，請重新登錄",
     "Continue without login": "以未登錄繼續",
-    "Search": "搜索"
+    "Search": "搜索",
+    "Post deleted": "帖子已刪除",
+    "Failed to delete post": "刪除帖子失敗",
+    "Delete": "刪除",
+    "Are you sure you want to delete this post?": "確定要刪除這篇帖子嗎？",
+    "Delete post": "刪除帖子"
   },
   "en-US":{
   }

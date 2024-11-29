@@ -138,6 +138,9 @@ export const network = {
             id: commentId,
         });
     },
+    deletePost: async (postId: number) => {
+        await axios.delete(`${app.server}/api/post/delete/${postId}`);
+    }
 }
 
 network.init();
