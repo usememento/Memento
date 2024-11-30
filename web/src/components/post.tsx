@@ -1,13 +1,14 @@
 import {getAvatar, Post} from "../network/model.ts";
-import {IconButton} from "./button.tsx";
+import {IconButton, TapRegion} from "./button.tsx";
 import {
+    MdCopyAll,
     MdFavorite,
     MdFavoriteBorder,
     MdOutlineComment,
     MdOutlineDelete,
     MdOutlineEdit
 } from "react-icons/md";
-import {ReactNode, useCallback, useContext, useEffect, useState} from "react";
+import {ReactNode, useCallback, useContext, useEffect, useRef, useState} from "react";
 import {network} from "../network/network.ts";
 import showMessage, {dialogCanceler, showDialog} from "./message.tsx";
 import app from "../app.ts";
@@ -16,6 +17,10 @@ import {Tr, translate} from "./translate.tsx";
 import CommentsPage from "../pages/comments_page.tsx";
 import Appbar from "./appbar.tsx";
 import PostEditPage from "../pages/post_edit_page.tsx";
+import Markdown from "react-markdown";
+import remarkGfm from 'remark-gfm';
+import "../code.css";
+import hljs from 'highlight.js';
 
 export default function PostWidget({post, showUser, onDelete}: {
     post: Post,
@@ -92,7 +97,9 @@ export default function PostWidget({post, showUser, onDelete}: {
             <div className={"flex-grow"}>
                 {showUser && <div className={"font-bold p-4"}>{post.user.nickname}</div>}
                 {!showUser && <div className={"p-2"}></div>}
-                <div className={"max-h-64 overflow-clip px-4 pb-2 select"}>{state.content}</div>
+                <div className={"max-h-64 overflow-clip px-4 pb-2 select"}>
+                    <MarkdownWidget content={state.content} limitHeight={true}/>
+                </div>
                 <div className={"h-10 w-full flex flex-row px-2 items-center text-default-700"}>
                     <IconButton onPress={likeOrUnlike} primary={false} isLoading={state.isLiking}>
                         {state.isLiked ? <MdFavorite className={"text-red-500 dark:text-red-400"}/> :
@@ -204,4 +211,53 @@ function DeletePostDialog({postId, onDelete}: {postId: number, onDelete: () => v
             <Button color={"danger"} onClick={deletePost} isLoading={isDeleting} className={"h-8 rounded-2xl"}><Tr>Delete</Tr></Button>
         </div>
     </div>
+}
+
+export function MarkdownWidget({content, limitHeight}: {content: string, limitHeight?: boolean}) {
+    if(limitHeight) {
+        const lines = content.split("\n");
+        if(lines.length > 20) {
+            content = lines.slice(0, 20).join("\n");
+        }
+    }
+
+    return <Markdown remarkPlugins={[remarkGfm]} className={`${limitHeight ? "max-h-56" : ""}`} components={{
+        code(props) {
+            return <CodeWidget props={props}/>
+        }
+    }}>{content}</Markdown>
+}
+
+function CodeWidget({props}: {props: any}) {
+    const {children, className, ...rest} = props
+    const match = /language-(\w+)/.exec(className || '')
+
+    const ref = useRef<HTMLElement>();
+
+    useEffect(() => {
+        if(ref.current)
+            hljs.highlightElement(ref.current)
+    }, []);
+
+    return <div className={"bg-content2 rounded-lg bg-opacity-60 my-2"}>
+        <div className={"h-9 flex flex-row items-center px-4 border-b"}>
+            <span>{match ? match[1] : "code"}</span>
+            <span className={"flex-grow"}></span>
+            <TapRegion onPress={() => {
+                navigator.clipboard.writeText(children.trim()).then(() => {
+                    showMessage({text: "Copied"});
+                });
+            }} borderRadius={8}>
+                <div className={"h-8 flex flex-row items-center px-1 select-none"}>
+                    <MdCopyAll/>
+                    <span className={"pl-1"}>Copy</span>
+                </div>
+            </TapRegion>
+        </div>
+        <div className={"px-2"}>
+            <code {...rest} className={className} ref={ref}>
+                {children}
+            </code>
+        </div>
+    </div>;
 }

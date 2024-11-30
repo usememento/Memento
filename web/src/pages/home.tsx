@@ -108,7 +108,7 @@ function Editor({fullHeight, updatePosts}: { fullHeight?: boolean, updatePosts: 
     }, []);
 
     return <div className={`w-full ${fullHeight ? "h-full" : ""} border-b px-4 pt-4 pb-2`}>
-        <textarea placeholder={translate("Write down your thoughts")} className={"w-full focus:outline-none min-h-6 max-h-screen resize-none px-2"} id={"editor"}
+        <textarea placeholder={translate("Write down your thoughts")} className={"w-full focus:outline-none min-h-6 resize-none px-2"} id={"editor"}
                   value={data.text} onChange={(v) => {
             setData({...data, text: v.target.value});
         }}></textarea>
@@ -139,6 +139,9 @@ function Editor({fullHeight, updatePosts}: { fullHeight?: boolean, updatePosts: 
                     setData({text: "", isPublic: true});
                     showMessage({text: translate("Post created")});
                     updatePosts();
+                    const editor = document.getElementById("editor")!;
+                    editor.style.height = "auto";
+                    editor.style.height = editor.scrollHeight + "px";
                 } catch (e: any) {
                     showMessage({text: e.toString()});
                 } finally {
