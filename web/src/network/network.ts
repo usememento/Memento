@@ -146,6 +146,13 @@ export const network = {
         formData.append("file", file);
         const res = await axios.post(`${app.server}/api/file/upload`, formData);
         return res.data.ID as string;
+    },
+    editPost: async (postId: number, content: string, isPublic: boolean) => {
+        await axios.postForm(`${app.server}/api/post/edit`, {
+            id: postId,
+            content: content,
+            permission: isPublic ? "public" : "private",
+        });
     }
 }
 

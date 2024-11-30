@@ -15,6 +15,7 @@ import {Avatar, Button} from "@nextui-org/react";
 import {Tr, translate} from "./translate.tsx";
 import CommentsPage from "../pages/comments_page.tsx";
 import Appbar from "./appbar.tsx";
+import PostEditPage from "../pages/post_edit_page.tsx";
 
 export default function PostWidget({post, showUser, onDelete}: {
     post: Post,
@@ -22,6 +23,7 @@ export default function PostWidget({post, showUser, onDelete}: {
     onDelete?: () => void
 }) {
     const [state, setState] = useState({
+        content: post.content,
         isLiked: post.isLiked,
         totalLiked: post.totalLiked,
         isLiking: false,
@@ -57,14 +59,23 @@ export default function PostWidget({post, showUser, onDelete}: {
     }, []);
 
     const openEdit = useCallback(() => {
-    }, []);
+        showDialog({
+            children: <PostEditPage post={post} onEdited={(p) => {
+                setState(prev => ({...prev, content: p.content}));
+                post.content = p.content;
+                post.isPrivate = !p.isPrivate;
+            }}/>,
+            title: translate("Edit post"),
+            fullscreen: true,
+        })
+    }, [post]);
 
     const deletePost = useCallback(() => {
         showDialog({
             title: translate("Delete post"),
             children: <DeletePostDialog postId={post.postID} onDelete={onDelete!}/>
         })
-    }, [post.postID]);
+    }, [onDelete, post.postID]);
 
     return <div className={"w-full flex flex-row border-b"}>
         {<>
@@ -81,7 +92,7 @@ export default function PostWidget({post, showUser, onDelete}: {
             <div className={"flex-grow"}>
                 {showUser && <div className={"font-bold p-4"}>{post.user.nickname}</div>}
                 {!showUser && <div className={"p-2"}></div>}
-                <div className={"max-h-64 overflow-clip px-4 pb-2 select"}>{post.content}</div>
+                <div className={"max-h-64 overflow-clip px-4 pb-2 select"}>{state.content}</div>
                 <div className={"h-10 w-full flex flex-row px-2 items-center text-default-700"}>
                     <IconButton onPress={likeOrUnlike} primary={false} isLoading={state.isLiking}>
                         {state.isLiked ? <MdFavorite className={"text-red-500 dark:text-red-400"}/> :
@@ -185,7 +196,7 @@ function DeletePostDialog({postId, onDelete}: {postId: number, onDelete: () => v
             showMessage({text: translate("Failed to delete post")});
             setIsDeleting(false);
         });
-    }, [canceler, postId]);
+    }, [canceler, onDelete, postId]);
     
     return <div className={"py-2"}>
         <p><Tr>Are you sure you want to delete this post?</Tr></p>

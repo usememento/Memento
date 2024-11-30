@@ -22,7 +22,7 @@ export const dialogCanceler = createContext(() => {})
 export function showDialog({children, title, fullscreen}: {children: ReactNode, title: string, fullscreen?: boolean}) {
     return new Promise<null>((resolve) => {
         const div = document.createElement("div");
-        div.className = "fixed left-0 right-0 top-0 bottom-0 flex items-center justify-center z-50 bg-black bg-opacity-50";
+        div.className = "fixed left-0 right-0 top-0 bottom-0 flex items-center justify-center z-50 bg-opacity-50" + (fullscreen??false ? "" : " bg-black");
         document.body.appendChild(div);
         createRoot(div).render(<div className={`bg-background w-full ${(fullscreen??false ? "h-full" : "max-w-sm shadow-md rounded-md")} px-4 py-2 items-center justify-center animate-appearance-in`}>
             <div className={"w-full h-9 flex flex-row items-center"}>
@@ -34,14 +34,19 @@ export function showDialog({children, title, fullscreen}: {children: ReactNode, 
                         <MdClose size={24}></MdClose>
                     </div>
                 </TapRegion>
-                <div className={"flex-grow ml-3"}>{title}</div>
+                <div className={"flex-grow ml-3 text-lg"}>{title}</div>
             </div>
-            <dialogCanceler.Provider value={() => {
-                resolve(null);
-                div.remove();
+            <div style={{
+                height: fullscreen ? "calc(100% - 3rem)" : undefined,
+                width: fullscreen ? "100%" : undefined,
             }}>
-                {children}
-            </dialogCanceler.Provider>
+                <dialogCanceler.Provider value={() => {
+                    resolve(null);
+                    div.remove();
+                }}>
+                    {children}
+                </dialogCanceler.Provider>
+            </div>
         </div>);
     });
 }
