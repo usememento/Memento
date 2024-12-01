@@ -5,7 +5,7 @@ import {useNavigate} from "react-router";
 export default function Appbar({title, hideTitle, onBack}: {title: string, hideTitle?: boolean, onBack?: () => void}) {
     const navigate = useNavigate();
 
-    return <div className={"h-12 sticky w-full flex flex-row px-2 items-center text-xl"}>
+    return <div className={"h-12 sticky w-full flex flex-row px-2 items-center text-xl top-0 bg-background"}>
         <TapRegion onPress={() => {
             (onBack ?? (() => navigate(-1)))();
         }} borderRadius={9999}>

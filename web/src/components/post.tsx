@@ -19,8 +19,9 @@ import Appbar from "./appbar.tsx";
 import PostEditPage from "../pages/post_edit_page.tsx";
 import Markdown from "react-markdown";
 import remarkGfm from 'remark-gfm';
-import "../code.css";
+import "../markdown.css";
 import hljs from 'highlight.js';
+import {useNavigate} from "react-router";
 
 export default function PostWidget({post, showUser, onDelete}: {
     post: Post,
@@ -82,50 +83,56 @@ export default function PostWidget({post, showUser, onDelete}: {
         })
     }, [onDelete, post.postID]);
 
-    return <div className={"w-full flex flex-row border-b"}>
-        {<>
-            {showComments &&
-                <div className={"fixed z-20 left-0 top-0 bottom-0 right-0 flex items-center justify-center " +
-                    "bg-primary-50 backdrop-blur bg-opacity-20 animate-appearance-in"} onClick={openComments}>
+    const navigate = useNavigate();
+
+    return <TapRegion lighter={true} onPress={() => {
+        navigate(`/post/${post.postID}`, {state: {post}});
+    }}>
+        <div className={"w-full flex flex-row border-b"}>
+            {<>
+                {showComments &&
+                  <div className={"fixed z-20 left-0 top-0 bottom-0 right-0 flex items-center justify-center " +
+                      "bg-primary-50 backdrop-blur bg-opacity-20 animate-appearance-in"} onClick={openComments}>
                     <PopUpWindow title={translate("Comments")} onBack={openComments}>
-                        <CommentsPage postId={post.postID}></CommentsPage>
+                      <CommentsPage postId={post.postID}></CommentsPage>
                     </PopUpWindow>
+                  </div>}
+                {showUser && <div className={"w-10 pt-4 pl-3"}>
+                  <Avatar src={getAvatar(post.user)} size={"sm"}></Avatar>
                 </div>}
-            {showUser && <div className={"w-10 pt-4 pl-3"}>
-                <Avatar src={getAvatar(post.user)} size={"sm"}></Avatar>
-            </div>}
-            <div className={"flex-grow"}>
-                {showUser && <div className={"font-bold p-4"}>{post.user.nickname}</div>}
-                {!showUser && <div className={"p-2"}></div>}
-                <div className={"max-h-64 overflow-clip px-4 pb-2 select"}>
-                    <MarkdownWidget content={state.content} limitHeight={true}/>
-                </div>
-                <div className={"h-10 w-full flex flex-row px-2 items-center text-default-700"}>
-                    <IconButton onPress={likeOrUnlike} primary={false} isLoading={state.isLiking}>
-                        {state.isLiked ? <MdFavorite className={"text-red-500 dark:text-red-400"}/> :
-                            <MdFavoriteBorder/>}
-                    </IconButton>
-                    <span className={"pl-1 text-sm"}>{state.totalLiked}</span>
-                    <span className={"w-4"}></span>
-                    <IconButton onPress={openComments} primary={false} isLoading={state.isLiking}>
-                        <MdOutlineComment/>
-                    </IconButton>
-                    <span className={"pl-1 text-sm"}>{post.totalComment}</span>
-                    {post.user.username === app.user?.username && <>
-                        <span className={"w-4"}></span>
-                        <IconButton onPress={openEdit} primary={false} isLoading={state.isLiking}>
-                            <MdOutlineEdit/>
+                <div className={"flex-grow"}>
+                    {showUser && <div className={"font-bold p-4"}>{post.user.nickname}</div>}
+                    {!showUser && <div className={"p-2"}></div>}
+                    <div className={"max-h-64 overflow-clip px-4 pb-2 select"}>
+                        <MarkdownWidget content={state.content} limitHeight={true}/>
+                    </div>
+                    <div className={"h-10 w-full flex flex-row px-2 items-center text-default-700"}>
+                        <IconButton onPress={likeOrUnlike} primary={false} isLoading={state.isLiking}>
+                            {state.isLiked ? <MdFavorite className={"text-red-500 dark:text-red-400"}/> :
+                                <MdFavoriteBorder/>}
                         </IconButton>
-                        {onDelete && <><span className={"w-2"}></span>
-                            <IconButton onPress={deletePost} primary={false} isLoading={state.isLiking}>
+                        <span className={"pl-1 text-sm"}>{state.totalLiked}</span>
+                        <span className={"w-4"}></span>
+                        <IconButton onPress={openComments} primary={false} isLoading={state.isLiking}>
+                            <MdOutlineComment/>
+                        </IconButton>
+                        <span className={"pl-1 text-sm"}>{post.totalComment}</span>
+                        {post.user.username === app.user?.username && <>
+                          <span className={"w-4"}></span>
+                          <IconButton onPress={openEdit} primary={false} isLoading={state.isLiking}>
+                            <MdOutlineEdit/>
+                          </IconButton>
+                            {onDelete && <><span className={"w-2"}></span>
+                              <IconButton onPress={deletePost} primary={false} isLoading={state.isLiking}>
                                 <MdOutlineDelete/>
-                            </IconButton></>}</>}
-                    <span className={"flex-grow"}></span>
-                    <span className={"text-sm text-default-600"}>{formatDate(new Date(post.editedAt))}</span>
+                              </IconButton></>}</>}
+                        <span className={"flex-grow"}></span>
+                        <span className={"text-sm text-default-600"}>{formatDate(new Date(post.editedAt))}</span>
+                    </div>
                 </div>
-            </div>
-        </>}
-    </div>
+            </>}
+        </div>
+    </TapRegion>
 }
 
 function formatDate(date: Date) {
@@ -158,7 +165,7 @@ function formatDate(date: Date) {
     }
 }
 
-function PopUpWindow({children, title, onBack}: { children: ReactNode, title: string, onBack: () => void }) {
+export function PopUpWindow({children, title, onBack}: { children: ReactNode, title: string, onBack: () => void }) {
     const [showPopUp, setShowPopUp] = useState(window.innerWidth > 600);
 
     useEffect(() => {
@@ -186,11 +193,11 @@ function PopUpWindow({children, title, onBack}: { children: ReactNode, title: st
     </div>
 }
 
-function DeletePostDialog({postId, onDelete}: {postId: number, onDelete: () => void}) {
+function DeletePostDialog({postId, onDelete}: { postId: number, onDelete: () => void }) {
     const [isDeleting, setIsDeleting] = useState(false);
 
     const canceler = useContext(dialogCanceler);
-    
+
     const deletePost = useCallback(() => {
         setIsDeleting(true);
         network.deletePost(postId).then(() => {
@@ -221,16 +228,16 @@ export function MarkdownWidget({content, limitHeight}: {content: string, limitHe
         }
     }
 
-    return <Markdown remarkPlugins={[remarkGfm]} className={`${limitHeight ? "max-h-56" : ""}`} components={{
-        code(props) {
+    return <Markdown remarkPlugins={[remarkGfm]} className={`${limitHeight ? "max-h-56" : ""} markdown`} components={{
+        pre(props) {
             return <CodeWidget props={props}/>
         }
     }}>{content}</Markdown>
 }
 
 function CodeWidget({props}: {props: any}) {
-    const {children, className, ...rest} = props
-    const match = /language-(\w+)/.exec(className || '')
+    const {children, className, ...rest} = props;
+    const match = /language-(\w+)/.exec(children?.props?.className || '');
 
     const ref = useRef<HTMLElement>();
 
@@ -244,9 +251,8 @@ function CodeWidget({props}: {props: any}) {
             <span>{match ? match[1] : "code"}</span>
             <span className={"flex-grow"}></span>
             <TapRegion onPress={() => {
-                navigator.clipboard.writeText(children.trim()).then(() => {
-                    showMessage({text: "Copied"});
-                });
+                navigator.clipboard.writeText(children?.props?.children);
+                showMessage({text: translate("Copied")});
             }} borderRadius={8}>
                 <div className={"h-8 flex flex-row items-center px-1 select-none"}>
                     <MdCopyAll/>
@@ -255,9 +261,9 @@ function CodeWidget({props}: {props: any}) {
             </TapRegion>
         </div>
         <div className={"px-2"}>
-            <code {...rest} className={className} ref={ref}>
+            <pre {...rest} className={className} ref={ref}>
                 {children}
-            </code>
+            </pre>
         </div>
     </div>;
 }

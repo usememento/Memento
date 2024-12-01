@@ -153,6 +153,10 @@ export const network = {
             content: content,
             permission: isPublic ? "public" : "private",
         });
+    },
+    getPost: async (postId: string | number) => {
+        const res = await axios.get(`${app.server}/api/post/get?id=${postId}`);
+        return res.data as Post;
     }
 }
 

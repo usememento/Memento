@@ -8,6 +8,7 @@ import FollowingPage from "../pages/following.tsx";
 import SearchPage from "../pages/search_page.tsx";
 import UserPage from "../pages/user_page.tsx";
 import TaggedPostsPage from "../pages/tagged_post_page.tsx";
+import PostPage from "../pages/post_page.tsx";
 
 export const router = createBrowserRouter([
     {
@@ -45,6 +46,10 @@ export const router = createBrowserRouter([
                 path: "/tag/:tag",
                 element: <TaggedPostsPage />,
             },
+            {
+                path: "/post/:id",
+                element: <PostPage />,
+            }
         ]
     }
 ])
