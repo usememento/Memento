@@ -29,7 +29,7 @@ export default function ResourcesPage() {
         setListKey(prev => prev+1);
     }, []);
 
-    return <div className={"px-4 pt-4 overflow-y-scroll w-full h-full"}>
+    return <div className={"px-4 pt-4 overflow-y-auto w-full h-full"}>
         <UploadWidget onUpload={handleUpload}></UploadWidget>
         <div className={"h-4"}/>
         <ResourcesList key={listKey} onDelete={onDelete}></ResourcesList>

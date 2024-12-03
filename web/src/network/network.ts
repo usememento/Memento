@@ -166,6 +166,21 @@ export const network = {
     },
     deleteFile: async (fileId: string) => {
         await axios.delete(`${app.server}/api/file/delete/${fileId}`);
+    },
+    editInfo: async (nickname: string | null, bio: string | null, avatar: File | null) => {
+        const data = new FormData();
+        if(nickname) data.append("nickname", nickname);
+        if(bio) data.append("bio", bio);
+        if(avatar) data.append("avatar", avatar);
+        const user = await axios.post(`${app.server}/api/user/edit`, data);
+        app.user = user.data as User;
+        app.writeData();
+    },
+    changePassword: async (oldPassword: string, newPassword: string) => {
+        await axios.postForm(`${app.server}/api/user/changePwd`, {
+            oldPassword: oldPassword,
+            newPassword: newPassword,
+        });
     }
 }
 

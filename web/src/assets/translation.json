@@ -28,7 +28,15 @@
     "Failed to delete post": "删除帖子失败",
     "Delete": "删除",
     "Are you sure you want to delete this post?": "确定要删除这篇帖子吗？",
-    "Delete post": "删除帖子"
+    "Delete post": "删除帖子",
+    "Avatar": "头像",
+    "Bio": "简介",
+    "Change bio": "修改简介",
+    "Change password": "修改密码",
+    "Change nickname": "修改昵称",
+    "Old password": "旧密码",
+    "New password": "新密码",
+    "Nickname": "昵称"
   },
   "zh-TW": {
     "Login": "登錄",
@@ -59,7 +67,14 @@
     "Failed to delete post": "刪除帖子失敗",
     "Delete": "刪除",
     "Are you sure you want to delete this post?": "確定要刪除這篇帖子嗎？",
-    "Delete post": "刪除帖子"
+    "Delete post": "刪除帖子",
+    "Avatar": "頭像",
+    "Bio": "簡介",
+    "Change bio": "修改簡介",
+    "Change password": "修改密碼",
+    "Old password": "舊密碼",
+    "New password": "新密碼",
+    "Nickname": "昵稱"
   },
   "en-US":{
   }

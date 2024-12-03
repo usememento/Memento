@@ -195,7 +195,7 @@ function UserPart({onTap}: { onTap?: () => void }) {
                 <button className={"w-full text-start hover:bg-content2 active:bg-content3 duration-200 rounded-2xl"}>
                     <div className={"w-full h-14 flex flex-row justify-center items-center px-4"}>
                         <Avatar src={getAvatar(app.user)}></Avatar>
-                        <div className={"flex-grow pl-3"}>{user?.username ?? translate("Login")}</div>
+                        <div className={"flex-grow pl-3"}>{user?.nickname ?? translate("Login")}</div>
                     </div>
                 </button>
             </DropdownTrigger>

@@ -56,6 +56,8 @@ function UserInfo({user}: { user: User }) {
             <div>
                 <p className={"font-bold text-xl pb-1"}>{user.username}</p>
                 <p className={"text-sm"}>{`@${user.username}`}</p>
+                <div className={"h-1"}/>
+                <p>{user.bio}</p>
             </div>
         </div>
         <div className={"flex flex-row pt-4 text-sm"}>
@@ -73,14 +75,12 @@ function UserInfo({user}: { user: User }) {
 function Pages({user}: {user: User}) {
     const pageNames = [
         "Posts",
-        "Replies",
         "Likes",
         "Statistics",
     ]
 
     const pages = [
         <Posts user={user}/>,
-        <Replies user={user}/>,
         <Likes user={user}/>,
         <Statistics user={user}/>,
     ]
@@ -158,13 +158,6 @@ function Posts({user}: {user: User}) {
         {state.isLoading && <div className={"h-10 w-full flex flex-row items-center justify-center"}>
             <Spinner size={"md"}/>
         </div>}
-    </div>
-}
-
-function Replies({user}: {user: User}) {
-    // TODO: Implement replies page
-    return <div>
-        Replies for {user.username}
     </div>
 }
 
