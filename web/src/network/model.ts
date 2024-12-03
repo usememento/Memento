@@ -59,3 +59,9 @@ export interface CommentWithPost {
     comment: Comment;
     post: Post;
 }
+
+export interface Resource {
+    id: number;
+    filename: string;
+    time: string;
+}

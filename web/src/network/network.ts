@@ -1,9 +1,6 @@
 import app from "../app.ts";
 import axios from 'axios';
-import {CommentWithPost, HeatMapData, Post, User, Comment} from "./model.ts";
-import {router} from "../components/router.tsx";
-import showMessage from "../components/message.tsx";
-import {translate} from "../components/translate.tsx";
+import {CommentWithPost, HeatMapData, Post, User, Comment, Resource} from "./model.ts";
 
 export const network = {
     isRefreshing: false,
@@ -34,9 +31,8 @@ export const network = {
                 if(res.config.url!.includes("/refresh")) {
                     setTimeout(() => {
                         app.clearData();
-                        router.navigate("/login");
-                        showMessage({text: translate("Session expired, please login again")});
-                    }, 200);
+                        window.location.reload();
+                    }, 500);
                 }
                 throw new Error(res.data.message);
             }
@@ -141,12 +137,6 @@ export const network = {
     deletePost: async (postId: number) => {
         await axios.delete(`${app.server}/api/post/delete/${postId}`);
     },
-    uploadFile: async (file: File) => {
-        const formData = new FormData();
-        formData.append("file", file);
-        const res = await axios.post(`${app.server}/api/file/upload`, formData);
-        return res.data.ID as string;
-    },
     editPost: async (postId: number, content: string, isPublic: boolean) => {
         await axios.postForm(`${app.server}/api/post/edit`, {
             id: postId,
@@ -157,6 +147,25 @@ export const network = {
     getPost: async (postId: string | number) => {
         const res = await axios.get(`${app.server}/api/post/get?id=${postId}`);
         return res.data as Post;
+    },
+    getResources: async (page: number) => {
+        const res = await axios.get(`${app.server}/api/file/all?page=${page}`);
+        const json = res.data;
+        return [json.files as Resource[], json.maxPage as number] as [Resource[], number];
+    },
+    uploadFile: async (file: File, onUploadProgress?: (progress: number) => void) => {
+        const formData = new FormData();
+        formData.append("file", file);
+        const res = await axios.post(`${app.server}/api/file/upload`, formData, {
+            onUploadProgress: (e) => {
+                if(onUploadProgress != null)
+                    onUploadProgress(e.loaded / (e.total ?? file.size));
+            }
+        });
+        return res.data.ID as string;
+    },
+    deleteFile: async (fileId: string) => {
+        await axios.delete(`${app.server}/api/file/delete/${fileId}`);
     }
 }
 
