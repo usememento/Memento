@@ -193,6 +193,20 @@ export const network = {
         const formData = new FormData();
         formData.append("icon", icon);
         await axios.post(`${app.server}/api/admin/setIcon`, formData);
+    },
+    listUsers: async (page: number) => {
+        const res = await axios.get(`${app.server}/api/admin/listUsers?page=${page}`);
+        const json = res.data;
+        return [json.users as User[], json.maxPage as number] as [User[], number];
+    },
+    deleteUser: async (username: string) => {
+        await axios.delete(`${app.server}/api/admin/deleteUser/${username}`);
+    },
+    setPermission: async (username: string, is_admin: boolean) => {
+        await axios.postForm(`${app.server}/api/admin/setPermission`, {
+            username: username,
+            is_admin: is_admin ? "true" : "false",
+        });
     }
 }
 
