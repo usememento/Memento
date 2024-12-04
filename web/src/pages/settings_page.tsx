@@ -191,8 +191,21 @@ function Admin() {
 }
 
 function About() {
-    // TODO
-    return <div></div>
+    return <div className={"w-full"}>
+        <p className={"text-2xl py-4 px-4"}>Memento</p>
+        <div className={"w-full py-2 px-4"}>
+            <p>Version</p>
+            <p className={"text-sm"}>{app.version}</p>
+        </div>
+        <TapRegion onPress={() => {
+            window.open("https://github.com/useMemento/Memento");
+        }}>
+            <div className={"w-full py-2 px-4"}>
+                <p>Github</p>
+                <p className={"text-sm"}>https://github.com/useMemento/Memento</p>
+            </div>
+        </TapRegion>
+    </div>
 }
 
 function PasswordDialog() {

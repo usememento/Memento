@@ -17,6 +17,8 @@ class _App {
 
     defaultPostVisibility = "public";
 
+    version = "1.0.0";
+
     get locale() {
         let locale = this._locale;
         if (locale === "system") {
