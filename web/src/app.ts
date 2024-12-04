@@ -13,7 +13,23 @@ class _App {
         return "http://localhost:1323";
     }
 
-    locale = "en"
+    _locale = "system"
+
+    defaultPostVisibility = "public";
+
+    get locale() {
+        let locale = this._locale;
+        if (locale === "system") {
+            locale = navigator.language;
+        }
+        if(locale.startsWith("en")) {
+            return "en-US";
+        }
+        if (![ "zh-CN", "zh-TW", "en-US" ].includes(locale)) {
+            return "en-US";
+        }
+        return locale;
+    }
 
     init() {
         const data = localStorage.getItem("data");
@@ -22,8 +38,9 @@ class _App {
             this.user = json.user;
             this.token = json.token;
             this.refreshToken = json.refreshToken;
+            this._locale = json._locale ?? "system";
+            this.defaultPostVisibility = json.defaultPostVisibility ?? "public";
         }
-        this.locale = navigator.language;
     }
 
     writeData() {
@@ -31,6 +48,8 @@ class _App {
             user: this.user,
             token: this.token,
             refreshToken: this.refreshToken,
+            locale: this._locale,
+            defaultPostVisibility: this.defaultPostVisibility,
         }
         localStorage.setItem("data", JSON.stringify(data));
     }

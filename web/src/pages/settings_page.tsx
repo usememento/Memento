@@ -1,8 +1,15 @@
-import {Avatar, Button, Input, Tab, Tabs} from "@nextui-org/react";
+import {Avatar, Button, Input, Select, SelectItem, Tab, Tabs} from "@nextui-org/react";
 import {TapRegion} from "../components/button.tsx";
 import {ReactNode, useContext, useState} from "react";
 import {Tr, translate} from "../components/translate.tsx";
-import {MdArrowRight, MdOutlineBadge, MdOutlineDescription, MdOutlinePassword, MdOutlinePerson} from "react-icons/md";
+import {
+    MdArrowRight,
+    MdLanguage,
+    MdOutlineBadge,
+    MdOutlineDescription, MdOutlineLock,
+    MdOutlinePassword,
+    MdOutlinePerson
+} from "react-icons/md";
 import {getAvatar} from "../network/model.ts";
 import app from "../app.ts";
 import showMessage, {dialogCanceler, showDialog, showInputDialog, showLoadingDialog} from "../components/message.tsx";
@@ -142,8 +149,40 @@ function Account() {
 }
 
 function Preferences() {
-    // TODO
-    return <div></div>
+    const [state, setState] = useState({
+        locale: app._locale,
+        defaultPostVisibility: app.defaultPostVisibility,
+    });
+    return <div className={"w-full"}>
+        <ListTile
+            title={translate("Language")}
+            leading={<MdLanguage size={24}/>}
+            trailing={<Select size={"sm"} selectionMode={"single"} className={"max-w-32"} selectedKeys={[state.locale]} onChange={(e) => {
+                if(e.target.value) {
+                    app._locale = e.target.value;
+                    setState(prev => ({...prev, locale: e.target.value}));
+                }
+            }}>
+                <SelectItem key={"system"} value={"system"}>System</SelectItem>
+                <SelectItem key={"en-US"} value={"en-US"}>English</SelectItem>
+                <SelectItem key={"zh-CN"} value={"zh-CN"}>简体中文</SelectItem>
+                <SelectItem key={"zh-TW"} value={"zh-TW"}>繁体中文</SelectItem>
+            </Select>}
+        />
+        <ListTile
+            title={translate("Default Post Visibility")}
+            leading={<MdOutlineLock size={24}/>}
+            trailing={<Select size={"sm"} selectionMode={"single"} className={"max-w-32"} selectedKeys={[state.defaultPostVisibility]} onChange={(e) => {
+                if(e.target.value) {
+                    app.defaultPostVisibility = e.target.value;
+                    setState(prev => ({...prev, defaultPostVisibility: e.target.value}));
+                }
+            }}>
+                <SelectItem key={"public"} value={"public"}>{translate("Public")}</SelectItem>
+                <SelectItem key={"private"} value={"private"}>{translate("Private")}</SelectItem>
+            </Select>}
+        />
+    </div>
 }
 
 function Admin() {

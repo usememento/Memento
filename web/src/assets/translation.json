@@ -36,7 +36,9 @@
     "Change nickname": "修改昵称",
     "Old password": "旧密码",
     "New password": "新密码",
-    "Nickname": "昵称"
+    "Nickname": "昵称",
+    "Language": "语言",
+    "Default Post Visibility": "默认帖子可见性"
   },
   "zh-TW": {
     "Login": "登錄",
@@ -74,7 +76,9 @@
     "Change password": "修改密碼",
     "Old password": "舊密碼",
     "New password": "新密碼",
-    "Nickname": "昵稱"
+    "Nickname": "昵稱",
+    "Language": "語言",
+    "Default Post Visibility": "默認帖子可見性"
   },
   "en-US":{
   }

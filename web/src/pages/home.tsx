@@ -75,7 +75,7 @@ function Editor({fullHeight, updatePosts}: { fullHeight?: boolean, updatePosts: 
         return () => editor.removeEventListener("input", listener);
     }, []);
 
-    const [data, setData] = useState<EditorData>({text: "", isPublic: true});
+    const [data, setData] = useState<EditorData>({text: "", isPublic: app.defaultPostVisibility === "public"});
     const [isUploading, setIsUploading] = useState(false);
     const [isUploadingImage, setIsUploadingImage] = useState(false);
 
