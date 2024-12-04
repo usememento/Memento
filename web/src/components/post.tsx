@@ -221,6 +221,15 @@ function DeletePostDialog({postId, onDelete}: { postId: number, onDelete: () => 
 }
 
 export function MarkdownWidget({content, limitHeight}: {content: string, limitHeight?: boolean}) {
+    const ref = useRef<HTMLDivElement | null>(null);
+
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        if (ref.current)
+            renderTags(ref.current, navigate);
+    }, [navigate]);
+
     if(limitHeight) {
         const lines = content.split("\n");
         if(lines.length > 20) {
@@ -228,11 +237,13 @@ export function MarkdownWidget({content, limitHeight}: {content: string, limitHe
         }
     }
 
-    return <Markdown remarkPlugins={[remarkGfm]} className={`${limitHeight ? "max-h-56" : ""} markdown`} components={{
-        pre(props) {
-            return <CodeWidget props={props}/>
-        }
-    }}>{content}</Markdown>
+    return <div ref={ref}>
+        <Markdown remarkPlugins={[remarkGfm]} className={`${limitHeight ? "max-h-56" : ""} markdown`} components={{
+            pre(props) {
+                return <CodeWidget props={props}/>
+            }
+        }}>{content}</Markdown>
+    </div>
 }
 
 function CodeWidget({props}: {props: any}) {
@@ -266,4 +277,52 @@ function CodeWidget({props}: {props: any}) {
             </pre>
         </div>
     </div>;
+}
+
+function renderTags(container: HTMLElement, navigate: (value: string) => void) {
+    for (const p of container.querySelectorAll('p')) {
+        if (p.textContent == null || !p.textContent.includes('#')) {
+            continue;
+        }
+        const children = p.childNodes;
+        const newChildren = [];
+        for(let i=0; i < children.length; i++) {
+            if (children[i].nodeType == Node.TEXT_NODE) {
+                const text = children[i].textContent;
+                if (text == null || !text.includes('#')) {
+                    newChildren.push(children[i]);
+                    continue;
+                }
+                const split = text!.split(" ");
+                let buffer = "";
+                for (let j = 0; j < split.length; j++) {
+                    if (split[j].startsWith("#") && split[j].length > 1) {
+                        if (buffer.length > 0) {
+                            newChildren.push(document.createTextNode(buffer));
+                        }
+                        const a = document.createElement('span');
+                        a.className = "text-primary cursor-pointer";
+                        a.textContent = split[j];
+                        a.onclick = (e) => {
+                            e.stopPropagation();
+                            navigate(`/tag/${split[j].substring(1)}`);
+                        };
+                        newChildren.push(a);
+                        buffer = " ";
+                    } else {
+                        buffer += split[j] + " ";
+                    }
+                }
+                if (buffer.length > 0) {
+                    newChildren.push(document.createTextNode(buffer));
+                }
+            } else {
+                newChildren.push(children[i]);
+            }
+        }
+        p.innerHTML = "";
+        for (const c of newChildren) {
+            p.appendChild(c);
+        }
+    }
 }
