@@ -1,18 +1,24 @@
 import {Avatar, Button, Input, Select, SelectItem, Tab, Tabs} from "@nextui-org/react";
 import {TapRegion} from "../components/button.tsx";
-import {ReactNode, useContext, useState} from "react";
+import {ReactNode, useContext, useEffect, useState} from "react";
 import {Tr, translate} from "../components/translate.tsx";
 import {
     MdArrowRight,
-    MdLanguage,
+    MdLanguage, MdOutlineAppRegistration,
     MdOutlineBadge,
-    MdOutlineDescription, MdOutlineLock,
+    MdOutlineDescription, MdOutlineDomain, MdOutlineImage, MdOutlineLock,
     MdOutlinePassword,
     MdOutlinePerson
 } from "react-icons/md";
-import {getAvatar} from "../network/model.ts";
+import {getAvatar, ServerConfig} from "../network/model.ts";
 import app from "../app.ts";
-import showMessage, {dialogCanceler, showDialog, showInputDialog, showLoadingDialog} from "../components/message.tsx";
+import showMessage, {
+    dialogCanceler,
+    Loading,
+    showDialog,
+    showInputDialog,
+    showLoadingDialog
+} from "../components/message.tsx";
 import {network} from "../network/network.ts";
 
 export default function SettingsPage() {
@@ -37,7 +43,7 @@ export default function SettingsPage() {
             panel: "p-0 w-full"
         }}>
             {pageNames.map((name, index) => {
-                return <Tab key={index} title={name}>
+                return <Tab key={index} title={translate(name)}>
                     {pages[index]}
                 </Tab>;
             })}
@@ -186,8 +192,84 @@ function Preferences() {
 }
 
 function Admin() {
-    // TODO
-    return <div></div>
+    const [config, setConfig] = useState<ServerConfig | null>(null);
+
+    const [isLoading, setIsLoading] = useState(false);
+
+    useEffect(() => {
+        network.getServerConfig().then(setConfig);
+    }, []);
+
+    if (app.user?.isAdmin !== true) {
+        return <div></div>
+    }
+
+    if (config == null) {
+        return <div className={"w-full h-24 flex items-center justify-center"}>
+            <Loading></Loading>
+        </div>
+    }
+
+    return <div className={"w-full"}>
+        <ListTile title={"Site Name"} leading={<MdOutlineDomain size={24}/>} trailing={<p>{config.siteName}</p>} onClick={() => {
+            showInputDialog("Site Name", "name", async (value) => {
+                await network.setServerConfig({...config, siteName: value});
+                setConfig({...config, siteName: value});
+            });
+        }}/>
+        <ListTile title={"Enable Register"} leading={<MdOutlineAppRegistration size={24}/>} trailing={<Select isLoading={isLoading} size={"sm"} selectionMode={"single"} className={"max-w-32"} selectedKeys={[config.enableRegister ? "1" : "0"]} onChange={(e) => {
+            if(e.target.value) {
+                setIsLoading(true);
+                network.setServerConfig({...config, enableRegister: e.target.value === "1"}).then(() => {
+                    setIsLoading(false);
+                    setConfig({...config, enableRegister: e.target.value === "1"});
+                }).catch((e) => {
+                    showMessage({
+                        text: e.toString(),
+                    });
+                    setIsLoading(false);
+                });
+            }
+        }}>
+            <SelectItem key={"0"} value={"1"}>{translate("Enabled")}</SelectItem>
+            <SelectItem key={"1"} value={"0"}>{translate("Disabled")}</SelectItem>
+        </Select>}/>
+        <ListTile title={"Site Description"} leading={<MdOutlineDescription size={24}/>} trailing={<MdArrowRight size={"24"}/>} onClick={() => {
+            showInputDialog("Site Description", "description", async (value) => {
+                await network.setServerConfig({...config, description: value});
+                setConfig({...config, description: value});
+            }, config?.description);
+        }}/>
+        <ListTile title={"Site Icon"} leading={<MdOutlineImage size={24}/>} trailing={<MdArrowRight size={"24"}/>} onClick={() => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = async () => {
+                const file = input.files?.[0];
+                if (!file) return;
+                if (file.size > 1024 * 1024 * 4) {
+                    showMessage({
+                        text: translate("File too large"),
+                    })
+                    return;
+                }
+                const canceler = showLoadingDialog();
+                try {
+                    await network.setSiteIcon(file);
+                    showMessage({
+                        text: translate("Icon changed"),
+                    })
+                } catch (e: any) {
+                    showMessage({
+                        text: e.toString(),
+                    })
+                } finally {
+                    canceler();
+                }
+            };
+            input.click();
+        }}/>
+    </div>
 }
 
 function About() {

@@ -46,16 +46,16 @@ func AdminCheck(next echo.HandlerFunc) echo.HandlerFunc {
 
 func HandleGetConfigs(c echo.Context) error {
 	return c.JSON(200, echo.Map{
-		"enable_register": memento.GetConfig().EnableRegister,
-		"site_name":       memento.GetConfig().SiteName,
-		"description":     memento.GetConfig().Description,
-		"icon_version":    memento.GetConfig().IconVersion,
+		"enableRegister": memento.GetConfig().EnableRegister,
+		"siteName":       memento.GetConfig().SiteName,
+		"description":    memento.GetConfig().Description,
+		"iconVersion":    memento.GetConfig().IconVersion,
 	})
 }
 
 func HandleSetConfig(c echo.Context) error {
-	enable := c.FormValue("enable_register")
-	siteName := c.FormValue("site_name")
+	enable := c.FormValue("enableRegister")
+	siteName := c.FormValue("siteName")
 	description := c.FormValue("description")
 	if enable != "" {
 		memento.GetConfig().EnableRegister = enable == "true"

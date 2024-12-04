@@ -1,4 +1,4 @@
-import {createContext, ReactNode, useContext} from "react";
+import {createContext, ReactNode, useContext, useState} from "react";
 import {createRoot} from "react-dom/client";
 import {TapRegion} from "./button.tsx";
 import {MdClose} from "react-icons/md";
@@ -81,7 +81,7 @@ export function showLoadingDialog() {
 }
 
 export function Loading() {
-    return <svg aria-hidden="true" className="w-8 h-8 bg-content2 animate-spin fill-primary"
+    return <svg aria-hidden="true" className="w-8 h-8 bg-opacity-0 animate-spin fill-primary text-content2"
                 viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path
             d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
@@ -92,25 +92,37 @@ export function Loading() {
     </svg>;
 }
 
-export function showInputDialog(title: string, fieldName: string, onFinished: (value: string) => void) {
+export function showInputDialog(title: string, fieldName: string, onFinished: (value: string) => void, initialValue?: string) {
     return showDialog({
         title: title,
-        children: <InputDialog onSubmit={onFinished} fieldName={fieldName}/>,
+        children: <InputDialog onSubmit={onFinished} fieldName={fieldName} initialValue={initialValue}/>,
     })
 }
 
-function InputDialog({onSubmit, fieldName}: {onSubmit: (value: string) => void, fieldName: string}) {
+function InputDialog({onSubmit, fieldName, initialValue}: {onSubmit: (value: string) => (void | Promise<void>), fieldName: string, initialValue?: string}) {
     const canceler = useContext(dialogCanceler);
+
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     return <form className={"px-2"} onSubmit={(e) => {
         e.preventDefault();
         const value = (document.getElementById('input') as HTMLInputElement).value;
-        onSubmit(value);
-        canceler();
+        const res = onSubmit(value);
+        if (res instanceof Promise) {
+            setIsSubmitting(true);
+            res.then(() => {
+                canceler();
+            }).catch((e: any) => {
+                showMessage({text: e.toString()});
+                setIsSubmitting(false);
+            });
+        } else {
+            canceler();
+        }
     }}>
-        <Input type={"text"} id={'input'} placeholder={fieldName} className={"my-2"}/>
+        <Input type={"text"} id={'input'} placeholder={fieldName} className={"my-2"} defaultValue={initialValue}/>
         <div className={"w-full h-12 flex flex-row-reverse mt-2"}>
-            <Button type={"submit"} color={"primary"}><Tr>Submit</Tr></Button>
+            <Button isLoading={isSubmitting} type={"submit"} color={"primary"}><Tr>Submit</Tr></Button>
         </div>
     </form>
 }

@@ -38,7 +38,12 @@
     "New password": "新密码",
     "Nickname": "昵称",
     "Language": "语言",
-    "Default Post Visibility": "默认帖子可见性"
+    "Default Post Visibility": "默认帖子可见性",
+    "Icon changed": "图标已更改",
+    "Account": "账号",
+    "Preferences": "偏好",
+    "Admin": "管理员",
+    "About": "关于"
   },
   "zh-TW": {
     "Login": "登錄",
@@ -78,7 +83,12 @@
     "New password": "新密碼",
     "Nickname": "昵稱",
     "Language": "語言",
-    "Default Post Visibility": "默認帖子可見性"
+    "Default Post Visibility": "默認帖子可見性",
+    "Icon changed": "圖標已更改",
+    "Account": "賬號",
+    "Preferences": "偏好",
+    "Admin": "管理員",
+    "About": "關於"
   },
   "en-US":{
   }

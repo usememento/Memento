@@ -65,3 +65,10 @@ export interface Resource {
     filename: string;
     time: string;
 }
+
+export interface ServerConfig{
+    enableRegister: boolean;
+    siteName: string;
+    description: string;
+    iconVersion: number;
+}

@@ -1,6 +1,6 @@
 import app from "../app.ts";
 import axios from 'axios';
-import {CommentWithPost, HeatMapData, Post, User, Comment, Resource} from "./model.ts";
+import {CommentWithPost, HeatMapData, Post, User, Comment, Resource, ServerConfig} from "./model.ts";
 
 export const network = {
     isRefreshing: false,
@@ -181,6 +181,18 @@ export const network = {
             oldPassword: oldPassword,
             newPassword: newPassword,
         });
+    },
+    getServerConfig: async () => {
+        const res = await axios.get(`${app.server}/api/admin/config`);
+        return res.data as ServerConfig;
+    },
+    setServerConfig: async (config: ServerConfig) => {
+        await axios.postForm(`${app.server}/api/admin/config`, config);
+    },
+    setSiteIcon: async (icon: File) => {
+        const formData = new FormData();
+        formData.append("icon", icon);
+        await axios.post(`${app.server}/api/admin/setIcon`, formData);
     }
 }
 
