@@ -20,8 +20,10 @@ import PostEditPage from "../pages/post_edit_page.tsx";
 import Markdown from "react-markdown";
 import remarkGfm from 'remark-gfm';
 import "../markdown.css";
-import hljs from 'highlight.js';
 import {useNavigate} from "react-router";
+
+const hljs = import('highlight.js/lib/common');
+const dart = import('highlight.js/lib/languages/dart');
 
 export default function PostWidget({post, showUser, onDelete}: {
     post: Post,
@@ -254,7 +256,12 @@ function CodeWidget({props}: {props: any}) {
 
     useEffect(() => {
         if(ref.current)
-            hljs.highlightElement(ref.current)
+            hljs.then((e) => {
+                dart.then((d) => {
+                    e.default.registerLanguage('dart', d.default);
+                    e.default.highlightElement(ref.current!);
+                })
+            })
     }, []);
 
     return <div className={"bg-content2 rounded-lg bg-opacity-60 my-2"}>

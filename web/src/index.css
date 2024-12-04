@@ -13,6 +13,16 @@
     --scrollbar-color-track: #fff;
 }
 
+@media (prefers-color-scheme: dark) {
+    :root {
+        --scrollbar-color-thumb: #333;
+        --scrollbar-color-track: #222;
+    }
+    * {
+        border-color: #444;
+    }
+}
+
 html {
     width: 100%;
     height: 100%;

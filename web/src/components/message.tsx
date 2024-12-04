@@ -4,6 +4,7 @@ import {TapRegion} from "./button.tsx";
 import {MdClose} from "react-icons/md";
 import {Button, Input} from "@nextui-org/react";
 import {Tr} from "./translate.tsx";
+import Theme from "./theme.tsx";
 
 export default function showMessage({text}:{ text: string }) {
     const div = document.createElement("div");
@@ -25,34 +26,38 @@ export function showDialog({children, title, fullscreen}: {children: ReactNode, 
     return new Promise<null>((resolve) => {
         const div = document.createElement("div");
         document.body.appendChild(div);
-        createRoot(div).render(<div onDrag={() => {}} onPointerDown={(e) => {
-            console.log(e);
-            div.remove();
-            resolve(null);
-        }} className={"fixed left-0 right-0 top-0 bottom-0 flex items-center justify-center z-50 bg-black bg-opacity-50 animate-opacity-in"}>
-            <div onPointerDown={(e) => {
-                e.stopPropagation();
+        createRoot(div).render(<Theme>
+            <div onDrag={() => {
+            }} onPointerDown={(e) => {
+                console.log(e);
+                div.remove();
+                resolve(null);
             }}
-                 className={`bg-background w-full ${(fullscreen ?? false ? "h-full" : "max-w-sm shadow-md rounded-md")} px-2 py-2 items-center justify-center animate-appearance-in`}>
-                {title && <div className={"w-full h-9 flex flex-row items-center"}>
-                  <TapRegion borderRadius={24} onPress={() => {
-                      resolve(null);
-                      div.remove();
-                  }}>
-                    <div className={"p-2 flex items-center justify-center"}>
-                      <MdClose size={24}></MdClose>
-                    </div>
-                  </TapRegion>
-                  <div className={"flex-grow ml-3"}>{title}</div>
-                </div>}
-                <dialogCanceler.Provider value={() => {
-                    resolve(null);
-                    div.remove();
-                }}>
-                    {children}
-                </dialogCanceler.Provider>
+                 className={"fixed left-0 right-0 top-0 bottom-0 flex items-center justify-center z-50 bg-black bg-opacity-50 animate-opacity-in"}>
+                <div onPointerDown={(e) => {
+                    e.stopPropagation();
+                }}
+                     className={`bg-background w-full ${(fullscreen ?? false ? "h-full" : "max-w-sm shadow-md rounded-md")} px-2 py-2 items-center justify-center animate-appearance-in dark:border`}>
+                    {title && <div className={"w-full h-9 flex flex-row items-center"}>
+                      <TapRegion borderRadius={24} onPress={() => {
+                          resolve(null);
+                          div.remove();
+                      }}>
+                        <div className={"p-2 flex items-center justify-center"}>
+                          <MdClose size={24}></MdClose>
+                        </div>
+                      </TapRegion>
+                      <div className={"flex-grow ml-3"}>{title}</div>
+                    </div>}
+                    <dialogCanceler.Provider value={() => {
+                        resolve(null);
+                        div.remove();
+                    }}>
+                        {children}
+                    </dialogCanceler.Provider>
+                </div>
             </div>
-        </div>);
+        </Theme>);
     });
 }
 
