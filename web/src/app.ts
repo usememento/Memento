@@ -8,9 +8,9 @@ class _App {
 
     refreshToken: string | null = null;
 
-    // Only for development, replace to empty string for production
     get server() {
-        return "http://localhost:1323";
+        // return "http://localhost:1323";
+        return window.location.origin;
     }
 
     _locale = "system"

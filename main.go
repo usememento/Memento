@@ -105,5 +105,5 @@ func main() {
 		public.GET("/article/:id", service.HandlePublicArticle)
 	}
 
-	e.Logger.Fatal(e.Start(fmt.Sprintf(":%d", memento.GetConfig().ServerConfig.Port)))
+	e.Logger.Fatal(e.Start(fmt.Sprintf("0.0.0.0:1323")))
 }

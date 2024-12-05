@@ -10,10 +10,8 @@ subprocess.run(["go", "build", "-o", "build/", "main.go"])
 
 shutil.copytree("./assets", "./build/assets")
 
-os.chdir("./frontend")
-if os.name == "nt":
-    subprocess.run(["flutter.bat", "build", "web", "--web-renderer", "html", "--release"])
-else:
-    subprocess.run(["flutter", "build", "web", "--web-renderer", "html", "--release"])
+os.chdir("./web")
+subprocess.run(["npm", "install"], shell=True)
+subprocess.run(["npm", "run", "build"], shell=True)
 os.chdir("..")
-shutil.copytree("./frontend/build/web", "./build/frontend/build/web")
+shutil.copytree("./web/dist", "./build/frontend/build/web")
