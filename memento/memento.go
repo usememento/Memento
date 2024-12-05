@@ -156,6 +156,11 @@ func Init() error {
 		log.Errorf("Error establishing database connection: %s\n", err.Error())
 		return err
 	}
+	_ = Db().AutoMigrate(&model.Tag{})
+	_ = Db().AutoMigrate(&model.File{})
+	_ = Db().AutoMigrate(&model.Comment{})
+	_ = Db().AutoMigrate(&model.Post{})
+	_ = Db().AutoMigrate(&model.User{})
 	err = initSearchEngine()
 	if err != nil {
 		log.Errorf("Error initializing bleve search: %s\n", err.Error())
