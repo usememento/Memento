@@ -53,17 +53,17 @@ export const network = {
     getPosts: async (username: string, page: number) => {
         const res = await axios.get(`${app.server}/api/post/userPosts?username=${username}&page=${page}`);
         const json = res.data;
-        return [json.posts as Post[], json.maxPage as number];
+        return [json.posts as Post[], json.maxPage as number] as [Post[], number];
     },
     getAllPosts: async (page: number) => {
         const res = await axios.get(`${app.server}/api/post/all?page=${page}`);
         const json = res.data;
-        return [json.posts as Post[], json.maxPage as number];
+        return [json.posts as Post[], json.maxPage as number] as [Post[], number];
     },
     getFollowPosts: async (page: number) => {
         const res = await axios.get(`${app.server}/api/post/following?page=${page}`);
         const json = res.data;
-        return [json.posts as Post[], json.maxPage as number];
+        return [json.posts as Post[], json.maxPage as number] as [Post[], number];
     },
     createPost: async (content: string, isPublic: boolean) => {
         await axios.postForm(`${app.server}/api/post/create`, {

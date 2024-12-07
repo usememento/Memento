@@ -1,7 +1,7 @@
 import {HeatMapData} from "../network/model.ts";
 import {ReactNode, useEffect, useRef, useState} from "react";
 import {network} from "../network/network.ts";
-import {Spinner} from "@nextui-org/react";
+import {Loading} from "./message.tsx";
 
 export default function HeatMapWidget({username, showStatistics}: { username: string, showStatistics?: boolean }) {
     const [data, setData] = useState<HeatMapData | null>(null)
@@ -11,7 +11,9 @@ export default function HeatMapWidget({username, showStatistics}: { username: st
     }, [username]);
 
     if (!data) {
-        return <div><Spinner/></div>
+        return <div className={"w-full h-20 flex items-center justify-center"}>
+            <Loading/>
+        </div>
     } else {
         return <HeatMap data={data} showStatistics={showStatistics}/>
     }

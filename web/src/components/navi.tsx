@@ -112,8 +112,10 @@ export default function NaviBar() {
                 <UserPart></UserPart>
                 <NaviList onTap={onNaviTap} link={window.location.pathname}/>
             </div>
-            <div className={"flex-grow h-full"}>
-            <AnimatedOutlet></AnimatedOutlet>
+            <div className={"h-full"} style={{
+                width: "calc(100% - 256px)"
+            }}>
+                <AnimatedOutlet></AnimatedOutlet>
             </div>
         </div>
     }

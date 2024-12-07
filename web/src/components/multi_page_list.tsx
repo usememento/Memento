@@ -1,6 +1,5 @@
 import React, {useCallback, useEffect} from "react";
-import showMessage from "./message.tsx";
-import {Spinner} from "@nextui-org/react";
+import showMessage, {Loading} from "./message.tsx";
 
 export default function MultiPageList<T>({itemBuilder, loader}: {
     itemBuilder: (item: T) => React.ReactNode, 
@@ -58,6 +57,6 @@ export default function MultiPageList<T>({itemBuilder, loader}: {
 
     return <div>
         {state.items.map((e, index) => <div key={index}>{itemBuilder(e)}</div>)}
-        {state.loading && <div className={"text-center text-accent-foreground"}><Spinner/></div>}
+        {state.loading && <div className={"w-full h-20 flex items-center justify-center"}><Loading/></div>}
     </div>
 }

@@ -65,7 +65,7 @@ export default function PostEditPage({post, onEdited}: { post: Post, onEdited: (
         <textarea className={"w-full p-4 focus:outline-none resize-none"} value={state.text} onChange={(e) => {
             setState(prev => ({...prev, text: e.target.value}));
         }} style={{
-            height: "calc(100% - 32px)",
+            height: "calc(100% - 72px)",
         }}></textarea>
         <div className={"h-8 w-full flex flex-row"}>
             <TapRegion onPress={() => {

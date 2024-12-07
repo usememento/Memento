@@ -87,7 +87,7 @@ export default function PostWidget({post, showUser, onDelete}: {
 
     const navigate = useNavigate();
 
-    return <TapRegion lighter={true} onPress={() => {
+    return <TapRegion className={"w-full"} lighter={true} onPress={() => {
         navigate(`/post/${post.postID}`, {state: {post}});
     }}>
         <div className={"w-full flex flex-row border-b"}>
@@ -243,6 +243,9 @@ export function MarkdownWidget({content, limitHeight}: {content: string, limitHe
         <Markdown remarkPlugins={[remarkGfm]} className={`${limitHeight ? "max-h-56" : ""} markdown`} components={{
             pre(props) {
                 return <CodeWidget props={props}/>
+            },
+            input(props) {
+                return <input {...props} disabled={false}/>
             }
         }}>{content}</Markdown>
     </div>

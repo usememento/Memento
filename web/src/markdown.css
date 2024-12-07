@@ -49,18 +49,19 @@
         padding-left: 8px;
         margin: 4px 0;
     }
-    li.task {
+    li.task-list-item {
         list-style-type: none;
         display: flex;
         align-items: center;
         font-size: 1em;
         line-height: 1.5em;
     }
-    li.task svg {
+    li>input {
         margin-right: 8px;
-        color: #4a9eff;
+        accent-color: #007aff;
+        border-radius: 0;
     }
-    ul.task {
+    ul.contains-task-list {
         padding-left: 4px;
     }
 

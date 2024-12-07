@@ -6,14 +6,15 @@ interface TapRegionProps {
     children: ReactNode;
     borderRadius?: number;
     lighter?: boolean;
+    className?: string;
 }
 
-export function TapRegion({onPress, children, borderRadius = 0, lighter}: TapRegionProps) {
+export function TapRegion({onPress, children, borderRadius = 0, lighter, className}: TapRegionProps) {
     return <div onClick={(e) => {
         e.stopPropagation();
         onPress();
     }} style={{borderRadius: borderRadius}}
-                className={`cursor-pointer hover:bg-content2 active:bg-content3 duration-200 ${lighter ? "hover:bg-opacity-60 active:bg-opacity-60" : ''}`}>
+                className={`cursor-pointer hover:bg-content2 active:bg-content3 duration-200 ${lighter ? "hover:bg-opacity-60 active:bg-opacity-60" : ''} ${className}`}>
         {children}
     </div>
 }
