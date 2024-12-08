@@ -113,13 +113,15 @@ export default function NaviBar() {
         const naviWidth = naviType === NaviType.left ? 224 : 64
         const small = naviType === NaviType.leftSmall
         return <div className={"w-full h-full flex flex-row no-select max-w-screen-xl m-auto"}>
-            <div className={`h-full ${small ? "px-1" : "px-4"} border-r flex-shrink-0`} style={{
+            <div className={`h-full ${small ? "px-1" : "px-4"} border-r`} style={{
                 width: `${naviWidth}px`
             }}>
                 <UserPart small={small}></UserPart>
                 <NaviList onTap={onNaviTap} link={window.location.pathname} small={small}/>
             </div>
-            <div className={"h-full flex-grow"}>
+            <div className={"h-full"} style={{
+                width: `calc(100% - ${naviWidth}px)`
+            }}>
                 <AnimatedOutlet></AnimatedOutlet>
             </div>
         </div>
