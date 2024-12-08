@@ -48,13 +48,11 @@ export default function HomePage() {
     }
 
     return <div className={"flex flex-row w-full h-full"}>
-        <div className={"h-full overflow-y-scroll"} style={{
-            width: showSidebar ? "calc(100% - 16rem)" : "100%",
-        }}>
+        <div className={"h-full overflow-y-scroll flex-grow"}>
             <Editor updatePosts={updatePosts}></Editor>
             <UserPosts key={postsKey}></UserPosts>
         </div>
-        {showSidebar&&app.user && <div className={"w-64 h-full border-l"} key={postsKey}>
+        {showSidebar&&app.user && <div className={"w-64 h-full border-l flex-shrink-0"} key={postsKey}>
             <SearchBar />
             <div className={"h-2"}></div>
             <HeatMapWidget username={app.user!.username}></HeatMapWidget>

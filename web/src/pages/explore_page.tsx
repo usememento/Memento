@@ -20,12 +20,10 @@ export default function ExplorePage() {
     }, []);
 
     return <div className={"flex flex-row w-full h-full"}>
-        <div className={"overflow-y-scroll h-full"} style={{
-            width: showSidebar ? "calc(100% - 16rem)" : "100%",
-        }}>
+        <div className={"overflow-y-scroll h-full flex-grow"}>
             <UserPosts></UserPosts>
         </div>
-        {showSidebar && <div className={"w-64 h-full border-l"}>
+        {showSidebar && <div className={"w-64 h-full border-l flex-shrink-0"}>
             <SearchBar />
             <div className={"h-4"}></div>
             <TagList/>

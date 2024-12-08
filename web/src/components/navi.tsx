@@ -23,11 +23,14 @@ import {AnimatePresence, motion} from "framer-motion";
 enum NaviType {
     top,
     left,
+    leftSmall
 }
 
 function getNaviType() {
     if (window.innerWidth < 600) {
         return NaviType.top;
+    } else if (window.innerWidth < 1024) {
+        return NaviType.leftSmall;
     } else {
         return NaviType.left;
     }
@@ -87,8 +90,8 @@ export default function NaviBar() {
             <div className={"fixed top-0 bottom-0 w-64 z-50 bg-background duration-200 px-2 shadow-md"} style={{
                 left: isOpen ? "0" : "-256px",
             }}>
-                <UserPart onTap={onNaviTap}></UserPart>
-                <NaviList onTap={onNaviTap} link={window.location.pathname}/>
+                <UserPart onTap={onNaviTap} small={false}></UserPart>
+                <NaviList onTap={onNaviTap} link={window.location.pathname} small={false}/>
             </div>
             {pageName !== "" && <div
                 className={"h-14 w-full fixed flex flex-row top-0 left-0 right-0 items-center px-4 border-b z-10 bg-background bg-opacity-60 backdrop-blur"}>
@@ -107,14 +110,16 @@ export default function NaviBar() {
             </div>
         </div>
     } else {
+        const naviWidth = naviType === NaviType.left ? 224 : 64
+        const small = naviType === NaviType.leftSmall
         return <div className={"w-full h-full flex flex-row no-select max-w-screen-xl m-auto"}>
-            <div className={"h-full w-64 px-4 border-r"}>
-                <UserPart></UserPart>
-                <NaviList onTap={onNaviTap} link={window.location.pathname}/>
-            </div>
-            <div className={"h-full"} style={{
-                width: "calc(100% - 256px)"
+            <div className={`h-full ${small ? "px-1" : "px-4"} border-r flex-shrink-0`} style={{
+                width: `${naviWidth}px`
             }}>
+                <UserPart small={small}></UserPart>
+                <NaviList onTap={onNaviTap} link={window.location.pathname} small={small}/>
+            </div>
+            <div className={"h-full flex-grow"}>
                 <AnimatedOutlet></AnimatedOutlet>
             </div>
         </div>
@@ -133,7 +138,7 @@ const AnimatedOutlet = () => {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.2 }}
-                    className='container h-full'
+                    className='h-full w-full'
                 >
                     {element}
                 </motion.div>
@@ -142,7 +147,7 @@ const AnimatedOutlet = () => {
     );
 };
 
-function NaviItem({icon, text, link, current, onTap}: { icon: ReactNode, text: string, link: string, current: string, onTap: () => void }) {
+function NaviItem({icon, text, link, current, onTap, small}: { icon: ReactNode, text: string, link: string, current: string, onTap: () => void, small: boolean }) {
     const navigate = useNavigate()
 
     const isActivated = current === link
@@ -154,35 +159,37 @@ function NaviItem({icon, text, link, current, onTap}: { icon: ReactNode, text: s
         <div className={`w-full h-12 flex flex-row text-lg  justify-center items-center px-4 duration-200
           ${isActivated ? "text-primary-500 font-bold" : "text-default-900"}`}>
             {icon}
-            <span className={"w-3"}></span>
-            <div className={"flex-grow pt-0.5"}>
+            {!small && <>
+              <span className={"w-3"}></span>
+              <div className={"flex-grow pt-0.5"}>
                 <Tr>{text}</Tr>
-            </div>
+              </div>
+            </>}
         </div>
     </TapRegion>
 }
 
-function NaviList({link, onTap}: { link: string, onTap: () => void}) {
+function NaviList({link, onTap, small}: { link: string, onTap: () => void, small: boolean }) {
     return <>
-        <NaviItem onTap={onTap} icon={<MdOutlineHome size={24}/>} text={"Home"} link={"/"} current={link}></NaviItem>
-        <NaviItem onTap={onTap} icon={<MdOutlineExplore size={24}/>} text={"Explore"} link={"/explore"} current={link}></NaviItem>
+        <NaviItem onTap={onTap} icon={<MdOutlineHome size={24}/>} text={"Home"} link={"/"} current={link} small={small}></NaviItem>
+        <NaviItem onTap={onTap} icon={<MdOutlineExplore size={24}/>} text={"Explore"} link={"/explore"} current={link} small={small}></NaviItem>
         <NaviItem onTap={onTap} icon={<MdOutlineSubscriptions size={24}/>} text={"Following"} link={"/following"}
-                  current={link}></NaviItem>
+                  current={link} small={small}></NaviItem>
         <NaviItem onTap={onTap} icon={<MdOutlineLibraryBooks size={24}/>} text={"Resources"} link={"/resources"}
-                  current={link}></NaviItem>
-        <NaviItem onTap={onTap} icon={<MdSearch size={24}/>} text={"Search"} link={"/search"} current={link}></NaviItem>
-        <NaviItem onTap={onTap} icon={<MdOutlineSettings size={24}/>} text={"Settings"} link={"/settings"} current={link}></NaviItem>
+                  current={link} small={small}></NaviItem>
+        <NaviItem onTap={onTap} icon={<MdSearch size={24}/>} text={"Search"} link={"/search"} current={link} small={small}></NaviItem>
+        <NaviItem onTap={onTap} icon={<MdOutlineSettings size={24}/>} text={"Settings"} link={"/settings"} current={link} small={small}></NaviItem>
     </>
 }
 
-function UserPart({onTap}: { onTap?: () => void }) {
+function UserPart({onTap, small}: { onTap?: () => void, small: boolean }) {
     const user = app.user
     const navigate = useNavigate()
 
     const [isOpen, setIsOpen] = useState(false)
 
     return <div className={"py-4"}>
-        <Dropdown className={"px-2 py-2"} isOpen={isOpen} onOpenChange={(b) => {
+        <Dropdown className={`${!small && "px-2"} py-2`} isOpen={isOpen} onOpenChange={(b) => {
             if (b) {
                 if (!user) {
                     navigate("/login")
@@ -194,10 +201,10 @@ function UserPart({onTap}: { onTap?: () => void }) {
             }
         }}>
             <DropdownTrigger>
-                <button className={"w-full text-start hover:bg-content2 active:bg-content3 duration-200 rounded-2xl"}>
-                    <div className={"w-full h-14 flex flex-row justify-center items-center px-4"}>
+                <button className={`w-full text-start hover:bg-content2 active:bg-content3 duration-200 rounded-2xl`}>
+                    <div className={`w-full h-14 flex flex-row justify-center items-center ${!small && "px-4"}`}>
                         <Avatar src={getAvatar(app.user)}></Avatar>
-                        <div className={"flex-grow pl-3"}>{user?.nickname ?? translate("Login")}</div>
+                        {!small && <div className={"flex-grow pl-3"}>{user?.nickname ?? translate("Login")}</div>}
                     </div>
                 </button>
             </DropdownTrigger>
