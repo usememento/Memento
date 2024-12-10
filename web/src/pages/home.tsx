@@ -143,7 +143,7 @@ function Editor({fullHeight, updatePosts}: { fullHeight?: boolean, updatePosts: 
                     updatePosts();
                     const editor = document.getElementById("editor")!;
                     editor.style.height = "auto";
-                    editor.style.height = editor.scrollHeight + "px";
+                    editor.style.height = "48px";
                 } catch (e: any) {
                     showMessage({text: e.toString()});
                 } finally {
