@@ -12,7 +12,7 @@ export const network = {
             return config;
         });
         axios.interceptors.response.use(async (res) => {
-            if (network.isRefreshing) {
+            if (res.status === 401 && network.isRefreshing) {
                 while (network.isRefreshing) {
                     await new Promise((resolve) => {
                         setTimeout(() => {
