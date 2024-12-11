@@ -1,21 +1,37 @@
 import app from "../app.ts";
 import axios from 'axios';
-import {CommentWithPost, HeatMapData, Post, User, Comment, Resource, ServerConfig} from "./model.ts";
+import { CommentWithPost, HeatMapData, Post, User, Comment, Resource, ServerConfig } from "./model.ts";
 
 export const network = {
     isRefreshing: false,
     init: () => {
         axios.interceptors.request.use((config) => {
-            if(app.token && !config.url!.includes("/refresh"))
+            if (app.token && !config.url!.includes("/refresh"))
                 config.headers.Authorization = app.token;
             config.validateStatus = () => true;
             return config;
         });
         axios.interceptors.response.use(async (res) => {
-            if(res.status === 401 && !network.isRefreshing && app.token) {
+            if (network.isRefreshing) {
+                while (network.isRefreshing) {
+                    await new Promise((resolve) => {
+                        setTimeout(() => {
+                            resolve(null);
+                        }, 100);
+                    })
+                }
+                let config = res.config;
+                config.headers.Authorization = app.token;
+                res = await axios.request(res.config);
+                return res;
+            }
+
+            if (res.status === 401 && !network.isRefreshing && app.token) {
                 try {
                     network.isRefreshing = true;
                     await network.refreshToken();
+                    let config = res.config;
+                    config.headers.Authorization = app.token;
                     res = await axios.request(res.config);
                     return res;
                 }
@@ -27,8 +43,8 @@ export const network = {
                     network.isRefreshing = false;
                 }
             }
-            if(res.status === 400) {
-                if(res.config.url!.includes("/refresh")) {
+            if (res.status === 400) {
+                if (res.config.url!.includes("/refresh")) {
                     setTimeout(() => {
                         app.clearData();
                         window.location.reload();
@@ -48,7 +64,9 @@ export const network = {
         const res = await axios.postForm(`${app.server}/api/user/refresh`, {
             refreshToken: app.refreshToken,
         });
-        app.token = res.data.token;
+        app.token = res.data.accessToken;
+        app.refreshToken = res.data.refreshToken;
+        app.writeData();
     },
     getPosts: async (username: string, page: number) => {
         const res = await axios.get(`${app.server}/api/post/userPosts?username=${username}&page=${page}`);
@@ -158,7 +176,7 @@ export const network = {
         formData.append("file", file);
         const res = await axios.post(`${app.server}/api/file/upload`, formData, {
             onUploadProgress: (e) => {
-                if(onUploadProgress != null)
+                if (onUploadProgress != null)
                     onUploadProgress(e.loaded / (e.total ?? file.size));
             }
         });
@@ -169,9 +187,9 @@ export const network = {
     },
     editInfo: async (nickname: string | null, bio: string | null, avatar: File | null) => {
         const data = new FormData();
-        if(nickname) data.append("nickname", nickname);
-        if(bio) data.append("bio", bio);
-        if(avatar) data.append("avatar", avatar);
+        if (nickname) data.append("nickname", nickname);
+        if (bio) data.append("bio", bio);
+        if (avatar) data.append("avatar", avatar);
         const user = await axios.post(`${app.server}/api/user/edit`, data);
         app.user = user.data as User;
         app.writeData();
