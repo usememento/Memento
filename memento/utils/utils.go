@@ -39,6 +39,27 @@ func RespondInternalError(c echo.Context, msg interface{}) error {
 		})
 }
 
+func removeInlineCode(line string) string {
+	isEscape := false
+	start := -1
+	for {
+		for i, c := range line {
+			if c == '\\' {
+				isEscape = !isEscape
+			} else if c == '`' && !isEscape {
+				if start == -1 {
+					start = i
+				} else {
+					line = line[:start] + line[i+1:]
+				}
+			}
+			if i == len(line)-1 {
+				return line
+			}
+		}
+	}
+}
+
 func GetTags(content string) []string {
 	content = strings.ReplaceAll(content, "\r", "")
 	lines := strings.Split(content, "\n")
@@ -53,6 +74,9 @@ func GetTags(content string) []string {
 		if isCode {
 			continue
 		}
+
+		l = removeInlineCode(l)
+
 		blocks := strings.Split(l, " ")
 
 		for _, b := range blocks {
