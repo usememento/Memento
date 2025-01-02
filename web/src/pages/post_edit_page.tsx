@@ -27,7 +27,7 @@ export default function PostEditPage() {
             throw "Post cannot be empty";
         }
         await network.editPost(post.postID, value.current.text, value.current.isPublic);
-        navigate("-1");
+        navigate(-1);
     }, [navigate, post.postID]);
 
     const onChanged = useCallback((data: EditorData) => {

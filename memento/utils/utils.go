@@ -42,22 +42,23 @@ func RespondInternalError(c echo.Context, msg interface{}) error {
 func removeInlineCode(line string) string {
 	isEscape := false
 	start := -1
-	for {
-		for i, c := range line {
-			if c == '\\' {
-				isEscape = !isEscape
-			} else if c == '`' && !isEscape {
-				if start == -1 {
-					start = i
-				} else {
-					line = line[:start] + line[i+1:]
-				}
+	for i := 0; i < len(line); i++ {
+		c := line[i]
+		if c == '\\' {
+			isEscape = !isEscape
+		} else if c == '`' && !isEscape {
+			if start == -1 {
+				start = i
+			} else {
+				line = line[:start] + line[i+1:]
+				i = start - 1
+				start = -1
 			}
-			if i == len(line)-1 {
-				return line
-			}
+		} else {
+			isEscape = false
 		}
 	}
+	return line
 }
 
 func GetTags(content string) []string {
