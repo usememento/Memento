@@ -1,12 +1,13 @@
+import { ReactNode } from "react";
 import {TapRegion} from "./button.tsx";
 import {MdArrowBack} from "react-icons/md";
 import {useNavigate} from "react-router";
 
-export default function Appbar({title, hideTitle, onBack}: {title: string, hideTitle?: boolean, onBack?: () => void}) {
+export default function Appbar({title, hideTitle, onBack, trailing}: {title: string, hideTitle?: boolean, onBack?: () => void, trailing?: ReactNode}) {
     const navigate = useNavigate();
 
     return <div className={"h-12 sticky w-full flex flex-row px-2 items-center text-xl top-0 bg-background z-50"}>
-        <TapRegion onPress={() => {
+        {window.history.length > 1 && <TapRegion onPress={() => {
             if (onBack) {
                 onBack();
                 return;
@@ -22,10 +23,11 @@ export default function Appbar({title, hideTitle, onBack}: {title: string, hideT
                 className={`w-10 h-10 flex flex-row items-center justify-center text-2xl`}>
                 <MdArrowBack/>
             </div>
-        </TapRegion>
+        </TapRegion>}
         <span className={"w-2"} />
         <span className={`flex-grow ${hideTitle ? "opacity-0" : "opacity-100"} duration-200 transition-opacity`}>
             {title}
         </span>
+        {trailing}
     </div>
 }

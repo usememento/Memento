@@ -16,7 +16,6 @@ import {Avatar, Button} from "@nextui-org/react";
 import {Tr, translate} from "./translate.tsx";
 import CommentsPage from "../pages/comments_page.tsx";
 import Appbar from "./appbar.tsx";
-import PostEditPage from "../pages/post_edit_page.tsx";
 import Markdown from "react-markdown";
 import remarkGfm from 'remark-gfm';
 import "../markdown.css";
@@ -66,17 +65,11 @@ export default function PostWidget({post, showUser, onDelete}: {
         setShowComments(prevState => !prevState);
     }, []);
 
+    const navigate = useNavigate();
+
     const openEdit = useCallback(() => {
-        showDialog({
-            children: <PostEditPage post={post} onEdited={(p) => {
-                setState(prev => ({...prev, content: p.content}));
-                post.content = p.content;
-                post.isPrivate = !p.isPrivate;
-            }}/>,
-            title: translate("Edit post"),
-            fullscreen: true,
-        })
-    }, [post]);
+        navigate(`/post/${post.postID}/edit`, {state: {post}});
+    }, [navigate, post]);
 
     const deletePost = useCallback(() => {
         showDialog({
@@ -84,8 +77,6 @@ export default function PostWidget({post, showUser, onDelete}: {
             children: <DeletePostDialog postId={post.postID} onDelete={onDelete!}/>
         })
     }, [onDelete, post.postID]);
-
-    const navigate = useNavigate();
 
     return <TapRegion className={"w-full"} lighter={true} onPress={() => {
         navigate(`/post/${post.postID}`, {state: {post}});

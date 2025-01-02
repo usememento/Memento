@@ -10,7 +10,7 @@ class _App {
 
     get server() {
         // return "http://localhost:1323";
-        return window.location.origin;
+        return "https://note.nyne.dev";
     }
 
     _locale = "system"

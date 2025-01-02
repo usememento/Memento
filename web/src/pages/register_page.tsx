@@ -33,7 +33,7 @@ export default function RegisterPage() {
                 const captcha: Captcha = await captchaRes.json();
                 let value = 0
                 await showDialog({
-                    title: "Move the slider to correct position",
+                    title: translate("Move the slider to correct position"),
                     children: <CaptchaWidget Captcha={captcha} onFinished={(v) => {
                         value = v;
                     }}/>

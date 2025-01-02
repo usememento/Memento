@@ -1,22 +1,17 @@
-import {useCallback, useEffect, useState} from "react";
-import {IconButton, TapRegion} from "../components/button.tsx";
-import {
-    MdLock,
-    MdOutlineImage,
-    MdOutlineInfo,
-    MdPublic
-} from "react-icons/md";
-import {Tr, translate} from "../components/translate.tsx";
-import {Button, Spinner} from "@nextui-org/react";
+import {useCallback, useEffect, useRef, useState} from "react";
+import {TapRegion} from "../components/button.tsx";
+import {Tr} from "../components/translate.tsx";
+import {Button} from "@nextui-org/react";
 import {Post} from "../network/model.ts";
 import {network} from "../network/network.ts";
 import app from "../app.ts";
-import showMessage, {Loading} from "../components/message.tsx";
+import {Loading} from "../components/message.tsx";
 import PostWidget from "../components/post.tsx";
 import HeatMapWidget from "../components/heat_map.tsx";
 import SearchBar from "../components/search.tsx";
 import {useNavigate} from "react-router";
 import MultiPageList from "../components/multi_page_list.tsx";
+import Editor, {EditorData} from "../components/editor.tsx";
 
 export default function HomePage() {
     const [postsKey, setPostsKey] = useState(0);
@@ -49,7 +44,7 @@ export default function HomePage() {
 
     return <div className={"flex flex-row w-full h-full"}>
         <div className={"h-full overflow-y-scroll flex-grow"}>
-            <Editor updatePosts={updatePosts}></Editor>
+            <HomePageEditor updatePosts={updatePosts}></HomePageEditor>
             <UserPosts key={postsKey}></UserPosts>
         </div>
         {showSidebar&&app.user && <div className={"w-64 h-full border-l flex-shrink-0"} key={postsKey}>
@@ -61,97 +56,32 @@ export default function HomePage() {
     </div>
 }
 
-interface EditorData {
-    text: string;
-    isPublic: boolean;
-}
-
-function Editor({fullHeight, updatePosts}: { fullHeight?: boolean, updatePosts: () => void }) {
-    useEffect(() => {
-        const editor = document.getElementById("editor")!;
-        const listener = () => {
-            editor.style.height = "auto";
-            editor.style.height = editor.scrollHeight + "px";
+function HomePageEditor({updatePosts}: { updatePosts: () => void }) {
+    const value = useRef({
+        text: "",
+        isPublic: true,
+    })
+    
+    const submit = useCallback(async () => {
+        if(value.current.text.trim().length === 0) {
+            throw "Post cannot be empty";
         }
-        editor.addEventListener("input", listener);
-        return () => editor.removeEventListener("input", listener);
+        await network.createPost(value.current.text, value.current.isPublic);
+        value.current = {
+            text: "",
+            isPublic: true,
+        };
+        updatePosts();
+    }, [updatePosts]);
+
+    const onChanged = useCallback((data: EditorData) => {
+        value.current = {
+            text: data.text,
+            isPublic: data.isPublic,
+        };
     }, []);
 
-    const [data, setData] = useState<EditorData>({text: "", isPublic: app.defaultPostVisibility === "public"});
-    const [isUploading, setIsUploading] = useState(false);
-    const [isUploadingImage, setIsUploadingImage] = useState(false);
-
-    const uploadImage = useCallback(async () => {
-        setIsUploadingImage(true);
-        const input = document.createElement("input");
-        input.type = "file";
-        input.accept = "image/*";
-        let isClicked = false;
-        input.onchange = async () => {
-            if(isClicked) return;
-            isClicked = true;
-            try {
-                const file = input.files?.item(0);
-                const id = await network.uploadFile(file!);
-                setData(prev => ({
-                    ...prev,
-                    text: prev.text + `![image](${app.server}/api/file/download/${id})`
-                }))
-            }
-            catch (e: any) {
-                showMessage({text: e.toString()});
-            }
-            finally {
-                setIsUploadingImage(false);
-            }
-        }
-        input.click();
-        input.oncancel = () => setIsUploadingImage(false);
-    }, []);
-
-    return <div className={`w-full ${fullHeight ? "h-full" : ""} border-b px-4 pt-4 pb-2`}>
-        <textarea placeholder={translate("Write down your thoughts")} className={"w-full focus:outline-none min-h-6 resize-none px-2"} id={"editor"}
-                  value={data.text} onChange={(v) => {
-            setData({...data, text: v.target.value});
-        }}></textarea>
-        <div className={"h-8 w-full flex flex-row"}>
-            <TapRegion onPress={() => {
-                setData({...data, isPublic: !data.isPublic});
-            }} borderRadius={12}>
-                <div className={"h-8 flex flex-row items-center justify-center text-primary text-sm px-2"}>
-                    {data.isPublic ? <MdPublic size={18}/> : <MdLock size={18}/>}
-                    <span className={"w-2"}></span>
-                    <Tr>{data.isPublic ? "Public" : "Private"}</Tr>
-                </div>
-            </TapRegion>
-            <IconButton onPress={uploadImage} isLoading={isUploadingImage}>
-                <MdOutlineImage/>
-            </IconButton>
-            <IconButton onPress={() => {
-                window.open("https://github.com/usememento/Memento/blob/master/doc/ContentSyntax.md")
-            }}>
-                <MdOutlineInfo/>
-            </IconButton>
-            <div className={"flex-grow"}></div>
-            <Button className={"h-8 rounded-2xl"} color={"primary"} onClick={async () => {
-                if(isUploading) return;
-                setIsUploading(true);
-                try {
-                    await network.createPost(data.text, data.isPublic);
-                    setData({text: "", isPublic: true});
-                    showMessage({text: translate("Post created")});
-                    updatePosts();
-                    const editor = document.getElementById("editor")!;
-                    editor.style.height = "auto";
-                    editor.style.height = "48px";
-                } catch (e: any) {
-                    showMessage({text: e.toString()});
-                } finally {
-                    setIsUploading(false);
-                }
-            }}>{isUploading ? <Spinner color={"default"} size={"sm"}></Spinner> : <Tr>Post</Tr>}</Button>
-        </div>
-    </div>
+    return <Editor onChanged={onChanged} submit={submit} fullHeight={false}/>
 }
 
 function UserPosts() {

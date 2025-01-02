@@ -11,7 +11,7 @@ import TaggedPostsPage from "../pages/tagged_post_page.tsx";
 import PostPage from "../pages/post_page.tsx";
 import ResourcesPage from "../pages/resources_page.tsx";
 import SettingsPage from "../pages/settings_page.tsx";
-import TestPage from "../pages/test.tsx";
+import PostEditPage from "../pages/post_edit_page.tsx";
 
 export const router = createBrowserRouter([
     {
@@ -61,10 +61,10 @@ export const router = createBrowserRouter([
                 path: "/post/:id",
                 element: <PostPage />,
             },
+            {
+                path: "/post/:id/edit",
+                element: <PostEditPage/>
+            }
         ]
     },
-    {
-        path: "/test",
-        element: <TestPage/>
-    }
 ])

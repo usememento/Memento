@@ -1,5 +1,5 @@
 import {ReactNode} from "react";
-import {Spinner} from "@nextui-org/react";
+import {Loading} from "./message.tsx";
 
 interface TapRegionProps {
     onPress: () => void;
@@ -28,7 +28,7 @@ export function IconButton({onPress, children, primary, isLoading}: {
     return <TapRegion onPress={onPress} borderRadius={9999}>
         <div
             className={`w-8 h-8 flex flex-row items-center justify-center ${(primary ?? true) ? "text-primary" : null} text-lg`}>
-            {(isLoading ?? false) ? <Spinner size={"sm"}/> : children}
+            {(isLoading ?? false) ? <Loading size={18}/> : children}
         </div>
     </TapRegion>
 }

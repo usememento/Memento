@@ -43,7 +43,16 @@
     "Account": "账号",
     "Preferences": "偏好",
     "Admin": "管理员",
-    "About": "关于"
+    "About": "关于",
+    "Register At": "注册于",
+    "Total Posts": "总帖数",
+    "Set as user": "设为用户",
+    "Set as admin": "设为管理员",
+    "Password changed": "密码已更改",
+    "Old Password": "旧密码",
+    "New Password": "新密码",
+    "Submit": "提交",
+    "Move the slider to correct position": "移动滑块到正确位置"
   },
   "zh-TW": {
     "Login": "登錄",
@@ -88,7 +97,16 @@
     "Account": "賬號",
     "Preferences": "偏好",
     "Admin": "管理員",
-    "About": "關於"
+    "About": "關於",
+    "Register At": "註冊於",
+    "Total Posts": "總帖數",
+    "Set as user": "設為用戶",
+    "Set as admin": "設為管理員",
+    "Password changed": "密碼已更改",
+    "Old Password": "舊密碼",
+    "New Password": "新密碼",
+    "Submit": "提交",
+    "Move the slider to correct position": "移動滑塊到正確位置"
   },
   "en-US":{
   }
