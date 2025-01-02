@@ -27,7 +27,7 @@ const dart = import('highlight.js/lib/languages/dart');
 export default function PostWidget({post, showUser, onDelete}: {
     post: Post,
     showUser?: boolean,
-    onDelete?: () => void
+    onDelete?: (post: Post) => void
 }) {
     const [state, setState] = useState({
         content: post.content,
@@ -74,9 +74,9 @@ export default function PostWidget({post, showUser, onDelete}: {
     const deletePost = useCallback(() => {
         showDialog({
             title: translate("Delete post"),
-            children: <DeletePostDialog postId={post.postID} onDelete={onDelete!}/>
+            children: <DeletePostDialog post={post} onDelete={onDelete!}/>
         })
-    }, [onDelete, post.postID]);
+    }, [onDelete, post]);
 
     return <TapRegion className={"w-full"} lighter={true} onPress={() => {
         navigate(`/post/${post.postID}`, {state: {post}});
@@ -186,24 +186,24 @@ export function PopUpWindow({children, title, onBack}: { children: ReactNode, ti
     </div>
 }
 
-function DeletePostDialog({postId, onDelete}: { postId: number, onDelete: () => void }) {
+function DeletePostDialog({post, onDelete}: { post: Post, onDelete: (post: Post) => void }) {
     const [isDeleting, setIsDeleting] = useState(false);
 
     const canceler = useContext(dialogCanceler);
 
     const deletePost = useCallback(() => {
         setIsDeleting(true);
-        network.deletePost(postId).then(() => {
+        network.deletePost(post.postID).then(() => {
             setIsDeleting(false);
             showMessage({text: translate("Post deleted")});
             canceler();
-            onDelete();
+            onDelete(post);
         }).catch((e) => {
             console.error("Failed to delete post: ", e);
             showMessage({text: translate("Failed to delete post")});
             setIsDeleting(false);
         });
-    }, [canceler, onDelete, postId]);
+    }, [canceler, onDelete, post]);
     
     return <div className={"py-2"}>
         <p className={"px-2"}><Tr>Are you sure you want to delete this post?</Tr></p>

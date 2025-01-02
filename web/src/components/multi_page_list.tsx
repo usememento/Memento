@@ -59,13 +59,21 @@ export default function MultiPageList<T>({itemBuilder, loader, deleteItemRef}: {
     useEffect(() => {
         if(deleteItemRef) {
             deleteItemRef.current = async (item: T) => {
-                setState(prev => ({...prev, items: prev.items.filter(e => e !== item)}));
+                setState(prev => {
+                    const items = [];
+                    for(let i = 0; i < prev.items.length; i++) {
+                        if(prev.items[i] != item) {
+                            items.push(prev.items[i]);
+                        }
+                    }
+                    return ({...prev, items: items});
+                });
             }
         }
     }, [deleteItemRef]);
 
     return <div>
-        {state.items.map((e, index) => <div key={index}>{itemBuilder(e)}</div>)}
+        {state.items.map((e) => itemBuilder(e))}
         {state.loading && <div className={"w-full h-20 flex items-center justify-center"}><Loading/></div>}
     </div>
 }

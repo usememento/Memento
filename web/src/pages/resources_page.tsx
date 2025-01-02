@@ -83,7 +83,7 @@ function UploadWidget({onUpload}: {onUpload: (file: File) => void}) {
 
 function ResourcesList({onDelete}: {onDelete: () => void}) {
     const builder = useCallback((item: Resource) => {
-        return <ResourceWidget resource={item} onDelete={onDelete}></ResourceWidget>
+        return <ResourceWidget key={item.id} resource={item} onDelete={onDelete}></ResourceWidget>
     }, [onDelete])
 
     return <MultiPageList itemBuilder={builder} loader={network.getResources}></MultiPageList>

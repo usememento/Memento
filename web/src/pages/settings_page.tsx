@@ -378,7 +378,7 @@ function UserList() {
 
     return <>
         <p className={"px-4 my-2 text-lg font-bold"}>Users</p>
-        <MultiPageList key={key} itemBuilder={(u) => <UserListTile user={u} onDelete={reload}/>} loader={network.listUsers}></MultiPageList>
+        <MultiPageList key={key} itemBuilder={(u) => <UserListTile key={u.username} user={u} onDelete={reload}/>} loader={network.listUsers}></MultiPageList>
     </>
 }
 

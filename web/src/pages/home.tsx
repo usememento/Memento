@@ -87,7 +87,7 @@ function HomePageEditor({updatePosts}: { updatePosts: () => void }) {
 function UserPosts() {
     const loader = useCallback((page: number) => network.getPosts(app.user!.username!, page), []);
     const deleteItemRef = useRef<((item: Post) => void) | null>(null);
-    const builder = useCallback((i: Post) => <PostWidget post={i} onDelete={() => deleteItemRef.current!(i)}/>, []);
+    const builder = useCallback((i: Post) => <PostWidget key={i.postID} post={i} onDelete={(post) => deleteItemRef.current!(post)}/>, []);
 
     return <MultiPageList
       itemBuilder={builder}

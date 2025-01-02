@@ -32,7 +32,7 @@ export default function ExplorePage() {
 }
 
 function UserPosts() {
-    return <MultiPageList itemBuilder={(i) => <PostWidget post={i}/>} loader={network.getAllPosts}></MultiPageList>
+    return <MultiPageList itemBuilder={(i) => <PostWidget key={i.postID} post={i}/>} loader={network.getAllPosts}></MultiPageList>
 }
 
 function TagList() {
