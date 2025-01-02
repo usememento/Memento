@@ -1,9 +1,10 @@
 import React, {useCallback, useEffect} from "react";
 import showMessage, {Loading} from "./message.tsx";
 
-export default function MultiPageList<T>({itemBuilder, loader}: {
+export default function MultiPageList<T>({itemBuilder, loader, deleteItemRef}: {
     itemBuilder: (item: T) => React.ReactNode, 
-    loader: (page: number) => Promise<[T[], number]>}) {
+    loader: (page: number) => Promise<[T[], number]>,
+    deleteItemRef?: React.MutableRefObject<((item: T) => void) | null>}) {
     const [state, setState] = React.useState({
         items: [] as T[],
         loading: false,
@@ -54,6 +55,14 @@ export default function MultiPageList<T>({itemBuilder, loader}: {
         window.addEventListener("scroll", listener);
         return () => window.removeEventListener("scroll", listener);
     }, [loadMore]);
+
+    useEffect(() => {
+        if(deleteItemRef) {
+            deleteItemRef.current = async (item: T) => {
+                setState(prev => ({...prev, items: prev.items.filter(e => e !== item)}));
+            }
+        }
+    }, [deleteItemRef]);
 
     return <div>
         {state.items.map((e, index) => <div key={index}>{itemBuilder(e)}</div>)}

@@ -85,7 +85,15 @@ function HomePageEditor({updatePosts}: { updatePosts: () => void }) {
 }
 
 function UserPosts() {
-    return <MultiPageList itemBuilder={(i) => <PostWidget post={i as Post}/>} loader={(page) => network.getPosts(app.user!.username!, page)}></MultiPageList>
+    const loader = useCallback((page: number) => network.getPosts(app.user!.username!, page), []);
+    const deleteItemRef = useRef<((item: Post) => void) | null>(null);
+    const builder = useCallback((i: Post) => <PostWidget post={i} onDelete={() => deleteItemRef.current!(i)}/>, []);
+
+    return <MultiPageList
+      itemBuilder={builder}
+      loader={loader}
+      deleteItemRef={deleteItemRef}>
+    </MultiPageList>
 }
 
 function TagList() {

@@ -206,7 +206,7 @@ function DeletePostDialog({postId, onDelete}: { postId: number, onDelete: () => 
     }, [canceler, onDelete, postId]);
     
     return <div className={"py-2"}>
-        <p><Tr>Are you sure you want to delete this post?</Tr></p>
+        <p className={"px-2"}><Tr>Are you sure you want to delete this post?</Tr></p>
         <div className={"flex flex-row-reverse mt-4"}>
             <Button color={"danger"} onClick={deletePost} isLoading={isDeleting} className={"h-8 rounded-2xl"}><Tr>Delete</Tr></Button>
         </div>
